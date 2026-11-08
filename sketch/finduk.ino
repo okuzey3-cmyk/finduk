@@ -1188,7 +1188,7 @@ void sesEkle(uint8_t b) {
   if (sesN >= 3600) sesYaz();
 }
 
-bool konus(const String& metin) {
+bool konusAl(const String& metin, bool akis) {
   WiFiClientSecure client;
   client.setInsecure();
   client.setTimeout(30);
@@ -1202,7 +1202,7 @@ bool konus(const String& metin) {
                  "\"}]}],\"generationConfig\":{\"responseModalities\":[\"AUDIO\"],\"speechConfig\":{\"voiceConfig\":{\"prebuiltVoiceConfig\":{\"voiceName\":\"" +
                  SES_ADI + "\"}}}}}";
 
-  String baslik = String("POST /v1beta/models/") + TTS_MODEL + ":generateContent HTTP/1.1\r\n" +
+  String baslik = String("POST /v1beta/models/") + TTS_MODEL + (akis ? ":streamGenerateContent?alt=sse" : ":generateContent") + " HTTP/1.1\r\n" +
                   "Host: generativelanguage.googleapis.com\r\n" +
                   "x-goog-api-key: " + GEMINI_KEY + "\r\n" +
                   "Content-Type: application/json\r\n" +
@@ -1253,23 +1253,36 @@ bool konus(const String& metin) {
     } else if (durumKod == 1) {
       if (b == '"') {
         durumKod = 2;
+        k = 0;
+        if (!calindi) {
+          int rate = 24000;
+          int ri = bas.indexOf("rate=");
+          if (ri >= 0) rate = bas.substring(ri + 5).toInt();
+          if (rate < 8000 || rate > 96000) rate = 24000;
+          gSesHiz = rate;
+          i2s_set_sample_rates(I2S_NUM_1, rate);
 
-        int rate = 24000;
-        int ri = bas.indexOf("rate=");
-        if (ri >= 0) rate = bas.substring(ri + 5).toInt();
-        if (rate < 8000 || rate > 96000) rate = 24000;
-        gSesHiz = rate;
-        i2s_set_sample_rates(I2S_NUM_1, rate);
-
-        gDurum = D_KONUS;
-        digitalWrite(AMP_SD, HIGH);
-        delay(30);
-        gSesIlk = true;
-        gSesSon = false;
-        calindi = true;
+          gDurum = D_KONUS;
+          if (!MAC_SES) digitalWrite(AMP_SD, HIGH);
+          delay(30);
+          gSesIlk = true;
+          gSesSon = false;
+          calindi = true;
+        }
       }
     } else {
-      if (b == '"') break;
+      if (b == '"') {
+        if (k == 2) sesEkle((dortlu[0] << 2) | (dortlu[1] >> 4));
+        if (k == 3) {
+          sesEkle((dortlu[0] << 2) | (dortlu[1] >> 4));
+          sesEkle(((dortlu[1] & 15) << 4) | (dortlu[2] >> 2));
+        }
+        k = 0;
+        if (!akis) break;
+        durumKod = 0;     // akista siradaki parcayi ara
+        eslesen = 0;
+        continue;
+      }
       if (b == '=') continue;
       int v = b64Deger(b);
       if (v < 0) continue;
@@ -1283,12 +1296,7 @@ bool konus(const String& metin) {
     }
   }
 
-  if (durumKod == 2) {
-    if (k == 2) sesEkle((dortlu[0] << 2) | (dortlu[1] >> 4));
-    if (k == 3) {
-      sesEkle((dortlu[0] << 2) | (dortlu[1] >> 4));
-      sesEkle(((dortlu[1] & 15) << 4) | (dortlu[2] >> 2));
-    }
+  if (calindi) {
     gSesSon = true;
     sesYaz();
     gSesSon = false;
@@ -1302,7 +1310,7 @@ bool konus(const String& metin) {
     }
     i2s_zero_dma_buffer(I2S_NUM_1);
     delay(100);
-    digitalWrite(AMP_SD, LOW);
+    if (!MAC_SES) digitalWrite(AMP_SD, LOW);
     sesN = 0;
   }
 
@@ -1316,6 +1324,13 @@ bool konus(const String& metin) {
     return false;
   }
   return true;
+}
+
+// Once akisli (parca parca, hizli baslar), olmazsa tek parca dener
+bool konus(const String& metin) {
+  if (konusAl(metin, true)) return true;
+  Serial.println("(Akisli ses olmadi, normal deneniyor)");
+  return konusAl(metin, false);
 }
 
 void setup() {
