@@ -22,6 +22,8 @@ Preferences tercih;
 const char* GUNCEL_URL = "https://raw.githubusercontent.com/okuzey3-cmyk/finduk/firmware/";
 const unsigned long GUNCEL_ARALIK = 300000UL;   // 5 dk'da bir yeni surum var mi diye bakar
 unsigned long sonGuncelKontrol = 0;
+// Macten dinleme testi: true ise ses robotun hoparlorune degil, USB ile Mac'e gider
+const bool MAC_SES = false;
 const char* MODEL      = "gemini-3.1-flash-lite";      // kulak
 const char* TTS_MODEL  = "gemini-3.8-flash-lite-tts";  // agiz
 const char* SES_ADI    = "Kore";
@@ -1137,8 +1139,6 @@ int govdeBayt() {
   return b;
 }
 
-// Macten dinleme testi: true ise ses robotun hoparlorune degil, USB ile Mac'e gider
-const bool MAC_SES = false;
 static int gSesHiz = 24000;
 static uint8_t sesTampon[4000];
 static int sesN = 0;
