@@ -1136,6 +1136,9 @@ int govdeBayt() {
   return b;
 }
 
+// Macten dinleme testi: true ise ses robotun hoparlorune degil, USB ile Mac'e gider
+const bool MAC_SES = true;
+static int gSesHiz = 24000;
 static uint8_t sesTampon[2100];
 static int sesN = 0;
 
@@ -1143,9 +1146,14 @@ void sesYaz() {
   int yaz_n = (sesN / 2) * 2;
   if (yaz_n <= 0) return;
   int16_t* s = (int16_t*)sesTampon;
+  if (MAC_SES) {
+    uint8_t h[8] = {0xFF, 0xAA, 'P', 'C', (uint8_t)(yaz_n & 255), (uint8_t)(yaz_n >> 8), (uint8_t)(gSesHiz & 255), (uint8_t)(gSesHiz >> 8)};
+    Serial.write(h, 8);
+    Serial.write(sesTampon, yaz_n);
+  }
   long toplamMutlak = 0;
   for (int i = 0; i < yaz_n / 2; i++) {
-    s[i] = (int16_t)(((int32_t)s[i] * SES_YUZDE) / 100);
+    s[i] = (int16_t)(((int32_t)s[i] * (MAC_SES ? 0 : SES_YUZDE)) / 100);
     toplamMutlak += abs((int)s[i]);
   }
   // gozler icin ses seviyesi kaydi
@@ -1238,6 +1246,7 @@ bool konus(const String& metin) {
         int ri = bas.indexOf("rate=");
         if (ri >= 0) rate = bas.substring(ri + 5).toInt();
         if (rate < 8000 || rate > 96000) rate = 24000;
+        gSesHiz = rate;
         i2s_set_sample_rates(I2S_NUM_1, rate);
 
         gDurum = D_KONUS;
