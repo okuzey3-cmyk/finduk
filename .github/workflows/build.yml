@@ -31,6 +31,7 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install esp32:esp32@3.3.12
           arduino-cli lib install "Adafruit GFX Library" "Adafruit SSD1306" "Adafruit BusIO"
+          arduino-cli board details --fqbn esp32:esp32:esp32s3 | grep -iE "16MB|Partition" | head -20 || true
 
       - name: Derle
         run: |
@@ -39,7 +40,7 @@ jobs:
           cp sketch/finduk.ino /tmp/finduk/finduk.ino
           sed -i "s/^#define FW_SURUM .*/#define FW_SURUM $N/" /tmp/finduk/finduk.ino
           grep -n "define FW_SURUM" /tmp/finduk/finduk.ino
-          arduino-cli compile --fqbn "esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M,PartitionScheme=default_16MB" --output-dir /tmp/out /tmp/finduk
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB" --output-dir /tmp/out /tmp/finduk
           mkdir -p /tmp/pub
           cp /tmp/out/finduk.ino.bin /tmp/pub/firmware.bin
           echo "$N" > /tmp/pub/version.txt
