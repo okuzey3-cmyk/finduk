@@ -1139,13 +1139,25 @@ int govdeBayt() {
 // Macten dinleme testi: true ise ses robotun hoparlorune degil, USB ile Mac'e gider
 const bool MAC_SES = true;
 static int gSesHiz = 24000;
-static uint8_t sesTampon[2100];
+static uint8_t sesTampon[4000];
 static int sesN = 0;
+static bool gSesSon = false;     // son parca mi (kuyrugu da yaz)
+static bool gSesIlk = true;      // ilk parca mi (yumusak giris)
+const int SES_TUT = 1600;        // sonda yumusak cikis icin tutulan bayt (yaklasik 33 ms)
 
 void sesYaz() {
-  int yaz_n = (sesN / 2) * 2;
+  int yaz_n = gSesSon ? (sesN / 2) * 2 : ((sesN - SES_TUT) / 2) * 2;
   if (yaz_n <= 0) return;
   int16_t* s = (int16_t*)sesTampon;
+  if (gSesIlk) {                                   // yumusak giris (tik sesini onler)
+    int m = yaz_n / 2; if (m > 480) m = 480;
+    for (int i = 0; i < m; i++) s[i] = (int16_t)(((int32_t)s[i] * i) / m);
+    gSesIlk = false;
+  }
+  if (gSesSon) {                                   // yumusak cikis (pirt sesini onler)
+    int m = yaz_n / 2; if (m > 800) m = 800;
+    for (int i = 0; i < m; i++) { int j = yaz_n / 2 - 1 - i; s[j] = (int16_t)(((int32_t)s[j] * i) / m); }
+  }
   if (MAC_SES) {
     uint8_t h[8] = {0xFF, 0xAA, 'P', 'C', (uint8_t)(yaz_n & 255), (uint8_t)(yaz_n >> 8), (uint8_t)(gSesHiz & 255), (uint8_t)(gSesHiz >> 8)};
     Serial.write(h, 8);
@@ -1173,7 +1185,7 @@ void sesYaz() {
 
 void sesEkle(uint8_t b) {
   sesTampon[sesN++] = b;
-  if (sesN >= 2000) sesYaz();
+  if (sesN >= 3600) sesYaz();
 }
 
 bool konus(const String& metin) {
@@ -1252,6 +1264,8 @@ bool konus(const String& metin) {
         gDurum = D_KONUS;
         digitalWrite(AMP_SD, HIGH);
         delay(30);
+        gSesIlk = true;
+        gSesSon = false;
         calindi = true;
       }
     } else {
@@ -1275,9 +1289,19 @@ bool konus(const String& metin) {
       sesEkle((dortlu[0] << 2) | (dortlu[1] >> 4));
       sesEkle(((dortlu[1] & 15) << 4) | (dortlu[2] >> 2));
     }
+    gSesSon = true;
     sesYaz();
+    gSesSon = false;
+    {   // kuyrukta kalan sesin kesilmemesi icin biraz sessizlik yaz, sonra kapat
+      static uint8_t sus[1024];
+      memset(sus, 0, sizeof(sus));
+      for (int i = 0; i < 20; i++) {
+        size_t yz = 0;
+        i2s_write(I2S_NUM_1, sus, sizeof(sus), &yz, portMAX_DELAY);
+      }
+    }
     i2s_zero_dma_buffer(I2S_NUM_1);
-    delay(300);
+    delay(100);
     digitalWrite(AMP_SD, LOW);
     sesN = 0;
   }
