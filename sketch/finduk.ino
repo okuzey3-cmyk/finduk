@@ -648,6 +648,7 @@ void hoparlorKur() {
   pins.data_out_num = AMP_DIN;
   pins.data_in_num = I2S_PIN_NO_CHANGE;
   i2s_set_pin(I2S_NUM_1, &pins);
+  if (!MAC_SES) digitalWrite(AMP_SD, HIGH);   // amfi hep acik, sessizken sifir verisi gider
 }
 
 // Ses gelene kadar bekler. zamanAsimi=0 ise sonsuza dek bekler. Ses gelirse true, sure dolarsa false.
@@ -1137,7 +1138,7 @@ int govdeBayt() {
 }
 
 // Macten dinleme testi: true ise ses robotun hoparlorune degil, USB ile Mac'e gider
-const bool MAC_SES = true;
+const bool MAC_SES = false;
 static int gSesHiz = 24000;
 static uint8_t sesTampon[4000];
 static int sesN = 0;
@@ -1263,7 +1264,6 @@ bool konusAl(const String& metin, bool akis) {
           i2s_set_sample_rates(I2S_NUM_1, rate);
 
           gDurum = D_KONUS;
-          if (!MAC_SES) digitalWrite(AMP_SD, HIGH);
           delay(30);
           gSesIlk = true;
           gSesSon = false;
@@ -1310,7 +1310,7 @@ bool konusAl(const String& metin, bool akis) {
     }
     i2s_zero_dma_buffer(I2S_NUM_1);
     delay(100);
-    if (!MAC_SES) digitalWrite(AMP_SD, LOW);
+    // amfi acik kalir (acma/kapama cizirtisini onlemek icin)
     sesN = 0;
   }
 
