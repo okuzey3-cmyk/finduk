@@ -1306,6 +1306,7 @@ void setup() {
   miknrofonKur();
   hoparlorKur();
   wifiBaglan();
+  Serial.println("Finduk: kablosuz guncelleme calisiyor.");
   guncellemeKontrol();
 }
 
