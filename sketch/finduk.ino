@@ -19,6 +19,7 @@
 // Wi-Fi bilgisi ve anahtarlar kodun icinde DEGIL, robotun hafizasinda durur (seri ekrandan bir kere yazilir)
 String WIFI_AD, WIFI_SIFRE, GEMINI_KEY, CLAUDE_KEY, GH_TOKEN;
 Preferences tercih;
+const char* SINEMA_KONU = "finduk-sinema-fc45fb1a9b13e7aa113ad1f0";   // Sinema Odasi kontrol kanali (ntfy.sh)
 const char* GUNCEL_URL = "https://raw.githubusercontent.com/okuzey3-cmyk/finduk/firmware/";
 const unsigned long GUNCEL_ARALIK = 300000UL;   // 5 dk'da bir yeni surum var mi diye bakar
 unsigned long sonGuncelKontrol = 0;
@@ -37,7 +38,10 @@ const char* KISILIK =
   "ONEMLI: Her cevabinin en basina, o an hissettigin duyguyu koseli parantez icinde TEK kelime olarak yaz. "
   "Sadece sunlardan birini kullan: [mutlu] [uzgun] [kizgin] [saskin] [uykulu] [normal]. "
   "Ornek: [mutlu] Harika bir fikir bu! "
-  "Guncel bilgi (hava durumu, haberler) gerekirse sana ayrica verilir. Verilmediyse bilmedigini soyle ama asla internete bagli degilim deme.";
+  "Guncel bilgi (hava durumu, haberler) gerekirse sana ayrica verilir. Verilmediyse bilmedigini soyle ama asla internete bagli degilim deme. "
+  "Demet'in Sinema Odasi adli film uygulamasini da kontrol edebilirsin. Kullanici istediginde cevabinin SONUNA, konusma metninden sonra, koseli parantez icinde komut yaz: [sinema:komut|ayrinti]. "
+  "Komutlar: sekme|kesfet veya kadife veya yakinda veya sahne veya rafim; ara|film adi; bilet (rastgele film bileti cek); zarf (surpriz zarf); zarfac; zarfdegis; ruh|aglamak veya gulmek veya gerilmek veya dusunmek veya fon; sec|1 (listedeki adayi sec); favori; izlerim; izledim; fragman; raf|fav veya izlenecek veya izlenen; rafcek; kadife|mesaj (uygulamanin sohbet asistanina yaz); filtre; kapat; kaydir|asagi veya yukari; dugme|ekrandaki dugmenin yazisi. "
+  "Birden fazla komutu art arda yazabilirsin. Komut kullandiysan cevapta ne yaptigini kisaca soyle. Komutu kullanici istemedikce kullanma.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -1046,6 +1050,50 @@ bool haberMi(const String& sd) {
 }
 // ===== INTERNET BILGI BITIS =====
 
+// ===== SINEMA ODASI KONTROLU BASLA =====
+// Komutu ntfy.sh kanalina yollar, Sinema Odasi uygulamasi dinleyip uygular
+void sinemaGonder(const String& k) {
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(8000);
+  if (!http.begin(c, String("https://ntfy.sh/") + SINEMA_KONU)) return;
+  http.addHeader("Content-Type", "text/plain; charset=utf-8");
+  int kod = http.POST((uint8_t*)k.c_str(), k.length());
+  Serial.println(String("SINEMA komutu: ") + k + " -> HTTP " + kod);
+  http.end();
+}
+
+// Uygulamanin son bildirdigi ekran durumu
+String sinemaDurum() {
+  String r = httpsGetGovde("ntfy.sh", (String("/") + SINEMA_KONU + "-durum/json?poll=1&since=latest").c_str(), 3000);
+  return degerBul(r, "message");
+}
+
+bool sinemaMi(const String& sd) {
+  const char* k[] = {"film", "bilet", "sinema", "dizi", "fragman", "zarf", "favori", "izle", "oyuncu", "puan", "raf"};
+  for (int i = 0; i < 11; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+// Cevaptaki [sinema:...] komutlarini ayiklar, metinden siler. Kac komut bulundugunu dondurur.
+int komutlariAyikla(String& c, String* liste, int maks) {
+  int n = 0;
+  while (true) {
+    int a = c.indexOf("[sinema:");
+    if (a < 0) break;
+    int b = c.indexOf(']', a);
+    if (b < 0) { c = c.substring(0, a); break; }
+    String k = c.substring(a + 8, b);
+    k.trim();
+    if (n < maks && k.length() > 0) liste[n++] = k;
+    c.remove(a, b - a + 1);
+  }
+  c.trim();
+  return n;
+}
+// ===== SINEMA ODASI KONTROLU BITIS =====
+
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
 unsigned long sohbetBitis = 0;
@@ -1447,10 +1495,21 @@ void loop() {
     Serial.println(bilgi);
   }
 
+  if (!hv && !hb && sinemaMi(sd)) {
+    String d = sinemaDurum();
+    if (d.length() > 0) {
+      bilgi = String("Demet'in Sinema Odasi uygulamasinin son bilinen ekrani: ") + d + " (Bu bilgi sadece durumu gosterir. Istenirse komutla kontrol edebilirsin.)";
+      Serial.print("SINEMA DURUM: ");
+      Serial.println(d);
+    }
+  }
+
   String ham = claudeCevapla(duyulan, bilgi);
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
     String hamCevap = cevap;          // etiketli hali hafiza icin
+    String komutlar[5];
+    int komutN = komutlariAyikla(cevap, komutlar, 5);
     int mood = moodCoz(cevap);        // etiketi ayiklar
     Serial.print("FINDUK (");
     Serial.print(mood);
@@ -1459,6 +1518,10 @@ void loop() {
     hafizayaEkle(duyulan, hamCevap);
     gMood = mood;
     konus(cevap);
+    for (int i = 0; i < komutN; i++) {      // konusma bitince uygulamaya komutlari yolla
+      sinemaGonder(komutlar[i]);
+      delay(300);
+    }
     gMoodBitis = millis() + 2500;
     sohbetBitis = millis() + SOHBET_SURE;     // 30 sn boyunca adini soylemeden devam edebilirsin
   } else {
