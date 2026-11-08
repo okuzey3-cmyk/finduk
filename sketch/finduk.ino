@@ -7,14 +7,24 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <math.h>
+#include <Preferences.h>
+#include <HTTPClient.h>
+#include <Update.h>
 
-const char* WIFI_AD    = "BURAYA_YAZ";
-const char* WIFI_SIFRE = "BURAYA_YAZ";
-const char* GEMINI_KEY = "BURAYA_YAZ";
+// Surum numarasini GitHub derlerken otomatik yazar (elle degistirme)
+#ifndef FW_SURUM
+#define FW_SURUM 0
+#endif
+
+// Wi-Fi bilgisi ve anahtarlar kodun icinde DEGIL, robotun hafizasinda durur (seri ekrandan bir kere yazilir)
+String WIFI_AD, WIFI_SIFRE, GEMINI_KEY, CLAUDE_KEY, GH_TOKEN;
+Preferences tercih;
+const char* GUNCEL_URL = "https://raw.githubusercontent.com/okuzey3-cmyk/finduk/firmware/";
+const unsigned long GUNCEL_ARALIK = 300000UL;   // 5 dk'da bir yeni surum var mi diye bakar
+unsigned long sonGuncelKontrol = 0;
 const char* MODEL      = "gemini-3.1-flash-lite";      // kulak
 const char* TTS_MODEL  = "gemini-3.8-flash-lite-tts";  // agiz
 const char* SES_ADI    = "Kore";
-const char* CLAUDE_KEY = "BURAYA_YAZ";
 const char* CLAUDE_MODEL = "claude-haiku-5-5";
 
 const char* KISILIK =
@@ -420,6 +430,152 @@ void wavBaslikYaz() {
   memcpy(wav + 40, &dataLen, 4);
 }
 
+// ===== AYAR VE GUNCELLEME BASLA =====
+void ayarYukle() {
+  tercih.begin("finduk", false);
+  WIFI_AD = tercih.getString("wifi", "");
+  WIFI_SIFRE = tercih.getString("sifre", "");
+  GEMINI_KEY = tercih.getString("gemini", "");
+  CLAUDE_KEY = tercih.getString("claude", "");
+  GH_TOKEN = tercih.getString("token", "");
+  tercih.end();
+}
+
+bool ayarTam() {
+  return WIFI_AD.length() > 0 && WIFI_SIFRE.length() > 0 && GEMINI_KEY.length() > 0 && CLAUDE_KEY.length() > 0;
+}
+
+// "wifi=ADI" gibi bir satiri isler. Basarili kayitta true doner.
+bool ayarKomutIsle(String s) {
+  s.trim();
+  if (s.length() == 0) return false;
+  if (s == "goster") {
+    Serial.println(String("wifi: ") + (WIFI_AD.length() ? WIFI_AD : String("(yok)")));
+    Serial.println(String("sifre: ") + (WIFI_SIFRE.length() ? "kayitli" : "(yok)"));
+    Serial.println(String("gemini: ") + (GEMINI_KEY.length() ? "kayitli" : "(yok)"));
+    Serial.println(String("claude: ") + (CLAUDE_KEY.length() ? "kayitli" : "(yok)"));
+    Serial.println(String("token: ") + (GH_TOKEN.length() ? "kayitli" : "(yok, istege bagli)"));
+    Serial.println(String("surum: ") + FW_SURUM);
+    return false;
+  }
+  int k = s.indexOf('=');
+  if (k < 0) {
+    Serial.println("Anlamadim. Ornek: wifi=EvAgi");
+    return false;
+  }
+  String ad = s.substring(0, k);
+  String deger = s.substring(k + 1);
+  ad.trim();
+  deger.trim();
+  const char* anahtar = nullptr;
+  if (ad == "wifi") anahtar = "wifi";
+  else if (ad == "sifre") anahtar = "sifre";
+  else if (ad == "gemini") anahtar = "gemini";
+  else if (ad == "claude") anahtar = "claude";
+  else if (ad == "token") anahtar = "token";
+  if (anahtar == nullptr) {
+    Serial.println("Bilinmeyen ad. Kullanilabilir: wifi sifre gemini claude token");
+    return false;
+  }
+  tercih.begin("finduk", false);
+  tercih.putString(anahtar, deger);
+  tercih.end();
+  ayarYukle();
+  Serial.println(String("Kaydedildi: ") + ad);
+  return true;
+}
+
+// Acilista kisa sure seri ekrandan ayar kabul eder. Bilgiler eksikse tamamlanana kadar bekler.
+void ayarPenceresi() {
+  Serial.println();
+  Serial.println("=== AYAR === Komutlar (yazip Enter'a bas):");
+  Serial.println("wifi=AGADI   sifre=SIFRE   gemini=ANAHTAR   claude=ANAHTAR   token=GITHUBTOKEN (istege bagli)   goster");
+  unsigned long bas = millis();
+  unsigned long sonUyari = millis();
+  unsigned long sure = ayarTam() ? 4000UL : 6000UL;
+  while (millis() - bas < sure || !ayarTam()) {
+    if (Serial.available()) {
+      String satir = Serial.readStringUntil('\n');
+      if (ayarKomutIsle(satir)) bas = millis();
+    }
+    if (!ayarTam() && millis() - sonUyari > 5000) {
+      sonUyari = millis();
+      Serial.println("Eksik bilgi var. wifi, sifre, gemini ve claude komutlarini yaz (goster ile bak).");
+    }
+    delay(10);
+  }
+  Serial.println("Ayar tamam, baslatiyorum...");
+}
+
+// GitHub'da yeni surum varsa indirir ve kendini yeniler
+void guncellemeKontrol() {
+  sonGuncelKontrol = millis();
+  if (WiFi.status() != WL_CONNECTED) return;
+  String taban = String(GUNCEL_URL);
+
+  int yeni = 0;
+  {
+    WiFiClientSecure c;
+    c.setInsecure();
+    HTTPClient http;
+    http.setTimeout(15000);
+    if (!http.begin(c, taban + "version.txt")) return;
+    if (GH_TOKEN.length() > 0) http.addHeader("Authorization", String("token ") + GH_TOKEN);
+    int kod = http.GET();
+    if (kod != 200) {
+      Serial.println(String("(Guncelleme kontrolu: HTTP ") + kod + ")");
+      http.end();
+      return;
+    }
+    yeni = http.getString().toInt();
+    http.end();
+  }
+  Serial.println(String("Yazilim surumu: bende ") + FW_SURUM + ", GitHub'da " + yeni);
+  if (yeni <= FW_SURUM) return;
+
+  Serial.println("Yeni surum var, indiriyorum...");
+  gDurum = D_DUSUN;
+  WiFiClientSecure c2;
+  c2.setInsecure();
+  HTTPClient h2;
+  h2.setTimeout(30000);
+  if (!h2.begin(c2, taban + "firmware.bin")) return;
+  if (GH_TOKEN.length() > 0) h2.addHeader("Authorization", String("token ") + GH_TOKEN);
+  int kod2 = h2.GET();
+  if (kod2 != 200) {
+    Serial.println(String("Indirme hatasi: HTTP ") + kod2);
+    h2.end();
+    gDurum = D_BOSTA;
+    return;
+  }
+  int boy = h2.getSize();
+  if (boy < 100000) {
+    Serial.println("Dosya boyutu beklenmedik, vazgectim.");
+    h2.end();
+    gDurum = D_BOSTA;
+    return;
+  }
+  if (!Update.begin(boy)) {
+    Serial.println(String("Update.begin hata: ") + Update.errorString());
+    h2.end();
+    gDurum = D_BOSTA;
+    return;
+  }
+  size_t yazilan = Update.writeStream(*h2.getStreamPtr());
+  bool tamam = (yazilan == (size_t)boy) && Update.end() && Update.isFinished();
+  h2.end();
+  if (tamam) {
+    Serial.println("Guncelleme tamam, yeniden basliyorum.");
+    delay(800);
+    ESP.restart();
+  } else {
+    Serial.println(String("Guncelleme basarisiz: ") + Update.errorString());
+    Update.abort();
+    gDurum = D_BOSTA;
+  }
+}
+// ===== AYAR VE GUNCELLEME BITIS =====
+
 void wifiBaglan() {
   WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
@@ -432,7 +588,7 @@ void wifiBaglan() {
   WiFi.setSleep(false);
   Serial.println("Wi-Fi baglaniyor (yeni kimlikle)...");
   unsigned long bas = millis();
-  WiFi.begin(WIFI_AD, WIFI_SIFRE);
+  WiFi.begin(WIFI_AD.c_str(), WIFI_SIFRE.c_str());
   while (WiFi.status() != WL_CONNECTED && millis() - bas < 120000UL) {
     delay(500);
   }
@@ -1144,9 +1300,13 @@ void setup() {
   }
   pcm = (int16_t*)(wav + 44);
 
+  ayarYukle();
+  ayarPenceresi();
+
   miknrofonKur();
   hoparlorKur();
   wifiBaglan();
+  guncellemeKontrol();
 }
 
 void loop() {
@@ -1155,13 +1315,17 @@ void loop() {
   gDurum = D_BOSTA;
   if (gUyku) {
     Serial.println("Uyuyorum... (bir ses cikar, uyanayim)");
-    bekleSes(0, ESIK_UYKU);
+    if (!bekleSes(GUNCEL_ARALIK, ESIK_UYKU)) {
+      guncellemeKontrol();      // uyurken yeni surum var mi diye bak
+      return;
+    }
     gUyku = false;
     Serial.println("Uyandim! Simdi konusabilirsin.");
     delay(1800);                 // uyanma animasyonu
     return;
   }
   if (!bekleSes(UYKU_SURE, ESIK)) {
+    if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
     gUyku = true;
     Serial.println("Uykuya daliyorum...");
     return;

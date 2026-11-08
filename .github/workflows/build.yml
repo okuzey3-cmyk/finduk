@@ -1,0 +1,57 @@
+name: Derle ve yayinla
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sketch/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: derle
+  cancel-in-progress: false
+
+jobs:
+  derle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: arduino-cli kur
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: ESP32 cekirdegi ve kutuphaneler
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.12
+          arduino-cli lib install "Adafruit GFX Library" "Adafruit SSD1306" "Adafruit BusIO"
+
+      - name: Derle
+        run: |
+          N=${{ github.run_number }}
+          mkdir -p /tmp/finduk
+          cp sketch/finduk.ino /tmp/finduk/finduk.ino
+          sed -i "s/^#define FW_SURUM .*/#define FW_SURUM $N/" /tmp/finduk/finduk.ino
+          grep -n "define FW_SURUM" /tmp/finduk/finduk.ino
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M,PartitionScheme=default_16MB" --output-dir /tmp/out /tmp/finduk
+          mkdir -p /tmp/pub
+          cp /tmp/out/finduk.ino.bin /tmp/pub/firmware.bin
+          echo "$N" > /tmp/pub/version.txt
+          ls -l /tmp/pub
+
+      - name: Yayinla (firmware dalina)
+        run: |
+          cd /tmp/pub
+          git init -q
+          git checkout -q -b firmware
+          git config user.name "finduk-bot"
+          git config user.email "finduk-bot@users.noreply.github.com"
+          git add firmware.bin version.txt
+          git commit -q -m "Yazilim surumu ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" firmware
