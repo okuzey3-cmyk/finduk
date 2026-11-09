@@ -55,7 +55,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -1155,7 +1155,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1308,7 +1308,9 @@ String alarmListesi() {
   return o;
 }
 
+bool molaVadesi();
 bool alarmVadesiGeldi() {
+  if (molaVadesi()) return true;
   long now = simdiEpoch();
   if (now == 0) return false;
   for (int i = 0; i < ALARM_MAX; i++) if (aEpoch[i] > 0 && now >= aEpoch[i]) return true;
@@ -1316,6 +1318,7 @@ bool alarmVadesiGeldi() {
 }
 
 // Kisa sinus bip sesi (alarm icin)
+volatile int gBipYuzde = 45;
 void bip(int hz, int ms) {
   static int16_t b[256];
   int toplam = 24000 * ms / 1000;
@@ -1330,7 +1333,7 @@ void bip(int hz, int ms) {
       float zarf = 1.0f;
       if (k < 200) zarf = k / 200.0f;
       if (toplam - k < 200) zarf = (toplam - k) / 200.0f;
-      b[i] = (int16_t)(sinf(faz) * 9000.0f * zarf * SES_YUZDE / 100.0f);
+      b[i] = (int16_t)(sinf(faz) * 9000.0f * zarf * gBipYuzde / 100.0f);
       faz += adim;
     }
     size_t w = 0;
@@ -1352,9 +1355,11 @@ void sus(int ms) {
 }
 
 // Vadesi gelen alarm varsa caldirir. Caldiysa true doner.
+void molaCal();
 bool alarmCal() {
   long now = simdiEpoch();
   if (now == 0) return false;
+  if (molaVadesi()) { molaCal(); return true; }
   for (int i = 0; i < ALARM_MAX; i++) {
     if (aEpoch[i] <= 0 || now < aEpoch[i]) continue;
     String m = aMsj[i];
@@ -1374,7 +1379,12 @@ bool alarmCal() {
     gMoodBitis = millis() + 5000;
     gDurum = D_KONUS;
     i2s_set_sample_rates(I2S_NUM_1, 24000);
-    for (int r = 0; r < 3; r++) { bip(880, 160); sus(90); bip(1175, 160); sus(140); }
+    for (int r = 0; r < 5; r++) {                 // kademeli alarm: her turda ses biraz yukselir
+      int v = SES_YUZDE * (50 + r * 25) / 100;
+      gBipYuzde = v > 90 ? 90 : v;
+      bip(880, 160); sus(90); bip(1175, 160); sus(140);
+    }
+    gBipYuzde = SES_YUZDE;
     sus(300);
     if (WiFi.status() == WL_CONNECTED) konus(m.length() ? String("Hatirlatma. ") + m : String("Zamanlayici doldu!"));
     gOzel = 0;
@@ -1467,6 +1477,9 @@ void komutIsle(const String& k) {
   else if (ad == "hafizasil") { if (ar == "hepsi") nvsYaz("hafiza", ""); else satirSil("hafiza", ar); }
   else if (ad == "liste") listeIsle(ar);
   else if (ad == "kisilik") nvsYaz("kisilik", temizMetin(ar, 20));
+  else if (ad == "mola") molaKur(ar);
+  else if (ad == "plan") satirEkle("plan", ar, 20);
+  else if (ad == "plansil") { if (ar == "hepsi") nvsYaz("plan", ""); else satirSil("plan", ar); }
   else if (ad == "goz") {
     int z = 0; unsigned long sure = 8000;
     if (ar == "kutla") { z = 2; sure = 6000; }
@@ -1487,7 +1500,7 @@ void sabahSelami() {
   if (z.tm_hour < 5 || z.tm_hour >= 11 || z.tm_yday == gSonSelamGun) return;
   gSonSelamGun = z.tm_yday;
   gDurum = D_DUSUN;
-  String bilgi = String("Sabah selami ver: gunaydin de, havayi ve gunun bir iki onemli haberini cok kisa soyle. ") + havaBilgisi() + " " + haberBilgisi();
+  String bilgi = String("Sabah selami ver: gunaydin de, havayi ve gunun bir iki onemli haberini cok kisa soyle. Kayitli plan varsa bugune ait olani da soyle. Plan: ") + planAl() + ". " + havaBilgisi() + " " + haberBilgisi();
   String ham = claudeCevapla("(Oguzhan az once uyandi, sabah selami ver)", bilgi);
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
@@ -1842,6 +1855,99 @@ void webBaslat() {
 }
 // ===== TELEFON AYAR SAYFASI, BILDIRIM BITIS =====
 
+// ===== MOLA, PLAN, DINI GUNLER BASLA =====
+volatile int gMolaDk = 0;
+unsigned long gMolaSon = 0;
+
+void molaYukle() {
+  String v = nvsOku("mola");
+  gMolaDk = v.length() ? v.toInt() : 0;
+  if (gMolaDk < 0 || gMolaDk > 480) gMolaDk = 0;
+  gMolaSon = millis();
+}
+
+void molaKur(const String& ar) {
+  int dk = ar.toInt();
+  if (dk < 0) dk = 0;
+  if (dk > 480) dk = 480;
+  if (dk > 0 && dk < 15) dk = 15;
+  gMolaDk = dk;
+  gMolaSon = millis();
+  nvsYaz("mola", String(dk));
+  Serial.println(String("MOLA hatirlatma: ") + dk + " dk");
+}
+
+bool molaVadesi() {
+  if (gMolaDk <= 0 || gUyku) return false;
+  long t = simdiEpoch();
+  if (t == 0) return false;
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 8 || z.tm_hour >= 22) return false;
+  return millis() - gMolaSon > (unsigned long)gMolaDk * 60000UL;
+}
+
+void molaCal() {
+  gMolaSon = millis();
+  Serial.println("MOLA vakti");
+  gOzelBitis = millis() + 6000;
+  gOzel = 3;
+  gMood = M_MUTLU;
+  gMoodBitis = millis() + 4000;
+  i2s_set_sample_rates(I2S_NUM_1, 24000);
+  gBipYuzde = SES_YUZDE;
+  bip(1047, 140); sus(80); bip(1319, 180);
+  sus(250);
+  gDurum = D_KONUS;
+  if (WiFi.status() == WL_CONNECTED) konus("Mola vakti! Biraz su ic, kalk ve esne.");
+  gDurum = D_BOSTA;
+}
+
+// Haftalik plan (satir satir): "Pazartesi: dis hekimi saat 15"
+String planAl() { return satirlariAl("plan"); }
+
+bool planMi(const String& sd) {
+  const char* k[] = {"plan", "program", "bu hafta", "haftalik", "bugun ne var", "randevu"};
+  for (int i = 0; i < 6; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+// Hicri tarih (Aladhan). Kandil, bayram, Ramazan icin
+String hicriBilgisi() {
+  long t = simdiEpoch();
+  if (t == 0) return "";
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  char yol[64];
+  snprintf(yol, sizeof(yol), "/v1/gToH/%02d-%02d-%04d", z.tm_mday, z.tm_mon + 1, z.tm_year + 1900);
+  String r = httpsGetGovde("api.aladhan.com", yol, 4000);
+  int k = r.indexOf("\"hijri\"");
+  if (k < 0) return "";
+  String seg = r.substring(k);
+  int g = seg.indexOf("\"gregorian\"");
+  if (g > 0) seg = seg.substring(0, g);
+  String gun = degerBul(seg, "day");
+  String ay = sayiBul(seg, "number");
+  String yil = degerBul(seg, "year");
+  if (gun.length() == 0 || ay.length() == 0) return "";
+  const char* adlar[] = {"", "Muharrem", "Safer", "Rebiulevvel", "Rebiulahir", "Cemaziyelevvel", "Cemaziyelahir", "Recep", "Saban", "Ramazan", "Sevval", "Zilkade", "Zilhicce"};
+  int an = ay.toInt();
+  if (an < 1 || an > 12) return "";
+  return String("Bugun hicri takvimle ") + gun + " " + adlar[an] + " " + yil + ". Onemli dini gunler (hicri): Hicri yilbasi 1 Muharrem, Asure 10 Muharrem, Mevlid Kandili 11 Rebiulevvel gecesi (12'sine baglanan gece), "
+         "Uc aylarin baslangici 1 Recep, Regaib Kandili Recep'in ilk persembesini cumaya baglayan gece, Mirac Kandili 26 Recep gecesi, Berat Kandili 14 Saban gecesi, Ramazan baslangici 1 Ramazan, "
+         "Kadir Gecesi 26 Ramazan gecesi, Ramazan Bayrami 1-3 Sevval, Kurban Bayrami 10-13 Zilhicce, Arefe bayramdan bir onceki gun. "
+         "Bu hesap Diyanet takviminden bir gun sapabilir, kesin tarih icin Diyanet'e bakilmali.";
+}
+
+bool dinMi(const String& sd) {
+  const char* k[] = {"kandil", "bayram", "ramazan", "hicri", "mubarek", "dini gun", "asure", "kurban", "regaip", "berat", "kadir gece", "mirac", "mevlid", "uc aylar"};
+  for (int i = 0; i < 14; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+// ===== MOLA, PLAN, DINI GUNLER BITIS =====
+
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
 unsigned long sohbetBitis = 0;
@@ -2153,6 +2259,7 @@ void setup() {
   zamanBaslat();
   alarmYukle();
   webBaslat();
+  molaYukle();
   bildir(String("Finduk acildi. Surum ") + FW_SURUM + ". " + resetNedeni());
   Serial.println("Finduk: kablosuz guncelleme calisiyor.");
   guncellemeKontrol();
@@ -2289,12 +2396,14 @@ void loop() {
       String al = alarmListesi();
       ek += String("Kurulu alarmlar: ") + (al.length() ? al : String("(yok)")) + ". ";
     }
+    if (planMi(sd)) { String pl = planAl(); ek += String("Kayitli plan: ") + (pl.length() ? pl : String("(bos)")) + ". "; }
+    if (dinMi(sd)) ek += hicriBilgisi() + " ";
     if (haftalikMi(sd)) ek += haftalikHava() + " ";
     if (listeMi(sd)) ek += listeleriAl() + " ";
     if (ozetMi(sd)) {
       Serial.println("(Gun ozeti hazirlaniyor...)");
       String nb = namazBilgisi();
-      ek += String("GUN OZETI icin: ") + havaBilgisi() + " " + nb + " Notlar: " + notlariAl() + ". Alarmlar: " + alarmListesi() + ". " + listeleriAl() + " ";
+      ek += String("GUN OZETI icin: ") + havaBilgisi() + " " + nb + " Plan: " + planAl() + ". Notlar: " + notlariAl() + ". Alarmlar: " + alarmListesi() + ". " + listeleriAl() + " ";
     }
     if (ek.length() > 0) bilgi = (bilgi.length() > 0) ? bilgi + " " + ek : ek;
   }
