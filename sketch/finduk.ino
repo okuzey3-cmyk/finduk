@@ -10,6 +10,8 @@
 #include <Preferences.h>
 #include <HTTPClient.h>
 #include <Update.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
 
 // Surum numarasini GitHub derlerken otomatik yazar (elle degistirme)
 #ifndef FW_SURUM
@@ -91,7 +93,8 @@ Adafruit_SSD1306 display(128, 64, &Wire, -1);
 const int ESIK = 3000;        // konusma algilama esigi
 const int ESIK_UYKU = 5000;   // uyurken uyandirma esigi (daha yuksek ses gerekir)
 const unsigned long UYKU_SURE = 60000;   // bu kadar sessizlikten sonra uyur (ms)
-const int SES_YUZDE = 45;     // hoparlor sesi (1-100)
+const int SES_YUZDE = 45;     // hoparlor sesi (varsayilan, 1-100)
+volatile int gSesAyar = SES_YUZDE;   // telefondan degistirilebilir
 const int SR = 16000;
 const int MAX_SANIYE = 5;                  // en uzun kayit (saniye)
 const int N_MAX = SR * MAX_SANIYE;
@@ -938,7 +941,7 @@ String claudeCevapla(const String& soru, const String& bilgi) {
   if (zy.length() > 0) sistem += String(" Su anki tarih ve saat (Istanbul): ") + zy + ".";
   { String hf = satirlariAl("hafiza"); if (hf.length()) sistem += String(" Kullanici hakkinda hafizandaki bilgiler: ") + hf + ".";
     String kt = nvsOku("kisilik"); if (kt.length()) sistem += String(" Konusma tarzin: ") + kt + ".";
-    if (sesYuzdeSimdi() < SES_YUZDE) sistem += " Gece oldu, sakin ve kisa konus."; }
+    if (sesYuzdeSimdi() < gSesAyar) sistem += " Gece oldu, sakin ve kisa konus."; }
   if (bilgi.length() > 0) {
     sistem += " ASAGIDA INTERNETTEN ALINMIS GUNCEL BILGI VAR. Cevabini buna dayandir. Haber ise en fazla 3 basligi kisa kisa soyle, hava ise sicakligi ve durumu soyle. Bilgi: " + bilgi;
   }
@@ -1581,13 +1584,14 @@ String listeleriAl() {
 
 // Gece sessiz saat: 23:00-07:00 arasi ses kisik
 int sesYuzdeSimdi() {
+  int v = gSesAyar;
   long t = simdiEpoch();
-  if (t == 0) return SES_YUZDE;
+  if (t == 0) return v;
   time_t tt = (time_t)t;
   struct tm z;
   localtime_r(&tt, &z);
-  if (z.tm_hour >= 23 || z.tm_hour < 7) return SES_YUZDE / 2 > 8 ? SES_YUZDE / 2 : 8;
-  return SES_YUZDE;
+  if (z.tm_hour >= 23 || z.tm_hour < 7) return v / 2 > 8 ? v / 2 : 8;
+  return v;
 }
 
 bool listeMi(const String& sd) {
@@ -1738,6 +1742,105 @@ bool macMi(const String& sd) {
   return false;
 }
 // ===== TRAFIK, MAC BITIS =====
+
+// ===== TELEFON AYAR SAYFASI, BILDIRIM BASLA =====
+WebServer webSunucu(80);
+
+String htmlKacir(String m) {
+  m.replace("&", "&amp;");
+  m.replace("<", "&lt;");
+  m.replace(">", "&gt;");
+  return m;
+}
+
+String resetNedeni() {
+  esp_reset_reason_t r = esp_reset_reason();
+  switch (r) {
+    case ESP_RST_POWERON: return "normal acilis (fis takildi)";
+    case ESP_RST_SW: return "yazilim yeniden baslatti (guncelleme)";
+    case ESP_RST_PANIC: return "HATA: program coktu";
+    case ESP_RST_INT_WDT: case ESP_RST_TASK_WDT: case ESP_RST_WDT: return "HATA: program takildi (watchdog)";
+    case ESP_RST_BROWNOUT: return "HATA: voltaj dustu, guc kaynagi zayif";
+    default: return "diger";
+  }
+}
+
+// Telefona bildirim (ntfy uygulamasinda <konu>-robot kanalini takip et)
+void bildir(const String& mesaj) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(6000);
+  if (!http.begin(c, String("https://ntfy.sh/") + SINEMA_KONU + "-robot")) return;
+  http.addHeader("Content-Type", "text/plain; charset=utf-8");
+  http.addHeader("Title", "Finduk");
+  int kod = http.POST((uint8_t*)mesaj.c_str(), mesaj.length());
+  Serial.println(String("Bildirim: ") + mesaj + " -> HTTP " + kod);
+  http.end();
+}
+
+void webAna() {
+  String h = "<!doctype html><html><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+             "<title>Finduk</title><style>body{font-family:-apple-system,sans-serif;margin:16px;max-width:520px}"
+             "h2{margin:18px 0 6px}input,select,button{font-size:18px;padding:8px;margin:4px 0}"
+             "button{background:#222;color:#fff;border:0;border-radius:8px}.k{background:#eee;padding:8px;border-radius:8px;font-size:15px}"
+             "</style></head><body><h1>Finduk</h1>";
+  h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
+  h += "<h2>Ses seviyesi</h2><form action=/ayar><input type=range name=ses min=10 max=90 value=" + String((int)gSesAyar) + " style='width:100%'><button>Kaydet</button></form>";
+  h += "<h2>Konusma tarzi</h2><form action=/ayar><select name=tarz><option>samimi</option><option>esprili</option><option>ciddi</option><option>sakin</option></select><button>Kaydet</button></form>";
+  h += String("<p>Su an: ") + htmlKacir(nvsOku("kisilik")) + "</p>";
+  h += "<h2>Hafiza</h2><div class=k>" + htmlKacir(satirlariAl("hafiza")) + "</div><form action=/sil><input type=hidden name=ne value=hafiza><button>Hafizayi sil</button></form>";
+  h += "<h2>Notlar</h2><div class=k>" + htmlKacir(notlariAl()) + "</div><form action=/sil><input type=hidden name=ne value=not><button>Notlari sil</button></form>";
+  h += "<h2>Listeler</h2><div class=k>" + htmlKacir(listeleriAl()) + "</div><form action=/sil><input type=hidden name=ne value=liste><button>Listeleri sil</button></form>";
+  h += "<h2>Alarmlar</h2><div class=k>" + htmlKacir(alarmListesi()) + "</div><form action=/sil><input type=hidden name=ne value=alarm><button>Alarmlari sil</button></form>";
+  h += "</body></html>";
+  webSunucu.send(200, "text/html; charset=utf-8", h);
+}
+
+void webAyar() {
+  if (webSunucu.hasArg("ses")) {
+    int v = webSunucu.arg("ses").toInt();
+    if (v < 10) v = 10;
+    if (v > 90) v = 90;
+    gSesAyar = v;
+    nvsYaz("ses", String(v));
+  }
+  if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  webSunucu.sendHeader("Location", "/");
+  webSunucu.send(303);
+}
+
+void webSil() {
+  String ne = webSunucu.arg("ne");
+  if (ne == "hafiza") nvsYaz("hafiza", "");
+  else if (ne == "not") notTemizle();
+  else if (ne == "liste") { nvsYaz("l_alis", ""); nvsYaz("l_yap", ""); }
+  else if (ne == "alarm") alarmTemizle();
+  webSunucu.sendHeader("Location", "/");
+  webSunucu.send(303);
+}
+
+void webGorevi(void* p) {
+  while (true) {
+    webSunucu.handleClient();
+    vTaskDelay(8 / portTICK_PERIOD_MS);
+  }
+}
+
+void webBaslat() {
+  if (WiFi.status() != WL_CONNECTED) return;
+  String sv = nvsOku("ses");
+  if (sv.length() > 0) { int v = sv.toInt(); if (v >= 10 && v <= 90) gSesAyar = v; }
+  MDNS.begin("finduk");
+  webSunucu.on("/", webAna);
+  webSunucu.on("/ayar", webAyar);
+  webSunucu.on("/sil", webSil);
+  webSunucu.begin();
+  xTaskCreate(webGorevi, "web", 8192, NULL, 1, NULL);
+  Serial.println(String("Ayar sayfasi: http://finduk.local veya http://") + WiFi.localIP().toString());
+}
+// ===== TELEFON AYAR SAYFASI, BILDIRIM BITIS =====
 
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
@@ -2049,6 +2152,8 @@ void setup() {
   wifiBaglan();
   zamanBaslat();
   alarmYukle();
+  webBaslat();
+  bildir(String("Finduk acildi. Surum ") + FW_SURUM + ". " + resetNedeni());
   Serial.println("Finduk: kablosuz guncelleme calisiyor.");
   guncellemeKontrol();
 }
