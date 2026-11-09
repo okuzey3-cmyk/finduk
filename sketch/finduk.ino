@@ -42,7 +42,12 @@ const char* KISILIK =
   "Demet'in Sinema Odasi adli film uygulamasini da kontrol edebilirsin. Kullanici istediginde cevabinin SONUNA, konusma metninden sonra, koseli parantez icinde komut yaz: [sinema:komut|ayrinti]. "
   "Komutlar: sekme|kesfet veya kadife veya yakinda veya sahne veya rafim; ara|film adi (sadece arar); ac|film adi (arar ve ilk sonucun biletini acar, ikinci sonuc icin ac|film adi|2); bilet (rastgele film bileti cek); zarf (surpriz zarf); zarfac; zarfdegis; ruh|aglamak veya gulmek veya gerilmek veya dusunmek veya fon; sec|1 (listedeki adayi sec); favori; izlerim; izledim; puanla|8|kisa not (izlendi olarak puanlar, 1-10 arasi); fragman; raf|fav veya izlenecek veya izlenen; rafcek; kadife|mesaj (uygulamanin sohbet asistanina yaz); "
   "filtre|alan=deger (alanlar: kategori film veya dizi veya turk veya yabanci, tur, sure, kimle aile veya cocuk, platform, yil recent veya 2020 veya 2010 veya 2000 veya 1990 veya 1980 veya old, puan 6 veya 7 veya 8; birden fazlasi icin ; ile ayir ornek filtre|tur=Komedi;yil=2010); filtretemizle; profil|demet veya oguzhan; yakindasec|1 (Yakinda ekranindaki n. filmi acar); ajandaac|1 (ajandadaki n. satiri acar); sahnesec|Ankara veya Izmir veya konser veya tiyatro (Sahne ekraninda sehir ya da tur secer); geri; kapat; kaydir|asagi veya yukari; yenile; dugme|ekrandaki dugmenin yazisi. "
-  "Birden fazla komutu art arda yazabilirsin. Komut kullandiysan cevapta ne yaptigini kisaca soyle. Komutu kullanici istemedikce kullanma.";
+  "Birden fazla komutu art arda yazabilirsin. Komut kullandiysan cevapta ne yaptigini kisaca soyle. Komutu kullanici istemedikce kullanma. "
+  "Saat, alarm ve not isleri de yaparsin. Su anki saat ve tarih sana verilir. Cevabinin sonuna su komutlari yazabilirsin: "
+  "[zamanlayici:dakika|mesaj] ornek [zamanlayici:20|cay demlendi]; [alarm:SS:DD|mesaj] ornek [alarm:07:30|kalk]; her gun tekrar icin [alarm:07:30|kalk|her gun]; [alarmsil:hepsi] tum alarmlari siler; "
+  "[not:metin] bir seyi deftere yazar; [notsil:hepsi] notlari siler. Kullanicinin kayitli notlari ve alarmlari sana verilirse onlara gore cevap ver. Komut kullandiysan ne yaptigini kisaca soyle. "
+  "Namaz vakti sorulursa sana verilen vakitleri kullan, vakit icin hatirlatma istenirse alarm kur. "
+  "Oyun istenirse (bilmece, kelime zinciri, sayi tahmini, yirmi soru, kelime tahmini) oyna, puani say, cevaplari kisa tut.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -673,6 +678,7 @@ bool bekleSes(unsigned long zamanAsimi, int esik) {
   unsigned long bas = millis();
   while (true) {
     if (zamanAsimi > 0 && millis() - bas > zamanAsimi) return false;
+    if (alarmVadesiGeldi()) return false;
     i2s_read(I2S_NUM_0, buf, sizeof(buf), &got, portMAX_DELAY);
     int n = got / 4;
     if (n <= 0) continue;
@@ -876,6 +882,8 @@ String claudeCevapla(const String& soru, const String& bilgi) {
   mesajlar += String("{\"role\":\"user\",\"content\":\"") + jsonKacis(soru) + "\"}]";
 
   String sistem = String(KISILIK);
+  String zy = zamanYazi();
+  if (zy.length() > 0) sistem += String(" Su anki tarih ve saat (Istanbul): ") + zy + ".";
   if (bilgi.length() > 0) {
     sistem += " ASAGIDA INTERNETTEN ALINMIS GUNCEL BILGI VAR. Cevabini buna dayandir. Haber ise en fazla 3 basligi kisa kisa soyle, hava ise sicakligi ve durumu soyle. Bilgi: " + bilgi;
   }
@@ -1077,23 +1085,351 @@ bool sinemaMi(const String& sd) {
   return false;
 }
 
-// Cevaptaki [sinema:...] komutlarini ayiklar, metinden siler. Kac komut bulundugunu dondurur.
+// Cevaptaki [sinema:..] [alarm:..] [not:..] gibi komut etiketlerini ayiklar, metinden siler. Kac komut bulundugunu dondurur.
 int komutlariAyikla(String& c, String* liste, int maks) {
   int n = 0;
+  int bas = 0;
   while (true) {
-    int a = c.indexOf("[sinema:");
+    int a = c.indexOf('[', bas);
     if (a < 0) break;
     int b = c.indexOf(']', a);
-    if (b < 0) { c = c.substring(0, a); break; }
-    String k = c.substring(a + 8, b);
-    k.trim();
-    if (n < maks && k.length() > 0) liste[n++] = k;
-    c.remove(a, b - a + 1);
+    if (b < 0) break;
+    int k = c.indexOf(':', a);
+    if (k < 0 || k > b) { bas = a + 1; continue; }
+    String ad = c.substring(a + 1, k);
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil") {
+      String icerik = c.substring(a + 1, b);
+      icerik.trim();
+      if (n < maks) liste[n++] = icerik;
+      c.remove(a, b - a + 1);
+      bas = a;
+    } else {
+      bas = a + 1;
+    }
   }
   c.trim();
   return n;
 }
 // ===== SINEMA ODASI KONTROLU BITIS =====
+
+// ===== ZAMAN, ALARM, NOT, NAMAZ BASLA =====
+const int ALARM_MAX = 5;
+long aEpoch[ALARM_MAX];
+bool aTekrar[ALARM_MAX];
+String aMsj[ALARM_MAX];
+int gSonSelamGun = -1;
+
+long simdiEpoch() {
+  long t = (long)time(nullptr);
+  return (t > 1700000000L) ? t : 0;
+}
+
+String zamanYazi() {
+  long t = simdiEpoch();
+  if (t == 0) return "";
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  const char* gun[] = {"Pazar", "Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi"};
+  const char* ay[] = {"Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"};
+  char b[80];
+  snprintf(b, sizeof(b), "%d %s %d %s saat %02d:%02d", z.tm_mday, ay[z.tm_mon], z.tm_year + 1900, gun[z.tm_wday], z.tm_hour, z.tm_min);
+  return String(b);
+}
+
+void zamanBaslat() {
+  configTzTime("TRT-3", "pool.ntp.org", "time.google.com");   // Istanbul UTC+3
+  for (int i = 0; i < 16 && simdiEpoch() == 0; i++) delay(500);
+  Serial.println(simdiEpoch() ? String("Saat: ") + zamanYazi() : String("(Saat henuz alinamadi)"));
+}
+
+void alarmKaydet() {
+  String s;
+  for (int i = 0; i < ALARM_MAX; i++) {
+    if (aEpoch[i] > 0) s += String(aEpoch[i]) + "|" + (aTekrar[i] ? "1" : "0") + "|" + aMsj[i] + "\n";
+  }
+  tercih.begin("finduk", false);
+  tercih.putString("alarmlar", s);
+  tercih.end();
+}
+
+void alarmYukle() {
+  for (int i = 0; i < ALARM_MAX; i++) { aEpoch[i] = 0; aTekrar[i] = false; aMsj[i] = ""; }
+  tercih.begin("finduk", false);
+  String s = tercih.getString("alarmlar", "");
+  tercih.end();
+  int n = 0;
+  int bas = 0;
+  while (bas < (int)s.length() && n < ALARM_MAX) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    int p1 = satir.indexOf('|');
+    int p2 = satir.indexOf('|', p1 + 1);
+    if (p1 < 0 || p2 < 0) continue;
+    aEpoch[n] = satir.substring(0, p1).toInt();
+    aTekrar[n] = satir.substring(p1 + 1, p2) == "1";
+    aMsj[n] = satir.substring(p2 + 1);
+    n++;
+  }
+}
+
+String temizMetin(String m, int maks) {
+  m.replace("|", " ");
+  m.replace("\n", " ");
+  m.trim();
+  if ((int)m.length() > maks) m = m.substring(0, maks);
+  return m;
+}
+
+void alarmEkle(long epoch, bool tekrar, const String& msj) {
+  int yer = -1;
+  for (int i = 0; i < ALARM_MAX; i++) if (aEpoch[i] == 0) { yer = i; break; }
+  if (yer < 0) {                         // dolu: en eskiyi at
+    for (int i = 1; i < ALARM_MAX; i++) { aEpoch[i - 1] = aEpoch[i]; aTekrar[i - 1] = aTekrar[i]; aMsj[i - 1] = aMsj[i]; }
+    yer = ALARM_MAX - 1;
+  }
+  aEpoch[yer] = epoch;
+  aTekrar[yer] = tekrar;
+  aMsj[yer] = temizMetin(msj, 100);
+  alarmKaydet();
+  Serial.println(String("ALARM KURULDU: ") + (epoch - simdiEpoch()) + " sn sonra, mesaj: " + aMsj[yer]);
+}
+
+void zamanlayiciKur(const String& ar) {
+  int p = ar.indexOf('|');
+  int dk = ar.substring(0, p < 0 ? ar.length() : p).toInt();
+  String m = (p < 0) ? String("") : ar.substring(p + 1);
+  long now = simdiEpoch();
+  if (dk <= 0 || dk > 1440 || now == 0) { Serial.println("(Zamanlayici kurulamadi)"); return; }
+  alarmEkle(now + dk * 60L, false, m);
+}
+
+void alarmKur(const String& ar) {
+  int p1 = ar.indexOf('|');
+  String z = (p1 < 0) ? ar : ar.substring(0, p1);
+  String rest = (p1 < 0) ? String("") : ar.substring(p1 + 1);
+  int c = z.indexOf(':');
+  long now = simdiEpoch();
+  if (c < 0 || now == 0) { Serial.println("(Alarm kurulamadi)"); return; }
+  int sa = z.substring(0, c).toInt();
+  int dk = z.substring(c + 1).toInt();
+  if (sa < 0 || sa > 23 || dk < 0 || dk > 59) { Serial.println("(Alarm saati gecersiz)"); return; }
+  bool tekrar = rest.indexOf("her gun") >= 0;
+  String m = rest;
+  int p2 = m.indexOf('|');
+  if (p2 >= 0) m = m.substring(0, p2);
+  if (m.indexOf("her gun") >= 0) m = "";
+  time_t tt = (time_t)now;
+  struct tm zz;
+  localtime_r(&tt, &zz);
+  zz.tm_hour = sa; zz.tm_min = dk; zz.tm_sec = 0;
+  long hedef = (long)mktime(&zz);
+  if (hedef <= now) hedef += 86400L;
+  alarmEkle(hedef, tekrar, m);
+}
+
+void alarmTemizle() {
+  for (int i = 0; i < ALARM_MAX; i++) { aEpoch[i] = 0; aTekrar[i] = false; aMsj[i] = ""; }
+  alarmKaydet();
+  Serial.println("(Alarmlar silindi)");
+}
+
+String alarmListesi() {
+  String o;
+  for (int i = 0; i < ALARM_MAX; i++) {
+    if (aEpoch[i] <= 0) continue;
+    time_t tt = (time_t)aEpoch[i];
+    struct tm z;
+    localtime_r(&tt, &z);
+    char b[24];
+    snprintf(b, sizeof(b), "%02d:%02d", z.tm_hour, z.tm_min);
+    o += String(b) + (aTekrar[i] ? " (her gun)" : "") + (aMsj[i].length() ? String(" ") + aMsj[i] : String("")) + "; ";
+  }
+  return o;
+}
+
+bool alarmVadesiGeldi() {
+  long now = simdiEpoch();
+  if (now == 0) return false;
+  for (int i = 0; i < ALARM_MAX; i++) if (aEpoch[i] > 0 && now >= aEpoch[i]) return true;
+  return false;
+}
+
+// Kisa sinus bip sesi (alarm icin)
+void bip(int hz, int ms) {
+  static int16_t b[256];
+  int toplam = 24000 * ms / 1000;
+  int yazilan = 0;
+  float faz = 0;
+  float adim = 2.0f * 3.14159265f * hz / 24000.0f;
+  while (yazilan < toplam) {
+    int n = toplam - yazilan;
+    if (n > 256) n = 256;
+    for (int i = 0; i < n; i++) {
+      int k = yazilan + i;
+      float zarf = 1.0f;
+      if (k < 200) zarf = k / 200.0f;
+      if (toplam - k < 200) zarf = (toplam - k) / 200.0f;
+      b[i] = (int16_t)(sinf(faz) * 9000.0f * zarf * SES_YUZDE / 100.0f);
+      faz += adim;
+    }
+    size_t w = 0;
+    i2s_write(I2S_NUM_1, b, n * 2, &w, portMAX_DELAY);
+    yazilan += n;
+  }
+}
+
+void sus(int ms) {
+  static int16_t b[256];
+  memset(b, 0, sizeof(b));
+  int toplam = 24000 * ms / 1000;
+  while (toplam > 0) {
+    int n = toplam > 256 ? 256 : toplam;
+    size_t w = 0;
+    i2s_write(I2S_NUM_1, b, n * 2, &w, portMAX_DELAY);
+    toplam -= n;
+  }
+}
+
+// Vadesi gelen alarm varsa caldirir. Caldiysa true doner.
+bool alarmCal() {
+  long now = simdiEpoch();
+  if (now == 0) return false;
+  for (int i = 0; i < ALARM_MAX; i++) {
+    if (aEpoch[i] <= 0 || now < aEpoch[i]) continue;
+    String m = aMsj[i];
+    long gec = now - aEpoch[i];
+    if (aTekrar[i]) {
+      while (aEpoch[i] <= now) aEpoch[i] += 86400L;
+    } else {
+      aEpoch[i] = 0;
+    }
+    alarmKaydet();
+    if (gec > 600) continue;             // robot kapaliyken kacan alarm, calma
+    Serial.println(String("ALARM CALIYOR: ") + m);
+    gUyku = false;
+    gMood = M_MUTLU;
+    gMoodBitis = millis() + 5000;
+    gDurum = D_KONUS;
+    i2s_set_sample_rates(I2S_NUM_1, 24000);
+    for (int r = 0; r < 3; r++) { bip(880, 160); sus(90); bip(1175, 160); sus(140); }
+    sus(300);
+    if (WiFi.status() == WL_CONNECTED) konus(m.length() ? String("Hatirlatma. ") + m : String("Zamanlayici doldu!"));
+    gDurum = D_BOSTA;
+    return true;
+  }
+  return false;
+}
+
+// Notlar (NVS'de, en fazla 10)
+void notEkle(const String& metin) {
+  String m = temizMetin(metin, 140);
+  if (m.length() == 0) return;
+  tercih.begin("finduk", false);
+  String s = tercih.getString("notlar", "");
+  s += m + "\n";
+  int say = 0;
+  for (unsigned int i = 0; i < s.length(); i++) if (s[i] == '\n') say++;
+  while (say > 10) {
+    int e = s.indexOf('\n');
+    s = s.substring(e + 1);
+    say--;
+  }
+  tercih.putString("notlar", s);
+  tercih.end();
+  Serial.println(String("NOT KAYDEDILDI: ") + m);
+}
+
+void notTemizle() {
+  tercih.begin("finduk", false);
+  tercih.putString("notlar", "");
+  tercih.end();
+  Serial.println("(Notlar silindi)");
+}
+
+String notlariAl() {
+  tercih.begin("finduk", false);
+  String s = tercih.getString("notlar", "");
+  tercih.end();
+  s.replace("\n", "; ");
+  return s;
+}
+
+// Diyanet vakitleri (Aladhan, yontem 13), Istanbul
+String namazBilgisi() {
+  String r = httpsGetGovde("api.aladhan.com", "/v1/timingsByCity?city=Istanbul&country=Turkey&method=13", 6000);
+  String im = degerBul(r, "Imsak");
+  String gu = degerBul(r, "Sunrise");
+  String og = degerBul(r, "Dhuhr");
+  String ik = degerBul(r, "Asr");
+  String ak = degerBul(r, "Maghrib");
+  String ya = degerBul(r, "Isha");
+  if (im.length() < 5 || ak.length() < 5) return "";
+  return String("Bugun Istanbul icin Diyanet vakitleri: Imsak ") + im.substring(0, 5) + ", Gunes " + gu.substring(0, 5) +
+         ", Ogle " + og.substring(0, 5) + ", Ikindi " + ik.substring(0, 5) + ", Aksam " + ak.substring(0, 5) + ", Yatsi " + ya.substring(0, 5) + ".";
+}
+
+bool namazMi(const String& sd) {
+  const char* k[] = {"namaz", "ezan", "imsak", "iftar", "sahur", "ikindi", "yatsi", "vakit"};
+  for (int i = 0; i < 8; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+bool notMi(const String& sd) {
+  const char* k[] = {"not", "hatirla", "unutma", "defter"};
+  for (int i = 0; i < 4; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+bool alarmMi(const String& sd) {
+  const char* k[] = {"alarm", "zamanlayici", "hatirlat", "dakika sonra", "saat sonra", "uyandir", "sayac"};
+  for (int i = 0; i < 7; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+// Komut etiketini isler
+void komutIsle(const String& k) {
+  int c = k.indexOf(':');
+  if (c < 0) return;
+  String ad = k.substring(0, c);
+  String ar = k.substring(c + 1);
+  ar.trim();
+  if (ad == "sinema") sinemaGonder(ar);
+  else if (ad == "zamanlayici") zamanlayiciKur(ar);
+  else if (ad == "alarm") alarmKur(ar);
+  else if (ad == "alarmsil") alarmTemizle();
+  else if (ad == "not") notEkle(ar);
+  else if (ad == "notsil") notTemizle();
+}
+
+// Sabah ilk uyanista hava ve haber ozetli selam
+void sabahSelami() {
+  long now = simdiEpoch();
+  if (now == 0 || WiFi.status() != WL_CONNECTED) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 5 || z.tm_hour >= 11 || z.tm_yday == gSonSelamGun) return;
+  gSonSelamGun = z.tm_yday;
+  gDurum = D_DUSUN;
+  String bilgi = String("Sabah selami ver: gunaydin de, havayi ve gunun bir iki onemli haberini cok kisa soyle. ") + havaBilgisi() + " " + haberBilgisi();
+  String ham = claudeCevapla("(Oguzhan az once uyandi, sabah selami ver)", bilgi);
+  String cevap = degerBul(ham, "text");
+  if (cevap.length() > 0) {
+    String tut[4];
+    komutlariAyikla(cevap, tut, 4);
+    int mood = moodCoz(cevap);
+    Serial.print("SABAH SELAMI: ");
+    Serial.println(cevap);
+    gMood = mood;
+    konus(cevap);
+    gMoodBitis = millis() + 2500;
+  }
+  gDurum = D_BOSTA;
+}
+// ===== ZAMAN, ALARM, NOT, NAMAZ BITIS =====
 
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
@@ -1403,6 +1739,8 @@ void setup() {
   miknrofonKur();
   hoparlorKur();
   wifiBaglan();
+  zamanBaslat();
+  alarmYukle();
   Serial.println("Finduk: kablosuz guncelleme calisiyor.");
   guncellemeKontrol();
 }
@@ -1414,15 +1752,18 @@ void loop() {
   if (gUyku) {
     Serial.println("Uyuyorum... (bir ses cikar, uyanayim)");
     if (!bekleSes(GUNCEL_ARALIK, ESIK_UYKU)) {
+      if (alarmCal()) return;
       guncellemeKontrol();      // uyurken yeni surum var mi diye bak
       return;
     }
     gUyku = false;
     Serial.println("Uyandim! Simdi konusabilirsin.");
     delay(1800);                 // uyanma animasyonu
+    sabahSelami();
     return;
   }
   if (!bekleSes(UYKU_SURE, ESIK)) {
+    if (alarmCal()) return;
     if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
     gUyku = true;
     Serial.println("Uykuya daliyorum...");
@@ -1481,6 +1822,11 @@ void loop() {
   String sd = sadelestir(duyulan);
   bool hv = havaMi(sd);
   bool hb = (!hv && haberMi(sd));
+  bool nm = (!hv && !hb && namazMi(sd));
+  if (nm) {
+    Serial.println("(Namaz vakitleri aliniyor...)");
+    bilgi = namazBilgisi();
+  }
   if (hv) {
     Serial.println("(Hava bilgisi aliniyor...)");
     bilgi = havaBilgisi();
@@ -1488,7 +1834,7 @@ void loop() {
     Serial.println("(Haberler aliniyor...)");
     bilgi = haberBilgisi();
   }
-  if ((hv || hb) && bilgi.length() == 0) {
+  if ((hv || hb || nm) && bilgi.length() == 0) {
     bilgi = "Veri su an cekilemedi. Kullaniciya su an bakamadigini kisaca soyle.";
     Serial.println("(Bilgi alinamadi)");
   } else if (bilgi.length() > 0) {
@@ -1496,7 +1842,7 @@ void loop() {
     Serial.println(bilgi);
   }
 
-  if (!hv && !hb && sinemaMi(sd)) {
+  if (!hv && !hb && !nm && sinemaMi(sd)) {
     String d = sinemaDurum();
     if (d.length() > 0) {
       bilgi = String("Demet'in Sinema Odasi uygulamasinin son bilinen ekrani: ") + d + " (Bu bilgi sadece durumu gosterir. Istenirse komutla kontrol edebilirsin.)";
@@ -1505,12 +1851,25 @@ void loop() {
     }
   }
 
+  {
+    String ek = "";
+    if (notMi(sd)) {
+      String nl = notlariAl();
+      ek += String("Kayitli notlar: ") + (nl.length() ? nl : String("(yok)")) + ". ";
+    }
+    if (alarmMi(sd)) {
+      String al = alarmListesi();
+      ek += String("Kurulu alarmlar: ") + (al.length() ? al : String("(yok)")) + ". ";
+    }
+    if (ek.length() > 0) bilgi = (bilgi.length() > 0) ? bilgi + " " + ek : ek;
+  }
+
   String ham = claudeCevapla(duyulan, bilgi);
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
     String hamCevap = cevap;          // etiketli hali hafiza icin
-    String komutlar[5];
-    int komutN = komutlariAyikla(cevap, komutlar, 5);
+    String komutlar[6];
+    int komutN = komutlariAyikla(cevap, komutlar, 6);
     int mood = moodCoz(cevap);        // etiketi ayiklar
     Serial.print("FINDUK (");
     Serial.print(mood);
@@ -1520,7 +1879,7 @@ void loop() {
     gMood = mood;
     konus(cevap);
     for (int i = 0; i < komutN; i++) {      // konusma bitince uygulamaya komutlari yolla
-      sinemaGonder(komutlar[i]);
+      komutIsle(komutlar[i]);
       delay(300);
     }
     gMoodBitis = millis() + 2500;
