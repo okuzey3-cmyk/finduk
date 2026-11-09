@@ -47,7 +47,13 @@ const char* KISILIK =
   "[zamanlayici:dakika|mesaj] ornek [zamanlayici:20|cay demlendi]; [alarm:SS:DD|mesaj] ornek [alarm:07:30|kalk]; her gun tekrar icin [alarm:07:30|kalk|her gun]; [alarmsil:hepsi] tum alarmlari siler; "
   "[not:metin] bir seyi deftere yazar; [notsil:hepsi] notlari siler. Kullanicinin kayitli notlari ve alarmlari sana verilirse onlara gore cevap ver. Komut kullandiysan ne yaptigini kisaca soyle. "
   "Namaz vakti sorulursa sana verilen vakitleri kullan, vakit icin hatirlatma istenirse alarm kur. "
-  "Oyun istenirse (bilmece, kelime zinciri, sayi tahmini, yirmi soru, kelime tahmini) oyna, puani say, cevaplari kisa tut.";
+  "Oyun istenirse (bilmece, kelime zinciri, sayi tahmini, yirmi soru, tabu, kim milyoner olmak ister, muzik tahmini) oyna, puani say, cevaplari kisa tut. "
+  "Yazi tura veya zar istenirse rastgele sec. Istenirse fikra, saka, masal, uyku oncesi sakin hikaye anlat, bugun tarihte ne oldu soylenirse bildigin gercek bir olayi anlat. "
+  "Pomodoro istenirse 25 dakikalik zamanlayici kur, bitince 5 dakikalik mola zamanlayicisi kur. Vardiya molasi hatirlatmasi icin alarm kur. Gun sonu sohbetinde bugun nasil gectigini sor. "
+  "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
+  "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
+  "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
+  "Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -884,6 +890,9 @@ String claudeCevapla(const String& soru, const String& bilgi) {
   String sistem = String(KISILIK);
   String zy = zamanYazi();
   if (zy.length() > 0) sistem += String(" Su anki tarih ve saat (Istanbul): ") + zy + ".";
+  { String hf = satirlariAl("hafiza"); if (hf.length()) sistem += String(" Kullanici hakkinda hafizandaki bilgiler: ") + hf + ".";
+    String kt = nvsOku("kisilik"); if (kt.length()) sistem += String(" Konusma tarzin: ") + kt + ".";
+    if (sesYuzdeSimdi() < SES_YUZDE) sistem += " Gece oldu, sakin ve kisa konus."; }
   if (bilgi.length() > 0) {
     sistem += " ASAGIDA INTERNETTEN ALINMIS GUNCEL BILGI VAR. Cevabini buna dayandir. Haber ise en fazla 3 basligi kisa kisa soyle, hava ise sicakligi ve durumu soyle. Bilgi: " + bilgi;
   }
@@ -1097,7 +1106,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1402,6 +1411,10 @@ void komutIsle(const String& k) {
   else if (ad == "alarmsil") alarmTemizle();
   else if (ad == "not") notEkle(ar);
   else if (ad == "notsil") notTemizle();
+  else if (ad == "hafiza") satirEkle("hafiza", ar, 30);
+  else if (ad == "hafizasil") { if (ar == "hepsi") nvsYaz("hafiza", ""); else satirSil("hafiza", ar); }
+  else if (ad == "liste") listeIsle(ar);
+  else if (ad == "kisilik") nvsYaz("kisilik", temizMetin(ar, 20));
 }
 
 // Sabah ilk uyanista hava ve haber ozetli selam
@@ -1430,6 +1443,108 @@ void sabahSelami() {
   gDurum = D_BOSTA;
 }
 // ===== ZAMAN, ALARM, NOT, NAMAZ BITIS =====
+
+// ===== HAFIZA, LISTE, TARZ BASLA =====
+String nvsOku(const char* anahtar) {
+  tercih.begin("finduk", false);
+  String v = tercih.getString(anahtar, "");
+  tercih.end();
+  return v;
+}
+
+void nvsYaz(const char* anahtar, const String& v) {
+  tercih.begin("finduk", false);
+  tercih.putString(anahtar, v);
+  tercih.end();
+}
+
+// satir satir tutulan liste: sona ekler, en fazla maks satir
+void satirEkle(const char* anahtar, const String& metin, int maks) {
+  String m = temizMetin(metin, 140);
+  if (m.length() == 0) return;
+  String s = nvsOku(anahtar);
+  if (s.indexOf(m + "\n") >= 0) return;
+  s += m + "\n";
+  int say = 0;
+  for (unsigned int i = 0; i < s.length(); i++) if (s[i] == '\n') say++;
+  while (say > maks) { s = s.substring(s.indexOf('\n') + 1); say--; }
+  nvsYaz(anahtar, s);
+}
+
+void satirSil(const char* anahtar, const String& parca) {
+  String s = nvsOku(anahtar);
+  String yeni = "";
+  int bas = 0;
+  String p = parca;
+  p.toLowerCase();
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    String k = satir;
+    k.toLowerCase();
+    if (p.length() > 0 && k.indexOf(p) >= 0) continue;
+    if (satir.length()) yeni += satir + "\n";
+  }
+  nvsYaz(anahtar, yeni);
+}
+
+String satirlariAl(const char* anahtar) {
+  String s = nvsOku(anahtar);
+  s.replace("\n", "; ");
+  return s;
+}
+
+const char* listeAnahtari(const String& ad) {
+  return (ad.indexOf("alis") >= 0 || ad.indexOf("market") >= 0) ? "l_alis" : "l_yap";
+}
+
+void listeIsle(const String& ar) {
+  int p1 = ar.indexOf('|');
+  if (p1 < 0) return;
+  String ad = ar.substring(0, p1);
+  String rest = ar.substring(p1 + 1);
+  int p2 = rest.indexOf('|');
+  String islem = (p2 < 0) ? rest : rest.substring(0, p2);
+  String metin = (p2 < 0) ? String("") : rest.substring(p2 + 1);
+  islem.trim();
+  const char* k = listeAnahtari(ad);
+  if (islem == "ekle") satirEkle(k, metin, 25);
+  else if (islem == "sil") satirSil(k, metin);
+  else if (islem == "temizle") nvsYaz(k, "");
+  Serial.println(String("LISTE ") + ad + " " + islem + " " + metin);
+}
+
+String listeleriAl() {
+  String a = satirlariAl("l_alis");
+  String y = satirlariAl("l_yap");
+  return String("Alisveris listesi: ") + (a.length() ? a : String("(bos)")) + ". Yapilacaklar: " + (y.length() ? y : String("(bos)")) + ".";
+}
+
+// Gece sessiz saat: 23:00-07:00 arasi ses kisik
+int sesYuzdeSimdi() {
+  long t = simdiEpoch();
+  if (t == 0) return SES_YUZDE;
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour >= 23 || z.tm_hour < 7) return SES_YUZDE / 2 > 8 ? SES_YUZDE / 2 : 8;
+  return SES_YUZDE;
+}
+
+bool listeMi(const String& sd) {
+  const char* k[] = {"liste", "alisveris", "yapilacak", "market", "gorev"};
+  for (int i = 0; i < 5; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+bool ozetMi(const String& sd) {
+  const char* k[] = {"gun ozeti", "bugun ne var", "bugun neler var", "gunun ozeti", "ozet ver", "gunaydin"};
+  for (int i = 0; i < 6; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+// ===== HAFIZA, LISTE, TARZ BITIS =====
 
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
@@ -1551,7 +1666,7 @@ void sesYaz() {
   }
   long toplamMutlak = 0;
   for (int i = 0; i < yaz_n / 2; i++) {
-    s[i] = (int16_t)(((int32_t)s[i] * (MAC_SES ? 0 : SES_YUZDE)) / 100);
+    s[i] = (int16_t)(((int32_t)s[i] * (MAC_SES ? 0 : sesYuzdeSimdi())) / 100);
     toplamMutlak += abs((int)s[i]);
   }
   // gozler icin ses seviyesi kaydi
@@ -1860,6 +1975,12 @@ void loop() {
     if (alarmMi(sd)) {
       String al = alarmListesi();
       ek += String("Kurulu alarmlar: ") + (al.length() ? al : String("(yok)")) + ". ";
+    }
+    if (listeMi(sd)) ek += listeleriAl() + " ";
+    if (ozetMi(sd)) {
+      Serial.println("(Gun ozeti hazirlaniyor...)");
+      String nb = namazBilgisi();
+      ek += String("GUN OZETI icin: ") + havaBilgisi() + " " + nb + " Notlar: " + notlariAl() + ". Alarmlar: " + alarmListesi() + ". " + listeleriAl() + " ";
     }
     if (ek.length() > 0) bilgi = (bilgi.length() > 0) ? bilgi + " " + ek : ek;
   }
