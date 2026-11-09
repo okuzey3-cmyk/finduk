@@ -55,7 +55,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -1155,7 +1155,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1479,6 +1479,10 @@ void komutIsle(const String& k) {
   else if (ad == "kisilik") nvsYaz("kisilik", temizMetin(ar, 20));
   else if (ad == "mola") molaKur(ar);
   else if (ad == "plan") satirEkle("plan", ar, 20);
+  else if (ad == "link") linkGonder(ar);
+  else if (ad == "telefon") bildir(ar);
+  else if (ad == "geri") geriSayimEkle(ar);
+  else if (ad == "gerisil") { if (ar == "hepsi") nvsYaz("geri", ""); else satirSil("geri", ar); }
   else if (ad == "plansil") { if (ar == "hepsi") nvsYaz("plan", ""); else satirSil("plan", ar); }
   else if (ad == "goz") {
     int z = 0; unsigned long sure = 8000;
@@ -1948,6 +1952,88 @@ bool dinMi(const String& sd) {
 }
 // ===== MOLA, PLAN, DINI GUNLER BITIS =====
 
+// ===== LINK, GERI SAYIM BASLA =====
+String urlKodla(const String& m) {
+  String o;
+  const char* h = "0123456789ABCDEF";
+  for (unsigned int i = 0; i < m.length(); i++) {
+    unsigned char ch = (unsigned char)m[i];
+    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) o += (char)ch;
+    else if (ch == ' ') o += '+';
+    else { o += '%'; o += h[ch >> 4]; o += h[ch & 15]; }
+  }
+  return o;
+}
+
+// Telefona tiklanabilir bildirim (ntfy Click basligi)
+void bildirLink(const String& baslik, const String& url) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(6000);
+  if (!http.begin(c, String("https://ntfy.sh/") + SINEMA_KONU + "-robot")) return;
+  http.addHeader("Content-Type", "text/plain; charset=utf-8");
+  http.addHeader("Title", "Finduk");
+  http.addHeader("Click", url);
+  String govde = baslik + " - dokununca acilir";
+  int kod = http.POST((uint8_t*)govde.c_str(), govde.length());
+  Serial.println(String("Link bildirimi: ") + url + " -> HTTP " + kod);
+  http.end();
+}
+
+// [link:trendyol|erkek kot pantolon] [link:hepsiburada|...] [link:amazon|...] [link:google|...]
+void linkGonder(const String& ar) {
+  int c = ar.indexOf('|');
+  if (c < 0) return;
+  String site = ar.substring(0, c);
+  String q = ar.substring(c + 1);
+  site.trim(); q.trim();
+  if (q.length() == 0) return;
+  String e = urlKodla(q);
+  String url;
+  if (site == "trendyol") url = String("https://www.trendyol.com/sr?q=") + e + "&sst=MOST_RATED";
+  else if (site == "hepsiburada") url = String("https://www.hepsiburada.com/ara?q=") + e + "&siralama=yorumsayisi";
+  else if (site == "amazon") url = String("https://www.amazon.com.tr/s?k=") + e + "&s=review-rank";
+  else url = String("https://www.google.com/search?q=") + e;
+  bildirLink(q, url);
+}
+
+// Geri sayim: satir bicimi "YYYY-AA-GG ad" ([geri:2027-02-16|ad] etiketindeki | kayitta bosluga doner)
+void geriSayimEkle(const String& ar) { satirEkle("geri", ar, 15); }
+
+String geriSayimlar() {
+  String liste = nvsOku("geri");
+  if (liste.length() == 0) return "Kayitli geri sayim yok.";
+  long now = simdiEpoch();
+  if (now == 0) return liste;
+  String sonuc;
+  int bas = 0;
+  while (bas < (int)liste.length()) {
+    int son = liste.indexOf('\n', bas);
+    if (son < 0) son = liste.length();
+    String satir = liste.substring(bas, son);
+    bas = son + 1;
+    satir.trim();
+    int c = 10;
+    if ((int)satir.length() < 12) continue;
+    struct tm t = {};
+    t.tm_year = satir.substring(0, 4).toInt() - 1900;
+    t.tm_mon = satir.substring(5, 7).toInt() - 1;
+    t.tm_mday = satir.substring(8, 10).toInt();
+    t.tm_hour = 12;
+    time_t hedef = mktime(&t);
+    long gun = (long)((hedef - (time_t)now) / 86400);
+    sonuc += satir.substring(c + 1) + ": " + (gun >= 0 ? String(gun) + " gun kaldi" : String(-gun) + " gun once oldu") + ". ";
+  }
+  return sonuc;
+}
+
+bool geriMi(const String& sd) {
+  return sd.indexOf("kac gun kaldi") >= 0 || sd.indexOf("ne kadar kaldi") >= 0 || sd.indexOf("geri sayim") >= 0 || sd.indexOf("kac gun var") >= 0;
+}
+// ===== LINK, GERI SAYIM BITIS =====
+
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
 unsigned long sohbetBitis = 0;
@@ -2396,6 +2482,7 @@ void loop() {
       String al = alarmListesi();
       ek += String("Kurulu alarmlar: ") + (al.length() ? al : String("(yok)")) + ". ";
     }
+    if (geriMi(sd)) ek += String("Geri sayimlar: ") + geriSayimlar() + " ";
     if (planMi(sd)) { String pl = planAl(); ek += String("Kayitli plan: ") + (pl.length() ? pl : String("(bos)")) + ". "; }
     if (dinMi(sd)) ek += hicriBilgisi() + " ";
     if (haftalikMi(sd)) ek += haftalikHava() + " ";
