@@ -41,7 +41,7 @@ const char* KISILIK =
   "Guncel bilgi (hava durumu, haberler) gerekirse sana ayrica verilir. Verilmediyse bilmedigini soyle ama asla internete bagli degilim deme. "
   "Demet'in Sinema Odasi adli film uygulamasini da kontrol edebilirsin. Kullanici istediginde cevabinin SONUNA, konusma metninden sonra, koseli parantez icinde komut yaz: [sinema:komut|ayrinti]. "
   "Komutlar: sekme|kesfet veya kadife veya yakinda veya sahne veya rafim; ara|film adi (sadece arar); ac|film adi (arar ve ilk sonucun biletini acar, ikinci sonuc icin ac|film adi|2); bilet (rastgele film bileti cek); zarf (surpriz zarf); zarfac; zarfdegis; ruh|aglamak veya gulmek veya gerilmek veya dusunmek veya fon; sec|1 (listedeki adayi sec); favori; izlerim; izledim; puanla|8|kisa not (izlendi olarak puanlar, 1-10 arasi); fragman; raf|fav veya izlenecek veya izlenen; rafcek; kadife|mesaj (uygulamanin sohbet asistanina yaz); "
-  "filtre|alan=deger (alanlar: kategori film veya dizi veya turk veya yabanci, tur, sure, kimle aile veya cocuk, platform, yil recent veya 2020 veya 2010 veya 2000 veya 1990 veya 1980 veya old, puan 6 veya 7 veya 8; birden fazlasi icin ; ile ayir ornek filtre|tur=Komedi;yil=2010); filtretemizle; profil|demet veya oguzhan; geri; kapat; kaydir|asagi veya yukari; yenile; dugme|ekrandaki dugmenin yazisi. "
+  "filtre|alan=deger (alanlar: kategori film veya dizi veya turk veya yabanci, tur, sure, kimle aile veya cocuk, platform, yil recent veya 2020 veya 2010 veya 2000 veya 1990 veya 1980 veya old, puan 6 veya 7 veya 8; birden fazlasi icin ; ile ayir ornek filtre|tur=Komedi;yil=2010); filtretemizle; profil|demet veya oguzhan; yakindasec|1 (Yakinda ekranindaki n. filmi acar); ajandaac|1 (ajandadaki n. satiri acar); sahnesec|Ankara veya Izmir veya konser veya tiyatro (Sahne ekraninda sehir ya da tur secer); geri; kapat; kaydir|asagi veya yukari; yenile; dugme|ekrandaki dugmenin yazisi. "
   "Birden fazla komutu art arda yazabilirsin. Komut kullandiysan cevapta ne yaptigini kisaca soyle. Komutu kullanici istemedikce kullanma.";
 
 // Mikrofon
@@ -1072,7 +1072,7 @@ String sinemaDurum() {
 }
 
 bool sinemaMi(const String& sd) {
-  const char* k[] = {"film", "bilet", "sinema", "dizi", "fragman", "zarf", "favori", "izle", "oyuncu", "puan", "raf", "kadife", "aday", "filtre", "ekran", "uygulama"};
+  const char* k[] = {"film", "bilet", "sinema", "dizi", "fragman", "zarf", "favori", "izle", "oyuncu", "puan", "raf", "kadife", "aday", "filtre", "ekran", "uygulama", "vizyon", "sahne", "ajanda", "yakinda"};
   for (int i = 0; i < 16; i++) if (sd.indexOf(k[i]) >= 0) return true;
   return false;
 }
