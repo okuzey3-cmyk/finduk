@@ -1609,6 +1609,79 @@ bool haftalikMi(const String& sd) {
 }
 // ===== FINANS, HAFTALIK HAVA BITIS =====
 
+// ===== TRAFIK, MAC BASLA =====
+// "anahtar": 45 veya "anahtar":"45.2" gibi degeri sayi olarak alir
+String gevsekSayi(const String& r, const char* anahtar) {
+  String ara = String("\"") + anahtar + "\"";
+  int k = r.indexOf(ara);
+  if (k < 0) return "";
+  int j = k + ara.length();
+  while (j < (int)r.length() && (r[j] == ' ' || r[j] == ':' || r[j] == '"')) j++;
+  String v;
+  while (j < (int)r.length() && (r[j] == '-' || r[j] == '.' || (r[j] >= '0' && r[j] <= '9'))) { v += r[j]; j++; }
+  return v;
+}
+
+String trafikBilgisi() {
+  String r = httpsGetGovde("tkmservices.ibb.gov.tr", "/web/api/TrafficData/v1/TrafficIndex_Sc1_Cont", 3000);
+  String t = gevsekSayi(r, "TI");
+  String av = gevsekSayi(r, "TI_Av");
+  String an = gevsekSayi(r, "TI_An");
+  if (t.length() == 0) return "";
+  String o = String("Istanbul trafik yogunlugu su an yuzde ") + (int)roundf(t.toFloat());
+  if (av.length() > 0) o += String(", Avrupa yakasi yuzde ") + (int)roundf(av.toFloat());
+  if (an.length() > 0) o += String(", Anadolu yakasi yuzde ") + (int)roundf(an.toFloat());
+  o += ". (Yuzde 0-30 akici, 30-60 orta, 60 ustu yogun.)";
+  return o;
+}
+
+bool trafikMi(const String& sd) {
+  const char* k[] = {"trafik", "yol durumu", "yollar nasil", "kopru"};
+  for (int i = 0; i < 4; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+// TheSportsDB (ucretsiz): Super Lig son ve siradaki maclar
+String macListesi(const char* yol, int en, const char* baslik) {
+  String r = httpsGetGovde("www.thesportsdb.com", yol, 14000);
+  if (r.length() < 50) return "";
+  String o = String(baslik) + ": ";
+  int bas = 0, say = 0;
+  while (say < en) {
+    int a = r.indexOf("{\"idEvent\"", bas);
+    if (a < 0) break;
+    int b = r.indexOf("{\"idEvent\"", a + 10);
+    String seg = (b < 0) ? r.substring(a) : r.substring(a, b);
+    bas = (b < 0) ? r.length() : b;
+    String ev = degerBul(seg, "strHomeTeam");
+    String dep = degerBul(seg, "strAwayTeam");
+    String tarih = degerBul(seg, "dateEvent");
+    if (ev.length() == 0 || dep.length() == 0) continue;
+    String sh = degerBul(seg, "intHomeScore");
+    String sa = degerBul(seg, "intAwayScore");
+    o += tarih + " " + ev;
+    if (sh.length() > 0 && sa.length() > 0) o += String(" ") + sh + "-" + sa + " ";
+    else o += " - ";
+    o += dep + "; ";
+    say++;
+  }
+  return say > 0 ? o : String("");
+}
+
+String macBilgisi() {
+  String a = macListesi("/api/v1/json/3/eventspastleague.php?id=4339", 8, "Super Lig son maclar");
+  String b = macListesi("/api/v1/json/3/eventsnextleague.php?id=4339", 6, "Super Lig siradaki maclar");
+  if (a.length() == 0 && b.length() == 0) return "";
+  return a + " " + b + " Bu liste eksik olabilir, emin olmadigin skoru kesin soyleme.";
+}
+
+bool macMi(const String& sd) {
+  const char* k[] = {"mac ", "maci", "maclar", "skor", "super lig", "galatasaray", "fenerbahce", "besiktas", "trabzonspor", "kac kac", "puan durumu"};
+  for (int i = 0; i < 11; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+// ===== TRAFIK, MAC BITIS =====
+
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
 unsigned long sohbetBitis = 0;
@@ -2010,6 +2083,16 @@ void loop() {
     Serial.println("(Kurlar aliniyor...)");
     bilgi = finansBilgisi();
   }
+  bool tr = (!hv && !hb && !nm && !fn && trafikMi(sd));
+  if (tr) {
+    Serial.println("(Trafik bilgisi aliniyor...)");
+    bilgi = trafikBilgisi();
+  }
+  bool mc = (!hv && !hb && !nm && !fn && !tr && macMi(sd));
+  if (mc) {
+    Serial.println("(Mac bilgisi aliniyor...)");
+    bilgi = macBilgisi();
+  }
   if (hv) {
     Serial.println("(Hava bilgisi aliniyor...)");
     bilgi = havaBilgisi();
@@ -2017,7 +2100,7 @@ void loop() {
     Serial.println("(Haberler aliniyor...)");
     bilgi = haberBilgisi();
   }
-  if ((hv || hb || nm) && bilgi.length() == 0) {
+  if ((hv || hb || nm || fn || tr || mc) && bilgi.length() == 0) {
     bilgi = "Veri su an cekilemedi. Kullaniciya su an bakamadigini kisaca soyle.";
     Serial.println("(Bilgi alinamadi)");
   } else if (bilgi.length() > 0) {
@@ -2025,7 +2108,7 @@ void loop() {
     Serial.println(bilgi);
   }
 
-  if (!hv && !hb && !nm && sinemaMi(sd)) {
+  if (!hv && !hb && !nm && !fn && !tr && !mc && sinemaMi(sd)) {
     String d = sinemaDurum();
     if (d.length() > 0) {
       bilgi = String("Demet'in Sinema Odasi uygulamasinin son bilinen ekrani: ") + d + " (Bu bilgi sadece durumu gosterir. Istenirse komutla kontrol edebilirsin.)";
