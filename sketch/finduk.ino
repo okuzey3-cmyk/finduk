@@ -53,7 +53,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -1546,6 +1546,69 @@ bool ozetMi(const String& sd) {
 }
 // ===== HAFIZA, LISTE, TARZ BITIS =====
 
+// ===== FINANS, HAFTALIK HAVA BASLA =====
+String finansBilgisi() {
+  String r = httpsGetGovde("open.er-api.com", "/v6/latest/USD", 6000);
+  String t = sayiBul(r, "TRY");
+  String e = sayiBul(r, "EUR");
+  if (t.length() == 0) return "";
+  float usd = t.toFloat();
+  String o = String("Guncel kurlar: 1 dolar ") + String(usd, 2) + " lira";
+  if (e.length() > 0 && e.toFloat() > 0) o += String(", 1 euro ") + String(usd / e.toFloat(), 2) + " lira";
+  String g = httpsGetGovde("api.gold-api.com", "/price/XAU", 6000);
+  String gp = sayiBul(g, "price");
+  if (gp.length() > 0) o += String(", gram altin yaklasik ") + (int)roundf(gp.toFloat() / 31.1035f * usd) + " lira";
+  o += ". Bunlar piyasa verisi, yatirim tavsiyesi degil.";
+  return o;
+}
+
+bool finansMi(const String& sd) {
+  const char* k[] = {"dolar", "euro", "kur ", "altin", "doviz", "borsa", "bitcoin"};
+  for (int i = 0; i < 7; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+
+// "temperature_2m_max":[a,b,...] dizisinden n. degeri alir
+String diziDeger(const String& r, const char* anahtar, int n) {
+  String ara = String("\"") + anahtar + "\":[";
+  int k = r.indexOf(ara);
+  if (k < 0) return "";
+  int j = k + ara.length();
+  for (int i = 0; i < n; i++) {
+    j = r.indexOf(',', j);
+    if (j < 0) return "";
+    j++;
+  }
+  String v;
+  while (j < (int)r.length() && r[j] != ',' && r[j] != ']') { v += r[j]; j++; }
+  return v;
+}
+
+String haftalikHava() {
+  String r = httpsGetGovde("api.open-meteo.com",
+      "/v1/forecast?latitude=41.01&longitude=28.97&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=5&timezone=auto", 4000);
+  String o = "Istanbul onumuzdeki gunler: ";
+  const char* gun[] = {"bugun", "yarin", "2 gun sonra", "3 gun sonra", "4 gun sonra"};
+  bool var = false;
+  for (int i = 0; i < 5; i++) {
+    String mx = diziDeger(r, "temperature_2m_max", i);
+    String mn = diziDeger(r, "temperature_2m_min", i);
+    String wc = diziDeger(r, "weather_code", i);
+    if (mx.length() == 0 || mn.length() == 0) continue;
+    var = true;
+    o += String(gun[i]) + " " + (int)roundf(mn.toFloat()) + " ile " + (int)roundf(mx.toFloat()) + " derece, " + havaYazi(wc.toInt()) + "; ";
+  }
+  return var ? o : String("");
+}
+
+bool haftalikMi(const String& sd) {
+  if (!havaMi(sd) && sd.indexOf("hava") < 0) return false;
+  const char* k[] = {"hafta", "yarin", "gelecek gun", "onumuzdeki"};
+  for (int i = 0; i < 4; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  return false;
+}
+// ===== FINANS, HAFTALIK HAVA BITIS =====
+
 // ===== ISIM BASLA =====
 const unsigned long SOHBET_SURE = 30000;   // adi soyledikten sonra bu sure adsiz devam edilebilir (ms)
 unsigned long sohbetBitis = 0;
@@ -1942,6 +2005,11 @@ void loop() {
     Serial.println("(Namaz vakitleri aliniyor...)");
     bilgi = namazBilgisi();
   }
+  bool fn = (!hv && !hb && !nm && finansMi(sd));
+  if (fn) {
+    Serial.println("(Kurlar aliniyor...)");
+    bilgi = finansBilgisi();
+  }
   if (hv) {
     Serial.println("(Hava bilgisi aliniyor...)");
     bilgi = havaBilgisi();
@@ -1976,6 +2044,7 @@ void loop() {
       String al = alarmListesi();
       ek += String("Kurulu alarmlar: ") + (al.length() ? al : String("(yok)")) + ". ";
     }
+    if (haftalikMi(sd)) ek += haftalikHava() + " ";
     if (listeMi(sd)) ek += listeleriAl() + " ";
     if (ozetMi(sd)) {
       Serial.println("(Gun ozeti hazirlaniyor...)");
