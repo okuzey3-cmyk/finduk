@@ -1,0 +1,26 @@
+name: Supurge
+on:
+  workflow_dispatch:
+    inputs:
+      komut:
+        description: "baslat, durdur, sarj, bul veya durum"
+        required: true
+        default: "durum"
+jobs:
+  calistir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install python-roborock
+      - name: Komutu gonder
+        env:
+          ROBOROCK_EPOSTA: ${{ secrets.ROBOROCK_EPOSTA }}
+          ROBOROCK_SIFRE: ${{ secrets.ROBOROCK_SIFRE }}
+          KOMUT: ${{ inputs.komut }}
+        run: |
+          case "$KOMUT" in baslat|durdur|sarj|bul|durum) ;; *) echo "gecersiz komut"; exit 1;; esac
+          python tools/supurge.py "$KOMUT"

@@ -55,7 +55,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, "komutu gonderdim" de. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -1155,7 +1155,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1480,6 +1480,7 @@ void komutIsle(const String& k) {
   else if (ad == "mola") molaKur(ar);
   else if (ad == "plan") satirEkle("plan", ar, 20);
   else if (ad == "link") linkGonder(ar);
+  else if (ad == "supurge") { if (!supurgeGonder(ar)) bildir("Supurge komutu gonderilemedi (anahtar eksik olabilir)"); }
   else if (ad == "telefon") bildir(ar);
   else if (ad == "geri") geriSayimEkle(ar);
   else if (ad == "gerisil") { if (ar == "hepsi") nvsYaz("geri", ""); else satirSil("geri", ar); }
@@ -1810,6 +1811,7 @@ void webAna() {
   h += "<h2>Hafiza</h2><div class=k>" + htmlKacir(satirlariAl("hafiza")) + "</div><form action=/sil><input type=hidden name=ne value=hafiza><button>Hafizayi sil</button></form>";
   h += "<h2>Notlar</h2><div class=k>" + htmlKacir(notlariAl()) + "</div><form action=/sil><input type=hidden name=ne value=not><button>Notlari sil</button></form>";
   h += "<h2>Listeler</h2><div class=k>" + htmlKacir(listeleriAl()) + "</div><form action=/sil><input type=hidden name=ne value=liste><button>Listeleri sil</button></form>";
+  h += String("<h2>Supurge anahtari</h2><p>") + (nvsOku("ghtoken").length() > 0 ? "Kayitli" : "Yok") + "</p><form action=/ayar method=post><input type=password name=ghtoken placeholder=anahtar style='width:100%'><button>Kaydet</button></form>";
   h += "<h2>Alarmlar</h2><div class=k>" + htmlKacir(alarmListesi()) + "</div><form action=/sil><input type=hidden name=ne value=alarm><button>Alarmlari sil</button></form>";
   h += "</body></html>";
   webSunucu.send(200, "text/html; charset=utf-8", h);
@@ -1823,6 +1825,7 @@ void webAyar() {
     gSesAyar = v;
     nvsYaz("ses", String(v));
   }
+  if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
   webSunucu.sendHeader("Location", "/");
   webSunucu.send(303);
@@ -2032,6 +2035,28 @@ String geriSayimlar() {
 bool geriMi(const String& sd) {
   return sd.indexOf("kac gun kaldi") >= 0 || sd.indexOf("ne kadar kaldi") >= 0 || sd.indexOf("geri sayim") >= 0 || sd.indexOf("kac gun var") >= 0;
 }
+// ===== SUPURGE (Roborock Q8+, GitHub Actions koprusu) =====
+// [supurge:baslat|durdur|sarj|bul|durum]  Anahtar finduk.local sayfasindan NVS'ye kaydedilir
+bool supurgeGonder(const String& komut) {
+  if (komut != "baslat" && komut != "durdur" && komut != "sarj" && komut != "bul" && komut != "durum") return false;
+  String tok = nvsOku("ghtoken");
+  if (tok.length() < 20 || WiFi.status() != WL_CONNECTED) { Serial.println("SUPURGE: anahtar yok veya ag yok"); return false; }
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(8000);
+  if (!http.begin(c, "https://api.github.com/repos/okuzey3-cmyk/finduk/actions/workflows/supurge.yml/dispatches")) return false;
+  http.addHeader("Authorization", String("Bearer ") + tok);
+  http.addHeader("Accept", "application/vnd.github+json");
+  http.addHeader("User-Agent", "finduk-robot");
+  http.addHeader("Content-Type", "application/json");
+  String govde = String("{\"ref\":\"main\",\"inputs\":{\"komut\":\"") + komut + "\"}}";
+  int kod = http.POST((uint8_t*)govde.c_str(), govde.length());
+  http.end();
+  Serial.println(String("SUPURGE ") + komut + " -> HTTP " + kod);
+  return kod == 204;
+}
+
 // ===== LINK, GERI SAYIM BITIS =====
 
 // ===== ISIM BASLA =====
