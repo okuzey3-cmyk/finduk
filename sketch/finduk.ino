@@ -53,7 +53,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -81,6 +81,9 @@ volatile int gDurum = D_BOSTA;
 #define M_UYKULU 5
 volatile int gMood = M_NORMAL;
 volatile unsigned long gMoodBitis = 0;
+// Ozel goz modlari: 0 yok, 1 alarm, 2 kutlama, 3 oyun, 4 saat
+volatile int gOzel = 0;
+volatile unsigned long gOzelBitis = 0;
 volatile bool gUyku = false;   // uyku modu
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -344,6 +347,11 @@ void gozAdim() {
   if (uy) {                      // uyku: kapali, asagi kavisli gozler
     tHT = -4; tHB = 6; tTilt = 0; tPr = 6; tBL = 12; tBT = 0; tBR = 0; tBA = 1; gxT = 0; gyT = 0;
   }
+  if (gOzel != 0 && t > gOzelBitis) gOzel = 0;
+  int oz = uy ? 0 : gOzel;
+  if (oz == 1) { tHT = 22; tHB = 18; tTilt = 0; tPr = 4; tBL = -6; tBT = 0; tBA = 5; tBR = 0; gxT = 0; gyT = -1; }
+  else if (oz == 2) { tHT = 14; tHB = -8; tTilt = 0; tPr = 7; tBL = -3; tBT = 0; tBA = 4; tBR = 0; gxT = 0; gyT = -1; }
+  else if (oz == 3) { tHT = 21; tHB = 17; tTilt = 0; tPr = 7; tBL = -5; tBT = 0; tBA = 4; tBR = 0; }
   if (d == D_KONUS) {            // konusma sesine tepki
     tPr += lv * 2.0f;
     tBL -= lv * 3.0f;
@@ -367,6 +375,10 @@ void gozAdim() {
     jy = random(-4, 5) / 10.0f;
   }
   int oy = uy ? (int)roundf(sinf(ts * 0.9f) * 2.0f) : (int)roundf(sinf(ts * 1.6f) * 1.0f);   // nefes
+
+  float sx = 0;
+  if (oz == 1) { oy += (int)roundf(sinf(ts * 45.0f) * 2.0f); sx = sinf(ts * 50.0f) * 3.0f; }
+  if (oz == 2) oy -= (int)(fabsf(sinf(ts * 9.0f)) * 6.0f);
 
   // ---- goz kirpma ----
   if (blinkBas == 0 && t >= sonrakiBlink && !uy) {
@@ -394,9 +406,43 @@ void gozAdim() {
   int irisOn = (hB > 2.0f && hT > 3.0f) ? 1 : 0;
   int lash = irisOn;
 
+  if (oz == 4) {                 // saat modu
+    long ep = (long)time(nullptr);
+    display.clearDisplay();
+    if (ep > 1700000000L) {
+      time_t tt = (time_t)ep;
+      struct tm zz;
+      localtime_r(&tt, &zz);
+      char hb[8];
+      snprintf(hb, sizeof(hb), "%02d:%02d", zz.tm_hour, zz.tm_min);
+      display.setTextColor(SSD1306_WHITE);
+      display.setTextSize(4);
+      display.setCursor(4, 18);
+      display.print(hb);
+      display.setTextSize(1);
+    }
+    return;
+  }
   display.clearDisplay();
-  gozCiz(0, 34, EYE_CY + oy, gx + jx, gy + jy, hTe, hBe, tilt, prE, c, irisOn, bL, bT, bA, lash);
-  gozCiz(1, 94, EYE_CY + oy, gx + jx, gy + jy, hTe, hBe, tilt, prE, c, irisOn, bL + bR, bT, bA, lash);
+  gozCiz(0, 34, EYE_CY + oy, gx + jx + sx, gy + jy, hTe, hBe, tilt, prE, c, irisOn, bL, bT, bA, lash);
+  gozCiz(1, 94, EYE_CY + oy, gx + jx + sx, gy + jy, hTe, hBe, tilt, prE, c, irisOn, bL + bR, bT, bA, lash);
+
+  if (oz == 2) {                 // konfeti
+    for (int n = 0; n < 14; n++) {
+      int px = (n * 37 + (int)(ts * 30.0f) * (1 + n % 3)) % 128;
+      int py = (n * 17 + (int)(ts * 50.0f)) % 64;
+      display.fillRect(px, py, 2, 2, SSD1306_WHITE);
+    }
+  } else if (oz == 3) {          // parlayan yildizlar
+    int ph = ((int)(ts * 4.0f)) % 4;
+    const int yx[4] = {6, 120, 8, 118};
+    const int yy[4] = {6, 8, 56, 55};
+    for (int n = 0; n < 4; n++) {
+      int r = ((n + ph) % 4 < 2) ? 3 : 1;
+      display.drawFastHLine(yx[n] - r, yy[n], 2 * r + 1, SSD1306_WHITE);
+      display.drawFastVLine(yx[n], yy[n] - r, 2 * r + 1, SSD1306_WHITE);
+    }
+  }
 
   // uyurken yukari dogru suzulen "z z z"
   if (uy && hT < 2.0f) {
@@ -1106,7 +1152,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1319,6 +1365,8 @@ bool alarmCal() {
     if (gec > 600) continue;             // robot kapaliyken kacan alarm, calma
     Serial.println(String("ALARM CALIYOR: ") + m);
     gUyku = false;
+    gOzelBitis = millis() + 40000;
+    gOzel = 1;
     gMood = M_MUTLU;
     gMoodBitis = millis() + 5000;
     gDurum = D_KONUS;
@@ -1326,6 +1374,7 @@ bool alarmCal() {
     for (int r = 0; r < 3; r++) { bip(880, 160); sus(90); bip(1175, 160); sus(140); }
     sus(300);
     if (WiFi.status() == WL_CONNECTED) konus(m.length() ? String("Hatirlatma. ") + m : String("Zamanlayici doldu!"));
+    gOzel = 0;
     gDurum = D_BOSTA;
     return true;
   }
@@ -1415,6 +1464,14 @@ void komutIsle(const String& k) {
   else if (ad == "hafizasil") { if (ar == "hepsi") nvsYaz("hafiza", ""); else satirSil("hafiza", ar); }
   else if (ad == "liste") listeIsle(ar);
   else if (ad == "kisilik") nvsYaz("kisilik", temizMetin(ar, 20));
+  else if (ad == "goz") {
+    int z = 0; unsigned long sure = 8000;
+    if (ar == "kutla") { z = 2; sure = 6000; }
+    else if (ar == "oyun") { z = 3; sure = 20000; }
+    else if (ar == "saat") { z = 4; sure = 10000; }
+    gOzelBitis = millis() + sure;
+    gOzel = z;
+  }
 }
 
 // Sabah ilk uyanista hava ve haber ozetli selam
