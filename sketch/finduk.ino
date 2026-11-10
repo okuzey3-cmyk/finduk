@@ -55,7 +55,7 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
-  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
+  "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. TELEFONUMU BUL: Kullanici telefonunu bulamazsa [telefonbul:1] yaz, telefonuna sesli acil bildirim gider (sessizdeyse duyulmayabilir). ALISKANLIK: Kullanici takip etmek istedigi bir aliskanlik soylerse [aliskanlik:su icmek] yaz, yaptigini soylerse [yaptim:su icmek] yaz (ad tanimdakiyle ayni olsun), istemezse [aliskanliksil:ad]; seri veya bu hafta sorulursa sana verilen kayitlardan kac gun ust uste yapildigini hesapla, kisa ve cesaretlendirici ol, dirdir etme. HIKAYE: Kullanici bir hikaye, ani veya tarif kaydetmek isterse kisa bir baslik sec, [hikaye:baslik] yaz ve anlatmaya baslamasini soyle; bundan sonra anlattiklari oldugu gibi kaydedilir, bitince hikaye bitti demesi yeterli, bunu da soyle. GUN OZETI: Her aksam 21.30da telefona gun ozeti gider; kullanici kapatmak isterse [ozet:kapat], acmak isterse [ozet:ac], simdi isterse [ozet:simdi] yaz. TELEFONDAN YAZMA: Kullanici telefondan da yazabilir; mesajlari birkac dakikada bir okunur. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
 #define MIC_SCK 4
@@ -88,6 +88,10 @@ volatile int gOzel = 0;
 volatile unsigned long gOzelBitis = 0;
 volatile bool gUyku = false;   // uyku modu
 unsigned long gSonFiyat = 0;    // fiyat alarmi son kontrol
+String gHikayeBaslik = "";      // hikaye kayit modu acikken baslik
+String gHikayeMetin = "";
+String gYazSon = "";            // telefondan gelen son mesaj kimligi
+unsigned long gSonYazKontrol = 0;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -1171,7 +1175,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1499,6 +1503,12 @@ void komutIsle(const String& k) {
   else if (ad == "fiyat") { satirEkle("fiyat", ar, 10); gSonFiyat = 0; }
   else if (ad == "fiyatsil") { if (ar == "hepsi") nvsYaz("fiyat", ""); else satirSil("fiyat", ar); }
   else if (ad == "uyu") gUyku = true;
+  else if (ad == "telefonbul") telefonuBul();
+  else if (ad == "aliskanlik") satirEkle("alsk_t", ar, 12);
+  else if (ad == "aliskanliksil") satirSil("alsk_t", ar);
+  else if (ad == "yaptim") aliskanlikYaptim(ar);
+  else if (ad == "hikaye") { hikayeBitir(); gHikayeBaslik = temizMetin(ar, 60); gHikayeMetin = ""; }
+  else if (ad == "ozet") { if (ar == "kapat") nvsYaz("ozet_kapali", "1"); else if (ar == "ac") nvsYaz("ozet_kapali", ""); else { nvsYaz("ozet_gun", ""); bildirBaslik("Finduk gun ozeti", String("Plan: ") + planAl() + "\nNotlar: " + notlariAl() + "\nAlisveris: " + satirlariAl("l_alis") + "\nYapilacaklar: " + satirlariAl("l_yap"), 3, "memo"); } }
   else if (ad == "supurge") { if (!supurgeGonder(ar)) bildir("Supurge komutu gonderilemedi (anahtar eksik olabilir)"); }
   else if (ad == "telefon") bildir(ar);
   else if (ad == "geri") geriSayimEkle(ar);
@@ -2127,6 +2137,160 @@ void fiyatKontrol() {
   }
 }
 
+// ===== BUYUK PAKET 26: TELEFONDAN YAZ, ALISKANLIK, HIKAYE, TELEFONUMU BUL, GUN OZETI =====
+// Baslikli / oncelikli bildirim (oncelik 3 normal, 5 acil)
+void bildirBaslik(const String& baslik, const String& mesaj, int oncelik, const char* etiket) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(8000);
+  if (!http.begin(c, String("https://ntfy.sh/") + SINEMA_KONU + "-robot")) return;
+  http.addHeader("Content-Type", "text/plain; charset=utf-8");
+  http.addHeader("Title", baslik);
+  http.addHeader("Priority", String(oncelik));
+  if (etiket && etiket[0]) http.addHeader("Tags", etiket);
+  int kod = http.POST((uint8_t*)mesaj.c_str(), mesaj.length());
+  Serial.println(String("Bildirim(") + baslik + ") -> HTTP " + kod);
+  http.end();
+}
+
+String bugunTarih() {
+  long t = simdiEpoch();
+  if (t == 0) return "";
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  char b[12];
+  snprintf(b, sizeof(b), "%04d-%02d-%02d", z.tm_year + 1900, z.tm_mon + 1, z.tm_mday);
+  return String(b);
+}
+
+// --- Telefonumu bul ---
+void telefonuBul() {
+  bildirBaslik("Telefonun burada!", "Finduk seni ariyor. Telefonun bu sesi cikariyor.", 5, "rotating_light");
+  delay(1500);
+  bildirBaslik("Telefonun burada!", "Hala buradayim!", 5, "rotating_light");
+}
+
+// --- Aliskanlik takibi ---
+// [aliskanlik:su icmek] tanimlar, [yaptim:su icmek] bugune isaret koyar, [aliskanliksil:ad]
+void aliskanlikYaptim(const String& ad) {
+  String g = bugunTarih();
+  if (g.length() == 0) return;
+  satirEkle("alskn", g + " " + ad, 90);
+}
+
+String aliskanlikOzet() {
+  String tan = satirlariAl("alsk_t");
+  String kay = nvsOku("alskn");
+  return String("Bugun ") + bugunTarih() + ". Tanimli aliskanliklar: " + (tan.length() ? tan : String("(yok)")) +
+         ". Isaretlenen gunler (tarih ve ad): " + (kay.length() ? kay : String("(yok)")) + ". ";
+}
+
+String bugunYapilmayanlar() {
+  String tan = nvsOku("alsk_t");
+  String kay = nvsOku("alskn");
+  String g = bugunTarih();
+  String o;
+  int bas = 0;
+  while (bas < (int)tan.length()) {
+    int son = tan.indexOf('\n', bas);
+    if (son < 0) son = tan.length();
+    String a = tan.substring(bas, son);
+    bas = son + 1;
+    a.trim();
+    if (a.length() == 0) continue;
+    if (kay.indexOf(g + " " + a) < 0) o += a + ", ";
+  }
+  return o;
+}
+
+bool aliskanlikMi(const String& sd) {
+  return sd.indexOf("aliskanlik") >= 0 || sd.indexOf("seri") >= 0 || sd.indexOf("yaptim") >= 0 || sd.indexOf("ictim") >= 0 ||
+         sd.indexOf("yuruyus") >= 0 || sd.indexOf("okudum") >= 0 || sd.indexOf("bu hafta") >= 0;
+}
+
+// --- Aile hikaye arsivi ---
+void hikayeBitir() {
+  if (gHikayeBaslik.length() == 0) return;
+  if (gHikayeMetin.length() > 0) {
+    bildirBaslik(String("Hikaye: ") + gHikayeBaslik, gHikayeMetin, 3, "book");
+    String g = bugunTarih();
+    satirEkle("hikaye", g + " " + gHikayeBaslik, 40);
+  }
+  gHikayeBaslik = "";
+  gHikayeMetin = "";
+}
+
+// --- Aksam gun ozeti (21:30) ---
+void gunOzetiKontrol() {
+  long t = simdiEpoch();
+  if (t == 0) return;
+  if (nvsOku("ozet_kapali") == "1") return;
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (!(z.tm_hour == 21 && z.tm_min >= 30) && z.tm_hour != 22) return;
+  String g = bugunTarih();
+  if (nvsOku("ozet_gun") == g) return;
+  nvsYaz("ozet_gun", g);
+  String o;
+  String pl = planAl();
+  if (pl.length()) o += String("Plan: ") + pl + "\n";
+  String nt = notlariAl();
+  if (nt.length()) o += String("Notlar: ") + nt + "\n";
+  String al = satirlariAl("l_alis");
+  if (al.length()) o += String("Alisveris: ") + al + "\n";
+  String yp = satirlariAl("l_yap");
+  if (yp.length()) o += String("Yapilacaklar: ") + yp + "\n";
+  String ar = alarmListesi();
+  if (ar.length()) o += String("Alarmlar: ") + ar + "\n";
+  String yk = bugunYapilmayanlar();
+  if (yk.length()) o += String("Bugun isaretlenmeyen aliskanliklar: ") + yk + "\n";
+  if (o.length() == 0) o = "Bugun icin kayitli bir sey yok. Iyi aksamlar!";
+  bildirBaslik("Finduk gun ozeti", o, 3, "memo");
+}
+
+// --- Telefondan Finduk'a yazma (ntfy ...-yaz kanali) ---
+String telefonMesajlariAl() {
+  if (WiFi.status() != WL_CONNECTED) return "";
+  if (gSonYazKontrol != 0 && millis() - gSonYazKontrol < 50000UL) return "";
+  gSonYazKontrol = millis();
+  String yol = String("/") + SINEMA_KONU + "-yaz/json?poll=1&since=" + (gYazSon.length() ? gYazSon : String("2m"));
+  String r = httpsGetGovde("ntfy.sh", yol.c_str(), 4000);
+  String hepsi;
+  int bas = 0;
+  while (bas < (int)r.length()) {
+    int son = r.indexOf('\n', bas);
+    if (son < 0) son = r.length();
+    String satir = r.substring(bas, son);
+    bas = son + 1;
+    if (satir.indexOf("\"event\":\"message\"") < 0) continue;
+    String id = degerBul(satir, "id");
+    String m = degerBul(satir, "message");
+    if (id.length()) gYazSon = id;
+    if (m.length()) hepsi += (hepsi.length() ? String(" / ") : String("")) + m;
+  }
+  return hepsi;
+}
+
+void telefonMesajiIsle() {
+  String m = telefonMesajlariAl();
+  if (m.length() == 0) return;
+  Serial.println(String("TELEFONDAN: ") + m);
+  String ham = claudeCevapla(m, String("Bu mesaj kullanicinin telefonundan YAZILI geldi, sesli degil. Cevabin telefona yazili gidecek; kisa yaz. Saat ve tarih: ") + zamanYazi() + ". " + aliskanlikOzet());
+  String cevap = degerBul(ham, "text");
+  if (cevap.length() == 0) { bildir("Mesajini aldim ama su an cevap uretemedim."); return; }
+  String hamCevap = cevap;
+  String komutlar[6];
+  int n = komutlariAyikla(cevap, komutlar, 6);
+  moodCoz(cevap);
+  hafizayaEkle(m, hamCevap);
+  bildirBaslik("Finduk", cevap, 3, "speech_balloon");
+  for (int i = 0; i < n; i++) { komutIsle(komutlar[i]); delay(200); }
+}
+
 // ===== LINK, GERI SAYIM BITIS =====
 
 // ===== ISIM BASLA =====
@@ -2455,6 +2619,8 @@ void loop() {
     if (!bekleSes(GUNCEL_ARALIK, ESIK_UYKU)) {
       if (alarmCal()) return;
       fiyatKontrol();
+      gunOzetiKontrol();
+      telefonMesajiIsle();
       guncellemeKontrol();      // uyurken yeni surum var mi diye bak
       return;
     }
@@ -2466,7 +2632,10 @@ void loop() {
   }
   if (!bekleSes(UYKU_SURE, ESIK)) {
     if (alarmCal()) return;
+    hikayeBitir();
     fiyatKontrol();
+    gunOzetiKontrol();
+    telefonMesajiIsle();
     if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
     gUyku = true;
     Serial.println("Uykuya daliyorum...");
@@ -2511,6 +2680,27 @@ void loop() {
   }
   Serial.print("SEN: ");
   Serial.println(duyulan);
+
+  // Hikaye kayit modu: duyulani oldugu gibi biriktir, "hikaye bitti" deyince telefona gonder
+  if (gHikayeBaslik.length() > 0) {
+    String hs = sadelestir(duyulan);
+    if (hs.indexOf("hikaye bitti") >= 0 || hs.indexOf("kaydi bitir") >= 0 || hs.indexOf("bu kadar") >= 0) {
+      String b = gHikayeBaslik;
+      hikayeBitir();
+      konus(String("Tamam, ") + b + " hikayesini kaydettim, telefonuna gonderdim.");
+    } else {
+      gHikayeMetin += duyulan + " ";
+      if (gHikayeMetin.length() > 3500) {
+        String b = gHikayeBaslik;
+        hikayeBitir();
+        gHikayeBaslik = b + " (devam)";
+      }
+      konus("Dinliyorum, devam et.");
+    }
+    sohbetBitis = millis() + SOHBET_SURE;
+    gDurum = D_BOSTA;
+    return;
+  }
 
   // Adi gecmiyorsa ve sohbet penceresi kapaliysa cevap verme
   bool adiVar = adiGeciyor(duyulan);
@@ -2587,6 +2777,7 @@ void loop() {
       ek += String("IYI GECELER: Kayitli alarmlar: ") + alarmListesi() + ". Yarinin havasi icin: " + hf + " Yarinin plani: " + planAl() + ". ";
     }
     if (sd.indexOf("fiyat alarm") >= 0 || sd.indexOf("haber ver") >= 0 || sd.indexOf("olunca") >= 0) ek += String("Kayitli fiyat alarmlari: ") + nvsOku("fiyat") + ". ";
+    if (aliskanlikMi(sd)) ek += aliskanlikOzet();
     if (geriMi(sd)) ek += String("Geri sayimlar: ") + geriSayimlar() + " ";
     if (planMi(sd)) { String pl = planAl(); ek += String("Kayitli plan: ") + (pl.length() ? pl : String("(bos)")) + ". "; }
     if (dinMi(sd)) ek += hicriBilgisi() + " ";
