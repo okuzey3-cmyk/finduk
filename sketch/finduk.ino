@@ -1104,9 +1104,24 @@ String haberBilgisi() {
   return o;
 }
 
+// Havalimani resmi hava raporu: METAR (anlik) ve TAF (tahmin). Kaynak NOAA Aviation Weather Center, Turk Meteoroloji verisini yayinlar
+String metarBilgisi(bool taf) {
+  String m = httpsGetGovde("aviationweather.gov", "/api/data/metar?ids=LTFM,LTFJ&format=raw", 900);
+  m.trim();
+  if (m.length() < 20) return "";
+  String o = String("RESMI HAVACILIK RAPORU (METAR, LTFM Istanbul Havalimani ve LTFJ Sabiha Gokcen): ") + m + " ";
+  if (taf) {
+    String t = httpsGetGovde("aviationweather.gov", "/api/data/taf?ids=LTFM&format=raw", 1200);
+    t.trim();
+    if (t.length() > 20) o += String("TAF tahmini (LTFM): ") + t + " ";
+  }
+  o += "Bu kodlari sade Turkce ile yorumla: ruzgar (dugum km/saate cevrilir, 1 dugum yaklasik 1.85 km/s), gorus mesafesi, bulut, sicaklik, yagis veya sis varsa. Kaynagi kisaca soyle: havalimani resmi METAR raporu. Kod okuma, ozetle.";
+  return o;
+}
+
 bool havaMi(const String& sd) {
-  const char* k[] = {"hava durum", "hava nasil", "kac derece", "sicaklik", "yagmur", "yagacak", "kar yag", "soguk mu", "sicak mi", "hava kac"};
-  for (int i = 0; i < 10; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  const char* k[] = {"hava durum", "hava nasil", "kac derece", "sicaklik", "yagmur", "yagacak", "kar yag", "soguk mu", "sicak mi", "hava kac", "havalimani", "metar", "ruzgar", "sisli", "sis var", "ucuslar"};
+  for (int i = 0; i < 16; i++) if (sd.indexOf(k[i]) >= 0) return true;
   return false;
 }
 
@@ -2475,7 +2490,10 @@ void loop() {
   }
   if (hv) {
     Serial.println("(Hava bilgisi aliniyor...)");
+    bool tf = sd.indexOf("havalimani") >= 0 || sd.indexOf("ucus") >= 0 || sd.indexOf("tahmin") >= 0 || sd.indexOf("taf") >= 0;
     bilgi = havaBilgisi();
+    String mt = metarBilgisi(tf);
+    if (mt.length() > 0) bilgi += String(" ") + mt;
   } else if (hb) {
     Serial.println("(Haberler aliniyor...)");
     bilgi = haberBilgisi();
