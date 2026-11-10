@@ -87,6 +87,7 @@ volatile unsigned long gMoodBitis = 0;
 volatile int gOzel = 0;
 volatile unsigned long gOzelBitis = 0;
 volatile bool gUyku = false;   // uyku modu
+unsigned long gSonFiyat = 0;    // fiyat alarmi son kontrol
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -2077,8 +2078,6 @@ bool supurgeGonder(const String& komut) {
 
 // ===== FIYAT ALARMI =====
 // [fiyat:dolar|>|45]  kayitta "dolar > 45" olur. Esik asilinca telefona bildirim, sonra silinir
-unsigned long gSonFiyat = 0;
-
 bool kurlariAl(float& usd, float& eur, float& altin) {
   String r = httpsGetGovde("open.er-api.com", "/v6/latest/USD", 6000);
   String t = sayiBul(r, "TRY");
