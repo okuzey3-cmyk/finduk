@@ -1542,7 +1542,7 @@ void sabahSelami() {
   if (z.tm_hour < 5 || z.tm_hour >= 11 || z.tm_yday == gSonSelamGun) return;
   gSonSelamGun = z.tm_yday;
   gDurum = D_DUSUN;
-  String bilgi = String("Bugun ozel gun varsa (") + ozelGunler(0) + ") onu da sicakca hatirlat. Bekleyen emanet mesaj varsa (" + emanetler() + ") kime ait oldugunu soyle. Sabah selami ver: gunaydin de, havayi ve gunun bir iki onemli haberini cok kisa soyle. Kayitli plan varsa bugune ait olani da soyle. Plan: ") + planAl() + ". " + havaBilgisi() + " " + haberBilgisi();
+  String bilgi = String("Bugun ozel gun varsa (") + ozelGunler(0) + ") onu da sicakca hatirlat. Bekleyen emanet mesaj varsa (" + emanetler() + ") kime ait oldugunu soyle. Sabah selami ver: gunaydin de, havayi ve gunun bir iki onemli haberini cok kisa soyle. Kayitli plan varsa bugune ait olani da soyle. Plan: " + planAl() + ". " + havaBilgisi() + " " + haberBilgisi();
   String ham = claudeCevapla("(Oguzhan az once uyandi, sabah selami ver)", bilgi);
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
