@@ -2311,6 +2311,54 @@ void gunOzetiKontrol() {
 }
 
 // --- Telefondan Finduk'a yazma (ntfy ...-yaz kanali) ---
+// ===== KUMANDA UYGULAMASI: YEREL KOMUTLAR BASLA =====
+void durumGonder() {
+  String m = String("surum|") + FW_SURUM + "\n";
+  m += String("uyku|") + (gUyku ? "1" : "0") + "\n";
+  m += String("ses|") + (int)gSesAyar + "\n";
+  m += String("misafir|") + (gMisafir ? "1" : "0") + "\n";
+  m += String("karakter|") + nvsOku("karakter") + "\n";
+  m += String("dil|") + nvsOku("dil_modu") + "\n";
+  m += String("macera|") + nvsOku("macera_ac") + "\n";
+  m += String("alarm|") + alarmListesi() + "\n";
+  m += String("not|") + notlariAl() + "\n";
+  m += String("alis|") + satirlariAl("l_alis") + "\n";
+  m += String("yap|") + satirlariAl("l_yap") + "\n";
+  m += String("plan|") + satirlariAl("plan") + "\n";
+  m += String("hatirlat|") + satirlariAl("hatirlat") + "\n";
+  m += String("ozelgun|") + satirlariAl("ozelgun") + "\n";
+  m += String("geri|") + satirlariAl("geri") + "\n";
+  m += String("arac|") + satirlariAl("arac") + "\n";
+  m += String("vardiya|") + vardiyaOzet() + "\n";
+  m += String("yemek|") + satirlariAl("yemekplan") + "\n";
+  m += String("espri|") + satirlariAl("espri") + "\n";
+  m += String("cihaz|") + cihazAdlari() + "\n";
+  m += String("tv|") + (nvsOku("tvip").length() ? "1" : "0") + "\n";
+  String g = satirlariAl("rgunluk");
+  if (g.length() > 600) g = g.substring(g.length() - 600);
+  m += String("gunluk|") + g + "\n";
+  m.replace("\r", "");
+  if (m.length() > 3800) m = m.substring(0, 3800);
+  bildirBaslik("Finduk durum", m, 1, "gear");
+}
+
+bool yerelKomut(const String& m) {
+  if (!m.startsWith("#")) return false;
+  String k = m.substring(1);
+  k.trim();
+  Serial.println(String("KUMANDA: ") + k);
+  if (k == "durum") { }
+  else if (k.startsWith("ses:")) { int v = k.substring(4).toInt(); if (v < 10) v = 10; if (v > 90) v = 90; gSesAyar = v; nvsYaz("ses", String(v)); }
+  else if (k == "uyu") gUyku = true;
+  else if (k == "uyan") { gUyku = false; gMood = M_MUTLU; gMoodBitis = millis() + 3000; }
+  else if (k.startsWith("soyle:")) { String t = k.substring(6); t.trim(); if (t.length()) { gUyku = false; bip(1200, 120); konus(t); gKonustu = true; } }
+  else if (k.startsWith("komut:")) komutIsle(k.substring(6));
+  else return false;
+  durumGonder();
+  return true;
+}
+// ===== KUMANDA UYGULAMASI BITIS =====
+
 String telefonMesajlariAl() {
   if (WiFi.status() != WL_CONNECTED) return "";
   if (gSonYazKontrol != 0 && millis() - gSonYazKontrol < 50000UL) return "";
@@ -2328,6 +2376,7 @@ String telefonMesajlariAl() {
     String id = degerBul(satir, "id");
     String m = degerBul(satir, "message");
     if (id.length()) gYazSon = id;
+    if (yerelKomut(m)) continue;
     if (m.length()) hepsi += (hepsi.length() ? String(" / ") : String("")) + m;
   }
   return hepsi;
@@ -3649,7 +3698,7 @@ void loop() {
   gDurum = D_BOSTA;
   if (gUyku) {
     Serial.println("Uyuyorum... (bir ses cikar, uyanayim)");
-    if (!bekleSes(GUNCEL_ARALIK, ESIK_UYKU)) {
+    if (!bekleSes(60000UL, ESIK_UYKU)) {
       if (alarmCal()) return;
       fiyatKontrol();
       gunOzetiKontrol();
@@ -3659,7 +3708,7 @@ void loop() {
       paket28Periyodik();
       gKonustu = false;
       telefonMesajiIsle();
-      guncellemeKontrol();      // uyurken yeni surum var mi diye bak
+      if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();      // uyurken yeni surum var mi diye bak
       return;
     }
     gUyku = false;
