@@ -55,6 +55,30 @@ const char* KISILIK =
   "HAFIZA: Kullanici bir seyi hatirlamani isterse ya da kalici onemli bir bilgi soylerse (isim, sevdigi sey, aile, dogum gunu, yildonumu, onemli tarih) cevabinin sonuna [hafiza:kisa bilgi] yaz, tarihleri yilla yaz. Unutmani isterse [hafizasil:hepsi]. Sana verilen hafiza bilgisini dogal sekilde kullan, gereksiz yere tekrar etme. Geri sayim sorulursa hafizadaki tarih ile bugun arasini hesapla. "
   "LISTELER: [liste:alisveris|ekle|sut], [liste:yapilacak|ekle|fatura ode], [liste:alisveris|sil|sut], [liste:alisveris|temizle]. Listeler sorulursa sana verilir, oku. "
   "TARZ: Kullanici konusma tarzini degistirmek isterse [kisilik:ciddi], [kisilik:esprili], [kisilik:sakin] veya [kisilik:samimi] yaz. "
+  " KENDILIGINDEN KONUSMA VE HUY: Bazen sessizlikte kendin konusursun, bu sana ayrica talimat olarak verilir. Gunluk huyun sana bildirilir. "
+  " ORTAK ESPRI: Kullanici ikinizin ortak bir espri, lakap veya guzel bir ani olusturdugunu soylerse ya da komik bir an yasanirsa [espri:kisa metin] yaz (en fazla 90 karakter); silmek icin [esprisil:parca]. "
+  " SESLI MACERA: Kullanici macera oyunu isterse [macera:basla|tema] yaz ve hikayeyi anlatmaya basla. Surerken [macera:ozet|guncel ozet] yaz. Bitince [macera:bitir] yaz. "
+  " KARAKTER MODU: Kullanici bir karakter isterse (ornek Osmanli taciri) [karakter:karakterin kisa tarifi] yaz ve o agizla konus. Cikmak icin [karakter:kapat]. "
+  " TARTISMA: Kullanici tartisalim derse karsi tarafi savun, kisa ve esprili itiraz et, inatci ama saygili ol, gercekten ikna olursan kabul et. "
+  " GUNUN TEKERLEMESI: Kullanici gunun tekerlemesini, siirini veya sarkisini isterse bugunku konusmalara ve guzel anlara dayanan kisa, kafiyeli, komik, 4 satirlik OZGUN bir tekerleme yaz. Var olan sarki veya siirlerden alinti yapma. "
+  " KIM KONUSUYOR: Konusan Demet oldugunu soylerse [kisi:demet], Oguzhan ise [kisi:oguzhan] yaz. Demet konusurken yazdigin hafiza komutlari Demet'in hafizasina gider. "
+  " RUH HALI: Kullanicinin sozlerinden yorgun, uzgun, stresli veya neseli oldugunu sezersen tavrini ayarla: yorgunsa kisa ve sakin konus, uzgunse once dinle ve destek ol. Ciddi bir sikinti sezersen yakinlarindan destek almasini nazikce oner. Tibbi teshis koyma. "
+  " INGILIZCE PRATIK: Kullanici Ingilizce pratik yapmak isterse [dil:ingilizce|seviye] yaz, bitirmek icin [dil:kapat]. "
+  " TARIF ADIM ADIM: Kullanici bir yemegi birlikte yapmak isterse tarifi en fazla 8 kisa adim halinde [tarif:yemek adi|adim bir;adim iki;adim uc] yaz (noktali virgul ile ayir). Robot adimlari sonraki, tekrar, onceki denince kendisi okur. Bekleme gereken adimlar icin ayrica [zamanlayici:...] yazabilirsin. "
+  " VARDIYA: Kullanici vardiya duzenini soylerse (ornek haftalik donen sabah, aksam, gece) [vardiya:ilk haftanin pazartesi tarihi YYYY-AA-GG|sabah,aksam,gece] yaz, siradaki haftalar tekrar eder. Vardiya degisimlerinde uyku duzeni icin kisa, genel oneriler ver (tibbi tavsiye degil). Kapatmak icin [vardiya:kapat]. "
+  " SU VE MOLA: Su icme hatirlaticisi istenirse [su:aralik dakika|baslangic saati|bitis saati] yaz, kapatmak icin [su:kapat]. "
+  " ARAC BAKIMI: Muayene, sigorta, bakim gibi tarihler icin [arac:ad|YYYY-AA-GG] yaz, silmek icin [aracsil:ad]. Tarih yaklasinca telefona bildirim gider. "
+  " YEMEK PLANI: Haftalik yemek plani istenirse kullanicinin zevklerine gore hazirla, [yemekplan:Pzt corba makarna;Sal ...] ile kaydet (gunleri noktali virgulle ayir), ayrintiyi [telefon:...] ile gonder. Silmek icin [yemekplansil:hepsi]. "
+  " HEDIYE VE SURPRIZ: Yildonumu veya dogum gunu icin hediye ya da surpriz isterse kayitli ozel gunleri ve hafizadaki zevkleri kullan, 3 somut fikir ver, butceyi sor. "
+  " FILM AKSAMI: Film izleyelim denince once kimlerin izleyecegini ve ruh halini tek soruyla ogren. Iki kisi farkli sey isterse ortak nokta bul, 2 secenek sun, secilince Sinema Odasi komutlariyla ac. "
+  " GIYIM: Ne giyeyim sorulursa sana verilen hava bilgisine gore somut oner. "
+  " UZUN CEVAPLAR: Seyahat plani gibi uzun seyleri sesli kisaca anlat, ayrintiyi [telefon:ilk kisim] ve [telefon:ikinci kisim] seklinde telefona gonder. "
+  " MAC GUNU: Kullanici bir macin takibini isterse [mac:takim adi|SS:DD] yaz, tarih bugun degilse [mac:takim adi|SS:DD|YYYY-AA-GG]. "
+  " GIZLI KASA: Kullanici sesli parolayla saklanacak ozel bir not verirse [kasa:tekkelimeparola|not] yaz (parola en az 4 harf, tek kelime). Notu sen soyleme, kasayi robot parolayi duyunca kendisi acar. Silmek icin [kasasil:parola]. "
+  " MISAFIR MODU: Misafir geldigini soylerse [misafir:ac], gidince [misafir:kapat] yaz. "
+  " EV CIHAZLARI: Sana kayitli ev cihazi bildirilirse acmak veya kapatmak icin [cihaz:ad|ac] ya da [cihaz:ad|kapat] yaz. "
+  " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE). Uygulama acmak icin [tv:uygulama|netflix] yaz (netflix youtube prime disney). "
+  " WIFI KURULUM: Kullanici yeni Wi-Fi ayarlamak isterse [kurulum:ac] yaz. Telefon Finduk-Kurulum agina baglanip 192.168.4.1/kurulum sayfasini acar. "
   "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. TELEFONUMU BUL: Kullanici telefonunu bulamazsa [telefonbul:1] yaz, telefonuna sesli acil bildirim gider (sessizdeyse duyulmayabilir). ALISKANLIK: Kullanici takip etmek istedigi bir aliskanlik soylerse [aliskanlik:su icmek] yaz, yaptigini soylerse [yaptim:su icmek] yaz (ad tanimdakiyle ayni olsun), istemezse [aliskanliksil:ad]; seri veya bu hafta sorulursa sana verilen kayitlardan kac gun ust uste yapildigini hesapla, kisa ve cesaretlendirici ol, dirdir etme. HIKAYE: Kullanici bir hikaye, ani veya tarif kaydetmek isterse kisa bir baslik sec, [hikaye:baslik] yaz ve anlatmaya baslamasini soyle; bundan sonra anlattiklari oldugu gibi kaydedilir, bitince hikaye bitti demesi yeterli, bunu da soyle. GUN OZETI: Her aksam 21.30da telefona gun ozeti gider; kullanici kapatmak isterse [ozet:kapat], acmak isterse [ozet:ac], simdi isterse [ozet:simdi] yaz. TELEFONDAN YAZMA: Kullanici telefondan da yazabilir; mesajlari birkac dakikada bir okunur. OZEL GUNLER: Her yil tekrar eden dogum gunu, yildonumu gibi gunleri [ozelgun:02-16|evlilik yildonumu] diye kaydet (ay-gun), silmek icin [ozelgunsil:ad]; yedi gun once, bir gun once ve o gun telefona hatirlatilir; bugun ozel gun ise sohbette sicakca hatirlat ve hediye veya kutlama fikri ver. TEKRARLAYAN HATIRLATICI: Belli gun ve saatte tekrar eden hatirlatma icin [hatirlat:19:00|pzt,per|cop cikacak] yaz; gunler hergun, haftaici, haftasonu veya pzt,sal,car,per,cum,cmt,paz (bosluksuz, saat iki haneli); silmek icin [hatirlatsil:mesajdan bir kelime] ya da [hatirlatsil:hepsi]. GUZEL ANLAR: Iyi geceler denince bazen bugunun guzel bir anini sor; kullanici guzel bir an, sevindigi veya sukrettigi bir sey anlatirsa [gunluk:kisa ozet] yaz; pazar aksami haftanin anlari telefona gider. EMANET: Biri evdeki baskasina mesaj birakmak isterse [emanet:Demet|mesaj] yaz; bekleyen emanet varsa ve konusan kisi o kisiyse veya kim oldugunu soylerse mesaji ilet ve [emanetsil:Demet] yaz; kime ait oldugu belli degilse kime mesaj oldugunu soyle, icerigi sahibine sakla. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
@@ -93,6 +117,20 @@ String gHikayeMetin = "";
 String gYazSon = "";            // telefondan gelen son mesaj kimligi
 unsigned long gSonYazKontrol = 0;
 long gSonHatirlat = 0;          // tekrarlayan hatirlatici son kontrol zamani
+// --- Paket 28 globalleri ---
+String gKisi = "";                 // konusan kisi: bos = Oguzhan, "demet" = Demet
+unsigned long gKisiBitis = 0;
+bool gMisafir = false;
+unsigned long gMisafirBitis = 0;
+unsigned long gSonEtkilesim = 0;   // son sohbet (millis)
+unsigned long gSonKendi = 0;       // son kendiliginden konusma (millis)
+unsigned long gSonSu = 0;
+bool gKonustu = false;             // periyodik is konustu mu
+bool gWebVar = false;              // web gorevi calisiyor mu
+String gTarifBaslik = "";
+String gTarifAdim[12];
+int gTarifN = 0;
+int gTarifI = 0;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -877,7 +915,7 @@ String geminiSesiYaziyaCevir() {
   client.setTimeout(30);
   if (!client.connect("generativelanguage.googleapis.com", 443)) return "BAGLANTI HATASI";
 
-  String onek = "{\"contents\":[{\"parts\":[{\"text\":\"Bu ses kaydini Turkce olarak aynen yaziya cevir. Konusmada Finduk adinda bir robota seslenilebilir, bu ismi Findik diye degil aynen Finduk diye yaz. Sadece soylenen cumleyi yaz, baska hicbir sey ekleme. Ses yoksa BOS yaz.\"},{\"inline_data\":{\"mime_type\":\"audio/wav\",\"data\":\"";
+  String onek = String("{\"contents\":[{\"parts\":[{\"text\":\"") + (nvsOku("dil_modu").length() ? "Bu ses kaydini aynen yaziya cevir. Konusma Turkce ya da Ingilizce olabilir, hangi dildeyse o dilde yaz." : "Bu ses kaydini Turkce olarak aynen yaziya cevir.") + String(" Konusmada Finduk adinda bir robota seslenilebilir, bu ismi Findik diye degil aynen Finduk diye yaz. Sadece soylenen cumleyi yaz, baska hicbir sey ekleme. Ses yoksa BOS yaz.\"},{\"inline_data\":{\"mime_type\":\"audio/wav\",\"data\":\"");
   String sonek = "\"}}]}]}";
   size_t govde = onek.length() + b64Uzunluk(gWavBytes) + sonek.length();
 
@@ -945,13 +983,14 @@ String claudeCevapla(const String& soru, const String& bilgi) {
   String sistem = String(KISILIK);
   String zy = zamanYazi();
   if (zy.length() > 0) sistem += String(" Su anki tarih ve saat (Istanbul): ") + zy + ".";
-  { String hf = satirlariAl("hafiza"); if (hf.length()) sistem += String(" Kullanici hakkinda hafizandaki bilgiler: ") + hf + ".";
-    String kt = nvsOku("kisilik"); if (kt.length()) sistem += String(" Konusma tarzin: ") + kt + ".";
-    if (sesYuzdeSimdi() < gSesAyar) sistem += " Gece oldu, sakin ve kisa konus."; }
+  { String hf = satirlariAl(gKisi == "demet" ? "hafiza_demet" : "hafiza"); if (!gMisafir && hf.length()) sistem += String(gKisi == "demet" ? " Konusan kisi Demet, onun hakkinda hafizandaki bilgiler: " : " Kullanici hakkinda hafizandaki bilgiler: ") + hf + ".";
+    String kt = nvsOku("kisilik"); if (!gMisafir && kt.length()) sistem += String(" Konusma tarzin: ") + kt + ".";
+    if (sesYuzdeSimdi() < gSesAyar) sistem += " Gece oldu, sakin ve kisa konus.";
+    sistem += paket28Sistem(); }
   if (bilgi.length() > 0) {
     sistem += " ASAGIDA INTERNETTEN ALINMIS GUNCEL BILGI VAR. Cevabini buna dayandir. Haber ise en fazla 3 basligi kisa kisa soyle, hava ise sicakligi ve durumu soyle. Bilgi: " + bilgi;
   }
-  String govde = String("{\"model\":\"") + CLAUDE_MODEL + "\",\"max_tokens\":300,\"system\":\"" +
+  String govde = String("{\"model\":\"") + CLAUDE_MODEL + "\",\"max_tokens\":450,\"system\":\"" +
                  jsonKacis(sistem) + "\",\"messages\":" + mesajlar + "}";
 
   String baslik = String("POST /v1/messages HTTP/1.1\r\n") +
@@ -1126,8 +1165,8 @@ String metarBilgisi(bool taf) {
 }
 
 bool havaMi(const String& sd) {
-  const char* k[] = {"hava durum", "hava nasil", "kac derece", "sicaklik", "yagmur", "yagacak", "kar yag", "soguk mu", "sicak mi", "hava kac", "havalimani", "metar", "ruzgar", "sisli", "sis var", "ucuslar"};
-  for (int i = 0; i < 16; i++) if (sd.indexOf(k[i]) >= 0) return true;
+  const char* k[] = {"hava durum", "hava nasil", "kac derece", "sicaklik", "yagmur", "yagacak", "kar yag", "soguk mu", "sicak mi", "hava kac", "havalimani", "metar", "ruzgar", "sisli", "sis var", "ucuslar", "ne giy", "mont", "semsiye", "ceket", "kazak"};
+  for (int i = 0; i < 21; i++) if (sd.indexOf(k[i]) >= 0) return true;
   return false;
 }
 
@@ -1176,7 +1215,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "kurulum" || ad == "radyo") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1494,8 +1533,8 @@ void komutIsle(const String& k) {
   else if (ad == "alarmsil") alarmTemizle();
   else if (ad == "not") notEkle(ar);
   else if (ad == "notsil") notTemizle();
-  else if (ad == "hafiza") satirEkle("hafiza", ar, 30);
-  else if (ad == "hafizasil") { if (ar == "hepsi") nvsYaz("hafiza", ""); else satirSil("hafiza", ar); }
+  else if (ad == "hafiza") satirEkle(gKisi == "demet" ? "hafiza_demet" : "hafiza", ar, 30);
+  else if (ad == "hafizasil") { const char* hk = (gKisi == "demet") ? "hafiza_demet" : "hafiza"; if (ar == "hepsi") nvsYaz(hk, ""); else satirSil(hk, ar); }
   else if (ad == "liste") listeIsle(ar);
   else if (ad == "kisilik") nvsYaz("kisilik", temizMetin(ar, 20));
   else if (ad == "mola") molaKur(ar);
@@ -1509,7 +1548,7 @@ void komutIsle(const String& k) {
   else if (ad == "ozelgunsil") satirSil("ozelgun", ar);
   else if (ad == "hatirlat") { String h = ar; if (h.length() > 1 && h[1] == ':') h = String("0") + h; h.replace(", ", ","); satirEkle("hatirlat", h, 15); }
   else if (ad == "hatirlatsil") { if (ar == "hepsi") nvsYaz("hatirlat", ""); else satirSil("hatirlat", ar); }
-  else if (ad == "gunluk") satirEkle("gunluk", bugunTarih() + " " + ar, 60);
+  else if (ad == "gunluk") { satirEkle("gunluk", bugunTarih() + " " + ar, 60); aniKaydet(ar); }
   else if (ad == "emanet") { int c = ar.indexOf('|'); if (c > 0) satirEkle("emanet", ar.substring(0, c) + ": " + ar.substring(c + 1), 10); }
   else if (ad == "emanetsil") { if (ar == "hepsi") nvsYaz("emanet", ""); else satirSil("emanet", ar); }
   else if (ad == "aliskanlik") satirEkle("alsk_t", ar, 12);
@@ -1522,6 +1561,7 @@ void komutIsle(const String& k) {
   else if (ad == "geri") geriSayimEkle(ar);
   else if (ad == "gerisil") { if (ar == "hepsi") nvsYaz("geri", ""); else satirSil("geri", ar); }
   else if (ad == "plansil") { if (ar == "hepsi") nvsYaz("plan", ""); else satirSil("plan", ar); }
+  else if (paket28Komut(ad, ar)) { }
   else if (ad == "goz") {
     int z = 0; unsigned long sure = 8000;
     if (ar == "kutla") { z = 2; sure = 6000; }
@@ -1849,6 +1889,9 @@ void webAna() {
   h += "<h2>Notlar</h2><div class=k>" + htmlKacir(notlariAl()) + "</div><form action=/sil><input type=hidden name=ne value=not><button>Notlari sil</button></form>";
   h += "<h2>Listeler</h2><div class=k>" + htmlKacir(listeleriAl()) + "</div><form action=/sil><input type=hidden name=ne value=liste><button>Listeleri sil</button></form>";
   h += String("<h2>Supurge anahtari</h2><p>") + (nvsOku("ghtoken").length() > 0 ? "Kayitli" : "Yok") + "</p><form action=/ayar method=post><input type=password name=ghtoken placeholder=anahtar style='width:100%'><button>Kaydet</button></form>";
+  h += "<h2>Wi-Fi degistir</h2><form action=/ayar method=post><input name=wifiad placeholder='Ag adi' style='width:100%'><input type=password name=wifisifre placeholder='Sifre' style='width:100%'><button>Kaydet ve yeniden baslat</button></form>";
+  h += String("<h2>Televizyon (Samsung)</h2><p>IP: ") + htmlKacir(nvsOku("tvip")) + "</p><form action=/ayar method=post><input name=tvip placeholder='192.168.1.50' style='width:100%'><button>Kaydet</button></form>";
+  h += String("<h2>Ev cihazlari</h2><div class=k>") + htmlKacir(cihazAdlari()) + "</div><form action=/ayar method=post><input name=cad placeholder='ad (tek kelime)' style='width:100%'><input name=con placeholder='ac adresi http://...' style='width:100%'><input name=coff placeholder='kapat adresi http://...' style='width:100%'><button>Ekle</button></form><form action=/sil><input type=hidden name=ne value=cihaz><button>Cihazlari sil</button></form>";
   h += "<h2>Alarmlar</h2><div class=k>" + htmlKacir(alarmListesi()) + "</div><form action=/sil><input type=hidden name=ne value=alarm><button>Alarmlari sil</button></form>";
   h += "</body></html>";
   webSunucu.send(200, "text/html; charset=utf-8", h);
@@ -1864,8 +1907,13 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("tvip")) { String t = webSunucu.arg("tvip"); t.trim(); if (t.length() >= 7 && t.length() < 40) nvsYaz("tvip", t); }
+  if (webSunucu.hasArg("cad")) cihazEkle(webSunucu.arg("cad"), webSunucu.arg("con"), webSunucu.arg("coff"));
+  bool yb = false;
+  if (webSunucu.hasArg("wifiad")) { String a = webSunucu.arg("wifiad"); a.trim(); if (a.length() > 0) { nvsYaz("wifi", a); nvsYaz("sifre", webSunucu.arg("wifisifre")); yb = true; } }
   webSunucu.sendHeader("Location", "/");
   webSunucu.send(303);
+  if (yb) { delay(1500); ESP.restart(); }
 }
 
 void webSil() {
@@ -1874,6 +1922,7 @@ void webSil() {
   else if (ne == "not") notTemizle();
   else if (ne == "liste") { nvsYaz("l_alis", ""); nvsYaz("l_yap", ""); }
   else if (ne == "alarm") alarmTemizle();
+  else if (ne == "cihaz") nvsYaz("cihaz", "");
   webSunucu.sendHeader("Location", "/");
   webSunucu.send(303);
 }
@@ -1895,6 +1944,7 @@ void webBaslat() {
   webSunucu.on("/sil", webSil);
   webSunucu.begin();
   xTaskCreate(webGorevi, "web", 8192, NULL, 1, NULL);
+  gWebVar = true;
   Serial.println(String("Ayar sayfasi: http://finduk.local veya http://") + WiFi.localIP().toString());
 }
 // ===== TELEFON AYAR SAYFASI, BILDIRIM BITIS =====
@@ -2745,6 +2795,823 @@ bool konus(const String& metin) {
   return konusAl(metin, false);
 }
 
+// ===== BUYUK PAKET 28: KARAKTER VE YASAM PAKETI BASLA =====
+String rastgeleSatirlar(const char* anahtar, int n) {
+  String s = nvsOku(anahtar);
+  String satir[40];
+  int say = 0, bas = 0;
+  while (bas < (int)s.length() && say < 40) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String t = s.substring(bas, e);
+    bas = e + 1;
+    t.trim();
+    if (t.length()) satir[say++] = t;
+  }
+  String o;
+  for (int i = 0; i < n && say > 0; i++) {
+    int k = esp_random() % say;
+    o += satir[k] + "; ";
+    satir[k] = satir[say - 1];
+    say--;
+  }
+  return o;
+}
+
+long gunFarki(const String& t10) {
+  long now = simdiEpoch();
+  if (now == 0 || t10.length() < 10) return -9999;
+  struct tm t = {};
+  t.tm_year = t10.substring(0, 4).toInt() - 1900;
+  t.tm_mon = t10.substring(5, 7).toInt() - 1;
+  t.tm_mday = t10.substring(8, 10).toInt();
+  t.tm_hour = 12;
+  t.tm_isdst = -1;
+  time_t h = mktime(&t);
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  z.tm_hour = 12; z.tm_min = 0; z.tm_sec = 0; z.tm_isdst = -1;
+  time_t b = mktime(&z);
+  return (long)lround((double)(h - b) / 86400.0);
+}
+
+// --- Gunluk sayaclar (robotun gunlugu icin) ---
+void sayacTazele() {
+  String g = bugunTarih();
+  if (g.length() && nvsOku("say_gun") != g) {
+    nvsYaz("say_gun", g);
+    nvsYaz("say_k", "0");
+    nvsYaz("say_kendi", "0");
+    nvsYaz("say_su", "0");
+  }
+}
+int sayacAl(const char* k) { sayacTazele(); return nvsOku(k).toInt(); }
+void sayacArttir(const char* k) { sayacTazele(); nvsYaz(k, String(nvsOku(k).toInt() + 1)); }
+
+// --- Huy: gunun havasi + uzun suredir gorusmeme ---
+String huyBilgisi() {
+  long now = simdiEpoch();
+  if (now == 0) return "";
+  const char* huy[] = {"neseli ve enerjik", "sakin ve dusunceli", "merakli, bol soru soran", "biraz tembel ve uykulu", "sakaci", "hafif nostaljik"};
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  int h = (z.tm_yday * 7 + z.tm_year) % 6;
+  String s = String(" Bugunku huyun: ") + huy[h] + " (abartma, cevaplara hafifce yansit).";
+  long son = nvsOku("son_gorus").toInt();
+  if (son > 0) {
+    long saat = (now - son) / 3600;
+    if (saat >= 72) s += String(" Kullaniciyi ") + (saat / 24) + " gundur gormedin, onu ozledin; bu konusmada ozledigini bir cumleyle sicak ve sirin sekilde belirt.";
+    else if (saat >= 44) s += " Kullanici iki gundur seninle konusmadi, biraz kuskunsun ama sevimli bir sekilde (tek cumle, agir kirginlik yok).";
+  }
+  return s;
+}
+
+// claudeCevapla sistem metnine eklenen paket 28 parcalari
+String paket28Sistem() {
+  String s = "";
+  if (gMisafir) {
+    s += " MISAFIR MODU ACIK: Evde misafir var. Sevimli ve esprili ol, kendini tanitabilirsin. Oguzhan'in ya da ailesinin kisisel bilgilerini (notlar, planlar, hafiza, aile, is) ASLA soyleme, sorulursa bunun ozel oldugunu soyle.";
+    return s;
+  }
+  if (gKisi == "demet") s += " Su an konusan kisi Demet (Oguzhan'in esi), Oguzhan degil. Ona adiyla hitap et.";
+  s += huyBilgisi();
+  String es = rastgeleSatirlar("espri", 3);
+  if (es.length()) s += String(" Ikinizin ortak espri ve anilari (ara sira, dogal bir yerde, zorlamadan an): ") + es;
+  if (nvsOku("macera_ac") == "1") s += String(" SESLI MACERA OYUNU ACIK. Tema ve hikaye ozeti: ") + nvsOku("macera") + ". Anlatici gibi 3-4 kisa cumleyle surdur, sonda kullaniciya ne yapacagini sor. Her cevabinin sonuna [macera:ozet|hikayenin guncel ozeti, en fazla 300 karakter] yaz. Oyun bitince [macera:bitir] yaz. Bu modda 2 cumle siniri yoktur.";
+  String kr = nvsOku("karakter");
+  if (kr.length()) s += String(" KARAKTER MODU ACIK: Su karakteri oynuyorsun: ") + kr + ". Cevaplarini bu agizla ver, kisa kal, Finduk oldugunu inkar etme.";
+  String dl = nvsOku("dil_modu");
+  if (dl.length()) s += String(" INGILIZCE PRATIK MODU ACIK (seviye: ") + dl + "). Kullanici Ingilizce pratik yapiyor. Cevabini basit Ingilizce ver (1-2 kisa cumle) ve bir soruyla devam et. Kullanici hata yaptiysa cevabin sonunda Kucuk duzeltme diyerek Turkce kisaca duzelt. Kullanici Turkce konusursa Turkce yardim et.";
+  return s;
+}
+
+// --- Bir yil once bugun: anilar kutusu ---
+String yilOnceAni() {
+  long now = simdiEpoch();
+  if (now == 0) return "";
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  char k[8];
+  snprintf(k, sizeof(k), "an%02d%02d", z.tm_mon + 1, z.tm_mday);
+  String s = nvsOku(k);
+  String o;
+  int yil = z.tm_year + 1900;
+  int bas = 0;
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    int y = satir.substring(0, 4).toInt();
+    if (satir.length() > 5 && y > 2000 && y < yil) o += satir + "; ";
+  }
+  return o;
+}
+
+void aniKaydet(const String& metin) {
+  long now = simdiEpoch();
+  if (now == 0) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  char k[8];
+  snprintf(k, sizeof(k), "an%02d%02d", z.tm_mon + 1, z.tm_mday);
+  satirEkle(k, String(z.tm_year + 1900) + " " + metin, 4);
+}
+
+// --- Robotun kendiliginden konusmasi (kimse sormadan) ---
+bool robotKonusur(const String& soru, const String& bilgi) {
+  if (WiFi.status() != WL_CONNECTED) return false;
+  gDurum = D_DUSUN;
+  String ham = claudeCevapla(soru, bilgi);
+  String cevap = degerBul(ham, "text");
+  if (cevap.length() == 0) { gDurum = D_BOSTA; return false; }
+  String tut[4];
+  int n = komutlariAyikla(cevap, tut, 4);
+  int mood = moodCoz(cevap);
+  Serial.print("FINDUK (kendiliginden): ");
+  Serial.println(cevap);
+  gUyku = false;
+  gMood = mood;
+  konus(cevap);
+  for (int i = 0; i < n; i++) {
+    if (gMisafir && !tut[i].startsWith("goz") && !tut[i].startsWith("misafir")) continue;
+    komutIsle(tut[i]);
+  }
+  gMoodBitis = millis() + 2500;
+  sohbetBitis = millis() + SOHBET_SURE;
+  gKonustu = true;
+  gDurum = D_BOSTA;
+  return true;
+}
+
+void kendiKonus() {
+  long now = simdiEpoch();
+  if (now == 0 || gMisafir || WiFi.status() != WL_CONNECTED) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 9 || z.tm_hour >= 22) return;
+  if (millis() - gSonEtkilesim < 75UL * 60000UL) return;
+  if (gSonKendi != 0 && millis() - gSonKendi < 100UL * 60000UL) return;
+  if (sayacAl("say_kendi") >= 3) return;
+  if (esp_random() % 3 != 0) return;
+  gSonKendi = millis();
+  sayacArttir("say_kendi");
+  String bilgi = "KENDILIGINDEN KONUSMA: Kimse sana bir sey sormadi, sessizlik oldu. Kisa (en fazla 2 cumle), dogal ve sicak bir sey soyle. Su seceneklerden birini sec: gunun nasil gectigini sor; ortak bir espriyi an; ilginc kucuk bir bilgi ver; tarihte bugun olan guzel bir olay anlat; ya da asagidaki ipuclarindan birini kullan. Kendini tanitma. Emin olmadigin bilgiyi uydurma.";
+  String an = yilOnceAni();
+  if (an.length()) bilgi += String(" Bir yil once bugun yasanan anilar: ") + an;
+  String og = ozelGunler(30);
+  if (og.length()) bilgi += String(" Yaklasan ozel gunler: ") + og;
+  robotKonusur("(Sessizlik oldu, kendiliginden bir sey soyle)", bilgi);
+}
+
+// --- Robotun kendi gunlugu (aksam 21:45'ten sonra) ---
+void robotGunlukKontrol() {
+  long now = simdiEpoch();
+  if (now == 0 || WiFi.status() != WL_CONNECTED) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 21 || (z.tm_hour == 21 && z.tm_min < 45)) return;
+  String g = bugunTarih();
+  if (nvsOku("rg_gun") == g) return;
+  nvsYaz("rg_gun", g);
+  int k = sayacAl("say_k"), kd = sayacAl("say_kendi"), su = sayacAl("say_su");
+  if (k == 0 && kd == 0) return;
+  String anlar = haftaninAnlari();
+  if (anlar.length() > 400) anlar = anlar.substring(0, 400);
+  String bilgi = String("ROBOT GUNLUGU: Bugun icin kendi gunlugunu yaz. Birinci agizdan (ben), en fazla 2 kisa cumle (toplam 120 karakteri gecmesin), sicak ve biraz esprili. Sayilar: kullanici ile ") + k + " konusma, kendiliginden " + kd + " konusma, su hatirlatmasi " + su + ". Bu haftanin guzel anlari: " + anlar + " Ortak espriler: " + rastgeleSatirlar("espri", 2) + " Sadece bu bilgilere dayan, uydurma. Cevabin sonuna komut yazma.";
+  String ham = claudeCevapla("(Gunlugunu yaz)", bilgi);
+  String c = degerBul(ham, "text");
+  if (c.length() == 0) return;
+  String tut[2];
+  komutlariAyikla(c, tut, 2);
+  moodCoz(c);
+  satirEkle("rgunluk", g + " " + c, 14);
+  bildirBaslik("Finduk'un gunlugu", c, 3, "book");
+}
+
+void yilOnceKontrol() {
+  long now = simdiEpoch();
+  if (now == 0) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 9) return;
+  String g = bugunTarih();
+  if (nvsOku("yo_gun") == g) return;
+  nvsYaz("yo_gun", g);
+  String an = yilOnceAni();
+  if (an.length()) bildirBaslik("Bir yil once bugun", an, 3, "hourglass");
+}
+
+// --- Bayram ve ozel gun modlari ---
+bool hicriAyGun(int& ay, int& gun) {
+  long t = simdiEpoch();
+  if (t == 0) return false;
+  time_t tt = (time_t)t;
+  struct tm z;
+  localtime_r(&tt, &z);
+  char yol[64];
+  snprintf(yol, sizeof(yol), "/v1/gToH/%02d-%02d-%04d", z.tm_mday, z.tm_mon + 1, z.tm_year + 1900);
+  String r = httpsGetGovde("api.aladhan.com", yol, 4000);
+  int k = r.indexOf("\"hijri\"");
+  if (k < 0) return false;
+  String seg = r.substring(k);
+  int g = seg.indexOf("\"gregorian\"");
+  if (g > 0) seg = seg.substring(0, g);
+  String gs = degerBul(seg, "day");
+  String as = sayiBul(seg, "number");
+  if (gs.length() == 0 || as.length() == 0) return false;
+  gun = gs.toInt();
+  ay = as.toInt();
+  return gun > 0 && ay > 0;
+}
+
+void ozelModKontrol() {
+  long now = simdiEpoch();
+  if (now == 0 || WiFi.status() != WL_CONNECTED) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 8 || z.tm_hour >= 22) return;
+  String g = bugunTarih();
+  if (nvsOku("om_gun") == g) return;
+  nvsYaz("om_gun", g);
+  char k[8];
+  snprintf(k, sizeof(k), "%02d-%02d", z.tm_mon + 1, z.tm_mday);
+  const char* sabit[][2] = {
+    {"01-01", "Yilbasi"}, {"03-08", "Dunya Kadinlar Gunu"}, {"03-18", "Canakkale Zaferi anma gunu"},
+    {"04-23", "23 Nisan Ulusal Egemenlik ve Cocuk Bayrami"}, {"05-01", "Emek ve Dayanisma Gunu"},
+    {"05-19", "19 Mayis Ataturk'u Anma, Genclik ve Spor Bayrami"}, {"07-15", "15 Temmuz Demokrasi ve Milli Birlik Gunu"},
+    {"08-30", "30 Agustos Zafer Bayrami"}, {"10-29", "29 Ekim Cumhuriyet Bayrami"},
+    {"11-10", "10 Kasim Ataturk'u anma gunu (saygiyla, sakin bir dille)"}, {"11-24", "Ogretmenler Gunu"}
+  };
+  String ad = "";
+  for (unsigned int i = 0; i < sizeof(sabit) / sizeof(sabit[0]); i++) if (String(sabit[i][0]) == k) ad = sabit[i][1];
+  if (ad.length() == 0) {
+    int ay = 0, gun = 0;
+    if (hicriAyGun(ay, gun)) {
+      if (ay == 9 && gun == 1) ad = "Ramazan ayinin ilk gunu";
+      else if (ay == 10 && gun >= 1 && gun <= 3) ad = "Ramazan Bayrami";
+      else if (ay == 12 && gun == 9) ad = "Kurban Bayrami arifesi";
+      else if (ay == 12 && gun >= 10 && gun <= 13) ad = "Kurban Bayrami";
+      else if (ay == 1 && gun == 1) ad = "Hicri yilbasi";
+      else if (ay == 1 && gun == 10) ad = "Asure gunu";
+      else if (ay == 3 && gun == 11) ad = "Mevlid Kandili (bu aksam)";
+      else if (ay == 7 && gun == 26) ad = "Mirac Kandili (bu aksam)";
+      else if (ay == 8 && gun == 14) ad = "Berat Kandili (bu aksam)";
+      else if (ay == 9 && gun == 26) ad = "Kadir Gecesi (bu aksam)";
+    }
+  }
+  if (ad.length() == 0) return;
+  gOzel = 2;
+  gOzelBitis = millis() + 8000;
+  bildirBaslik(ad, "Finduk bugunu kutluyor", 3, "tada");
+  robotKonusur(String("(Bugun: ") + ad + ". Bu gune uygun, sicak ve kisa bir tebrik ya da anma sozu soyle)", String("Bugun ") + ad + ". Emin degilsen sadece guzel bir gun dile, tarihi bilgi uydurma.");
+}
+
+// --- Su ve mola hatirlaticisi ---
+void suKur(const String& ar) {
+  if (sadelestir(ar).indexOf("kapat") >= 0) { nvsYaz("su", ""); return; }
+  int ar1 = ar.toInt();
+  if (ar1 < 20) ar1 = 20;
+  if (ar1 > 240) ar1 = 240;
+  int bas = 9, bit = 22;
+  int c1 = ar.indexOf('|');
+  if (c1 > 0) {
+    bas = ar.substring(c1 + 1).toInt();
+    int c2 = ar.indexOf('|', c1 + 1);
+    if (c2 > 0) bit = ar.substring(c2 + 1).toInt();
+  }
+  if (bas < 0 || bas > 23) bas = 9;
+  if (bit < 1 || bit > 24) bit = 22;
+  nvsYaz("su", String(ar1) + " " + bas + " " + bit);
+  gSonSu = millis();
+}
+
+void suKontrol() {
+  String c = nvsOku("su");
+  if (c.length() < 5) return;
+  long now = simdiEpoch();
+  if (now == 0) return;
+  int b1 = c.indexOf(' ');
+  int b2 = c.indexOf(' ', b1 + 1);
+  if (b1 < 0 || b2 < 0) return;
+  int ar = c.toInt();
+  int bas = c.substring(b1 + 1, b2).toInt();
+  int bit = c.substring(b2 + 1).toInt();
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < bas || z.tm_hour >= bit) return;
+  if (gSonSu == 0) { gSonSu = millis(); return; }
+  if (millis() - gSonSu < (unsigned long)ar * 60000UL) return;
+  gSonSu = millis();
+  const char* m[] = {"Su icme vakti! Bir bardak su iyi gelir.", "Biraz ayaga kalk, omuzlarini ve boynunu gevset.", "Gozlerini dinlendir, birkac saniye uzaga bak.", "Bir yudum su, bir derin nefes. Hadi.", "Kisa bir mola zamani, biraz yuru."};
+  bip(1200, 150);
+  gUyku = false;
+  konus(m[esp_random() % 5]);
+  sayacArttir("say_su");
+  gKonustu = true;
+}
+
+// --- Arac bakim takvimi: satir "YYYY-AA-GG ad" ---
+void aracKontrol() {
+  long now = simdiEpoch();
+  if (now == 0) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 10) return;
+  String g = bugunTarih();
+  if (nvsOku("ar_gun") == g) return;
+  nvsYaz("ar_gun", g);
+  String liste = nvsOku("arac");
+  int bas = 0;
+  while (bas < (int)liste.length()) {
+    int e = liste.indexOf('\n', bas);
+    if (e < 0) e = liste.length();
+    String satir = liste.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    if (satir.length() < 12) continue;
+    long k = gunFarki(satir.substring(0, 10));
+    String ad = satir.substring(11);
+    if (k == 30 || k == 14 || k == 7 || k == 3 || k == 1) bildirBaslik(String("Arac: ") + ad, String(k) + " gun kaldi", 4, "car");
+    else if (k == 0) bildirBaslik(String("Arac: ") + ad, "Bugun son gun!", 5, "warning");
+  }
+}
+
+String aracOzet() {
+  String liste = nvsOku("arac");
+  if (liste.length() == 0) return "Kayitli arac takvimi yok.";
+  String o = "Arac takvimi: ";
+  int bas = 0;
+  while (bas < (int)liste.length()) {
+    int e = liste.indexOf('\n', bas);
+    if (e < 0) e = liste.length();
+    String satir = liste.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    if (satir.length() < 12) continue;
+    long k = gunFarki(satir.substring(0, 10));
+    o += satir.substring(11) + ": " + (k >= 0 ? String(k) + " gun kaldi" : String(-k) + " gun once") + "; ";
+  }
+  return o;
+}
+
+// --- Vardiya takvimi: "YYYY-AA-GG sabah,aksam,gece" (baslangic haftasi pazartesi) ---
+void vardiyaKur(const String& ar) {
+  if (sadelestir(ar).indexOf("kapat") >= 0) { nvsYaz("vardiya", ""); return; }
+  int c = ar.indexOf('|');
+  if (c != 10) return;
+  String l = ar.substring(c + 1);
+  l.replace(" ", "");
+  l.toLowerCase();
+  nvsYaz("vardiya", ar.substring(0, 10) + " " + temizMetin(l, 60));
+}
+
+String vardiyaOzet() {
+  String v = nvsOku("vardiya");
+  if (v.length() < 12) return "";
+  long gecen = -gunFarki(v.substring(0, 10));
+  String liste = v.substring(11);
+  liste.trim();
+  String t[8];
+  int n = 0, bas = 0;
+  while (bas < (int)liste.length() && n < 8) {
+    int e = liste.indexOf(',', bas);
+    if (e < 0) e = liste.length();
+    String x = liste.substring(bas, e);
+    x.trim();
+    bas = e + 1;
+    if (x.length()) t[n++] = x;
+  }
+  if (n == 0) return "";
+  if (gecen < 0) return String("Vardiya duzeni henuz baslamadi, baslangic ") + v.substring(0, 10) + ".";
+  long hafta = gecen / 7;
+  return String("Vardiya (donen duzen): bu hafta ") + t[hafta % n] + ", gelecek hafta " + t[(hafta + 1) % n] + ", iki hafta sonra " + t[(hafta + 2) % n] + ".";
+}
+
+void vardiyaKontrol() {
+  long now = simdiEpoch();
+  if (now == 0) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_wday != 0 || z.tm_hour < 18) return;
+  String g = bugunTarih();
+  if (nvsOku("vd_gun") == g) return;
+  nvsYaz("vd_gun", g);
+  String o = vardiyaOzet();
+  if (o.length()) bildirBaslik("Haftalik vardiya", o, 3, "calendar");
+}
+
+// --- Mac gunu: satir "YYYY-AA-GG SS:DD A takim" (A: 0 bekliyor, 1 on bildirim, 2 basladi) ---
+void macKur(const String& ar) {
+  int c1 = ar.indexOf('|');
+  if (c1 <= 0) return;
+  String takim = ar.substring(0, c1);
+  String rest = ar.substring(c1 + 1);
+  int c2 = rest.indexOf('|');
+  String saat = (c2 < 0) ? rest : rest.substring(0, c2);
+  String tarih = (c2 < 0) ? bugunTarih() : rest.substring(c2 + 1);
+  saat.trim();
+  tarih.trim();
+  if (saat.length() != 5 || saat[2] != ':' || tarih.length() != 10) return;
+  satirEkle("macgun", tarih + " " + saat + " 0 " + takim, 6);
+}
+
+void macKontrol() {
+  String liste = nvsOku("macgun");
+  if (liste.length() == 0) return;
+  long now = simdiEpoch();
+  if (now == 0) return;
+  String yeni = "";
+  bool degisti = false;
+  int bas = 0;
+  while (bas < (int)liste.length()) {
+    int e = liste.indexOf('\n', bas);
+    if (e < 0) e = liste.length();
+    String satir = liste.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    if (satir.length() < 20) { degisti = true; continue; }
+    struct tm t = {};
+    t.tm_year = satir.substring(0, 4).toInt() - 1900;
+    t.tm_mon = satir.substring(5, 7).toInt() - 1;
+    t.tm_mday = satir.substring(8, 10).toInt();
+    t.tm_hour = satir.substring(11, 13).toInt();
+    t.tm_min = satir.substring(14, 16).toInt();
+    t.tm_isdst = -1;
+    long kick = (long)mktime(&t);
+    int as = satir.charAt(17) - '0';
+    String takim = satir.substring(19);
+    bool sil = false;
+    if (now > kick + 6 * 3600L) {
+      sil = true;
+    } else if (now >= kick + 6900L) {
+      sil = true;
+      bildirBaslik(takim + " maci", "Mac bitmis olmali, Finduk skoru soyluyor.", 3, "soccer");
+      robotKonusur(String("(") + takim + " maci bitmis olmali, skoru ve sonucu kisaca soyle)", String("Takim: ") + takim + ". " + macBilgisi() + " Skoru bulamazsan bulamadigini soyle, uydurma.");
+    } else if (as < 2 && now >= kick) {
+      as = 2;
+      degisti = true;
+      gOzel = 3;
+      gOzelBitis = millis() + 25000;
+      gMood = M_MUTLU;
+      gMoodBitis = millis() + 5000;
+      gUyku = false;
+      konus(takim + " maci basladi, heyecan basliyor!");
+      gKonustu = true;
+    } else if (as == 0 && now >= kick - 600) {
+      as = 1;
+      degisti = true;
+      bildirBaslik(takim + " maci", "10 dakika sonra basliyor", 4, "soccer");
+      gUyku = false;
+      bip(1200, 150);
+      konus(takim + " maci 10 dakika sonra basliyor!");
+      gKonustu = true;
+    }
+    if (sil) { degisti = true; continue; }
+    yeni += satir.substring(0, 17) + String(as) + satir.substring(18) + "\n";
+  }
+  if (degisti) nvsYaz("macgun", yeni);
+}
+
+// --- Gizli kasa: satir "parola not" (parola tek kelime, kucuk harf) ---
+String kasaAc(const String& sd) {
+  String s = nvsOku("kasa");
+  String o;
+  int bas = 0;
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    int sp = satir.indexOf(' ');
+    if (sp < 4) continue;
+    if (sd.indexOf(satir.substring(0, sp)) >= 0) o += satir.substring(sp + 1) + ". ";
+  }
+  return o;
+}
+
+void kasaKaydet(const String& ar) {
+  int c = ar.indexOf('|');
+  if (c <= 0) return;
+  String p = sadelestir(ar.substring(0, c));
+  p.trim();
+  int sp = p.indexOf(' ');
+  if (sp > 0) p = p.substring(0, sp);
+  if (p.length() < 4) return;
+  satirEkle("kasa", p + " " + ar.substring(c + 1), 15);
+}
+
+// --- Mutfak modu: tarif adim adim ---
+void tarifKur(const String& ar) {
+  int c = ar.indexOf('|');
+  if (c < 0) return;
+  gTarifBaslik = ar.substring(0, c);
+  String s = ar.substring(c + 1);
+  gTarifN = 0;
+  gTarifI = 0;
+  int bas = 0;
+  while (bas < (int)s.length() && gTarifN < 12) {
+    int e = s.indexOf(';', bas);
+    if (e < 0) e = s.length();
+    String t = s.substring(bas, e);
+    t.trim();
+    bas = e + 1;
+    if (t.length()) gTarifAdim[gTarifN++] = t;
+  }
+  if (gTarifN > 0) konus(String("Birinci adim: ") + gTarifAdim[0] + ". Hazir olunca sonraki de.");
+}
+
+bool tarifSozMu(const String& sd) {
+  return gTarifN > 0 && (sd.indexOf("sonraki") >= 0 || sd.indexOf("tekrar") >= 0 || sd.indexOf("onceki") >= 0 || sd.indexOf("tarif bitti") >= 0 || sd.indexOf("tarifi kapat") >= 0);
+}
+
+bool tarifKomutu(const String& sd) {
+  if (gTarifN <= 0) return false;
+  if (sd.indexOf("tarif bitti") >= 0 || sd.indexOf("tarifi kapat") >= 0) { gTarifN = 0; konus("Afiyet olsun!"); return true; }
+  if (sd.indexOf("onceki") >= 0) { if (gTarifI > 0) gTarifI--; }
+  else if (sd.indexOf("sonraki") >= 0) gTarifI++;
+  else if (sd.indexOf("tekrar") >= 0) { }
+  else return false;
+  if (gTarifI >= gTarifN) { gTarifN = 0; konus("Tarif bitti, afiyet olsun!"); return true; }
+  konus(String("Adim ") + (gTarifI + 1) + ": " + gTarifAdim[gTarifI]);
+  return true;
+}
+
+// --- Sesli macera ---
+void maceraIsle(const String& ar) {
+  int c = ar.indexOf('|');
+  String islem = (c < 0) ? ar : ar.substring(0, c);
+  String m = (c < 0) ? String("") : ar.substring(c + 1);
+  islem.trim();
+  if (islem == "basla") { nvsYaz("macera_ac", "1"); nvsYaz("macera", temizMetin(String("Tema: ") + m, 380)); }
+  else if (islem == "ozet") { if (nvsOku("macera_ac") == "1") nvsYaz("macera", temizMetin(m, 380)); }
+  else if (islem == "bitir") { nvsYaz("macera_ac", ""); nvsYaz("macera", ""); }
+}
+
+// --- Ev cihazlari (Shelly, Tasmota gibi yerel http ile acilip kapanan cihazlar): satir "ad ac_url kapat_url" ---
+void cihazEkle(String ad, String on, String off) {
+  ad = sadelestir(ad);
+  ad.replace(" ", "");
+  on.trim();
+  off.trim();
+  if (ad.length() < 2 || ad.length() > 20 || !on.startsWith("http://")) return;
+  if (!off.startsWith("http://")) off = on;
+  if (on.indexOf(' ') >= 0 || off.indexOf(' ') >= 0 || on.length() > 120 || off.length() > 120) return;
+  satirSil("cihaz", ad + " ");
+  String s = nvsOku("cihaz");
+  s += ad + " " + on + " " + off + "\n";
+  nvsYaz("cihaz", s);
+}
+
+String cihazAdlari() {
+  String s = nvsOku("cihaz");
+  String o;
+  int bas = 0;
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    int sp = satir.indexOf(' ');
+    if (sp > 0) o += satir.substring(0, sp) + ", ";
+  }
+  return o;
+}
+
+bool cihazKomut(const String& ar) {
+  int c = ar.indexOf('|');
+  if (c <= 0) return false;
+  String ad = sadelestir(ar.substring(0, c));
+  ad.replace(" ", "");
+  String eylem = sadelestir(ar.substring(c + 1));
+  bool kapat = eylem.indexOf("kapat") >= 0 || eylem.indexOf("sondur") >= 0;
+  String s = nvsOku("cihaz");
+  int bas = 0;
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    int a = satir.indexOf(' ');
+    int b = satir.indexOf(' ', a + 1);
+    if (a <= 0 || b < 0) continue;
+    if (satir.substring(0, a) != ad) continue;
+    String url = kapat ? satir.substring(b + 1) : satir.substring(a + 1, b);
+    url.trim();
+    HTTPClient http;
+    http.setTimeout(5000);
+    if (!http.begin(url)) return false;
+    int kod = http.GET();
+    http.end();
+    Serial.println(String("CIHAZ ") + ad + (kapat ? " kapat" : " ac") + " -> HTTP " + kod);
+    return kod > 0 && kod < 400;
+  }
+  return false;
+}
+
+// --- Samsung televizyon (WebSocket, port 8002). Ilk kullanimda TV ekraninda Izin ver denmeli ---
+bool tvBekle(WiFiClientSecure& c, unsigned long ms) {
+  unsigned long b = millis();
+  while (!c.available() && c.connected() && millis() - b < ms) delay(10);
+  return c.available() > 0;
+}
+
+bool tvTus(String tus) {
+  String ip = nvsOku("tvip");
+  if (ip.length() < 7) return false;
+  tus = sadelestir(tus);
+  tus.toUpperCase();
+  for (unsigned int i = 0; i < tus.length(); i++) if (!(isalnum(tus[i]) || tus[i] == '_')) return false;
+  WiFiClientSecure c;
+  c.setInsecure();
+  c.setTimeout(6);
+  if (!c.connect(ip.c_str(), 8002)) return false;
+  String tok = nvsOku("tvtoken");
+  String yol = "/api/v2/channels/samsung.remote.control?name=RmluZHVr";
+  if (tok.length()) yol += String("&token=") + tok;
+  c.print(String("GET ") + yol + " HTTP/1.1\r\nHost: " + ip + ":8002\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n");
+  String baslik;
+  unsigned long b = millis();
+  while (millis() - b < 6000) {
+    if (c.available()) {
+      baslik += (char)c.read();
+      if (baslik.endsWith("\r\n\r\n")) break;
+    } else if (!c.connected()) break;
+    else delay(5);
+  }
+  if (baslik.indexOf(" 101") < 0) { c.stop(); return false; }
+  unsigned long bekle = tok.length() ? 4000UL : 20000UL;
+  bool baglandi = false;
+  b = millis();
+  while (millis() - b < bekle && !baglandi) {
+    if (!tvBekle(c, 500)) continue;
+    int b0 = c.read();
+    if (!c.available()) tvBekle(c, 500);
+    int b1 = c.read();
+    if (b0 < 0 || b1 < 0) break;
+    int len = b1 & 0x7F;
+    if (len == 126) { int h = c.read(); int l = c.read(); len = ((h & 0xFF) << 8) | (l & 0xFF); }
+    else if (len == 127) break;
+    String yuk;
+    unsigned long b2 = millis();
+    while ((int)yuk.length() < len && millis() - b2 < 3000) {
+      if (c.available()) yuk += (char)c.read();
+      else delay(2);
+    }
+    if (yuk.indexOf("ms.channel.connect") >= 0) {
+      baglandi = true;
+      String t2 = degerBul(yuk, "token");
+      if (t2.length() > 3 && t2 != tok) nvsYaz("tvtoken", t2);
+    } else if (yuk.indexOf("ms.channel.timeOut") >= 0 || yuk.indexOf("unauthorized") >= 0) break;
+  }
+  if (!baglandi) { c.stop(); return false; }
+  String js = String("{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"") + tus + "\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}";
+  int n = js.length();
+  uint8_t mask[4] = {0x21, 0x43, 0x65, 0x87};
+  c.write((uint8_t)0x81);
+  if (n < 126) c.write((uint8_t)(0x80 | n));
+  else { c.write((uint8_t)(0x80 | 126)); c.write((uint8_t)(n >> 8)); c.write((uint8_t)(n & 0xFF)); }
+  c.write(mask, 4);
+  for (int i = 0; i < n; i++) c.write((uint8_t)(js[i] ^ mask[i % 4]));
+  delay(400);
+  c.stop();
+  return true;
+}
+
+bool tvUygulama(const String& ad) {
+  String ip = nvsOku("tvip");
+  if (ip.length() < 7) return false;
+  String a = sadelestir(ad);
+  String id = "";
+  if (a.indexOf("netflix") >= 0) id = "3201907018807";
+  else if (a.indexOf("youtube") >= 0) id = "111299001912";
+  else if (a.indexOf("prime") >= 0) id = "3201910019365";
+  else if (a.indexOf("disney") >= 0) id = "3201901017640";
+  if (id.length() == 0) return false;
+  HTTPClient http;
+  http.setTimeout(5000);
+  if (!http.begin(String("http://") + ip + ":8001/api/v2/applications/" + id)) return false;
+  int kod = http.POST("");
+  http.end();
+  Serial.println(String("TV uygulama -> HTTP ") + kod);
+  return kod == 200 || kod == 201;
+}
+
+void tvKomut(const String& ar) {
+  int c = ar.indexOf('|');
+  if (c <= 0) return;
+  String tur = ar.substring(0, c);
+  String deger = ar.substring(c + 1);
+  tur.trim();
+  bool ok = false;
+  if (tur == "tus") ok = tvTus(deger);
+  else if (tur == "uygulama") ok = tvUygulama(deger);
+  if (!ok) bildir("TV komutu gonderilemedi (IP, TV acik mi, izin verildi mi bak)");
+}
+
+// --- Wi-Fi kurulum agi: telefon Finduk-Kurulum agina baglanir, 192.168.4.1/kurulum sayfasini acar ---
+void kurulumSayfa() {
+  int n = WiFi.scanNetworks();
+  String h = "<!doctype html><html><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Finduk kurulum</title></head><body style='font-family:-apple-system,sans-serif;margin:16px'><h2>Finduk Wi-Fi kurulumu</h2><form action=/kaydet method=post><select name=wifiad style='font-size:18px;width:100%'>";
+  for (int i = 0; i < n && i < 15; i++) h += String("<option>") + htmlKacir(WiFi.SSID(i)) + "</option>";
+  h += "</select><br><input type=password name=wifisifre placeholder='Wi-Fi sifresi' style='font-size:18px;width:100%;margin:8px 0'><br><button style='font-size:18px;padding:8px'>Kaydet</button></form></body></html>";
+  webSunucu.send(200, "text/html; charset=utf-8", h);
+}
+
+void kurulumKaydet() {
+  String a = webSunucu.arg("wifiad");
+  String s = webSunucu.arg("wifisifre");
+  if (a.length() == 0) { webSunucu.send(400, "text/plain", "Ag adi bos"); return; }
+  nvsYaz("wifi", a);
+  nvsYaz("sifre", s);
+  webSunucu.send(200, "text/html; charset=utf-8", "<p>Kaydedildi. Finduk yeniden basliyor.</p>");
+  delay(1500);
+  ESP.restart();
+}
+
+void kurulumAP() {
+  Serial.println("Wi-Fi kurulum modu: Finduk-Kurulum agi acildi, 192.168.4.1/kurulum");
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP("Finduk-Kurulum");
+  webSunucu.on("/kurulum", kurulumSayfa);
+  webSunucu.on("/kaydet", HTTP_POST, kurulumKaydet);
+  if (!gWebVar) webSunucu.begin();
+  unsigned long b = millis();
+  while (millis() - b < 600000UL) {
+    if (!gWebVar) webSunucu.handleClient();
+    delay(5);
+  }
+  if (WiFi.status() == WL_CONNECTED) { WiFi.softAPdisconnect(true); return; }
+  ESP.restart();
+}
+
+// --- Paket 28 komutlari ---
+bool paket28Komut(const String& ad, const String& ar) {
+  if (ad == "espri") satirEkle("espri", ar, 20);
+  else if (ad == "esprisil") { if (ar == "hepsi") nvsYaz("espri", ""); else satirSil("espri", ar); }
+  else if (ad == "macera") maceraIsle(ar);
+  else if (ad == "karakter") { if (sadelestir(ar).indexOf("kapat") == 0) nvsYaz("karakter", ""); else nvsYaz("karakter", temizMetin(ar, 120)); }
+  else if (ad == "kisi") { gKisi = (sadelestir(ar).indexOf("demet") >= 0) ? "demet" : ""; gKisiBitis = millis() + 20UL * 60000UL; }
+  else if (ad == "misafir") { if (sadelestir(ar).indexOf("kapat") >= 0) gMisafir = false; else { gMisafir = true; gMisafirBitis = millis() + 4UL * 3600000UL; } }
+  else if (ad == "dil") {
+    if (sadelestir(ar).indexOf("kapat") >= 0) nvsYaz("dil_modu", "");
+    else { int c = ar.indexOf('|'); String s = (c >= 0) ? ar.substring(c + 1) : String(""); s = temizMetin(s, 20); if (s.length() == 0) s = "baslangic"; nvsYaz("dil_modu", s); }
+  }
+  else if (ad == "tarif") tarifKur(ar);
+  else if (ad == "vardiya") vardiyaKur(ar);
+  else if (ad == "su") suKur(ar);
+  else if (ad == "arac") { int c = ar.indexOf('|'); if (c > 0 && ar.length() >= c + 11 && ar[c + 5] == '-') satirEkle("arac", ar.substring(c + 1, c + 11) + " " + ar.substring(0, c), 20); }
+  else if (ad == "aracsil") satirSil("arac", ar);
+  else if (ad == "yemekplan") {
+    int bas = 0;
+    while (bas < (int)ar.length()) {
+      int e = ar.indexOf(';', bas);
+      if (e < 0) e = ar.length();
+      String t = ar.substring(bas, e);
+      t.trim();
+      bas = e + 1;
+      if (t.length()) satirEkle("yemekplan", t, 14);
+    }
+  }
+  else if (ad == "yemekplansil") { if (ar == "hepsi") nvsYaz("yemekplan", ""); else satirSil("yemekplan", ar); }
+  else if (ad == "kasa") kasaKaydet(ar);
+  else if (ad == "kasasil") satirSil("kasa", sadelestir(ar));
+  else if (ad == "mac") macKur(ar);
+  else if (ad == "cihaz") { if (!cihazKomut(ar)) bildir("Cihaz komutu calismadi (kayitli mi, acik mi bak)"); }
+  else if (ad == "tv") tvKomut(ar);
+  else if (ad == "kurulum") kurulumAP();
+  else return false;
+  return true;
+}
+
+// Dakikalik/periyodik paket 28 isleri (uyku ve uyanik dongusunde cagrilir)
+void paket28Periyodik() {
+  if (gMisafir && millis() > gMisafirBitis) gMisafir = false;
+  if (gKisi.length() && millis() > gKisiBitis) gKisi = "";
+  kendiKonus();
+  robotGunlukKontrol();
+  yilOnceKontrol();
+  ozelModKontrol();
+  suKontrol();
+  aracKontrol();
+  vardiyaKontrol();
+  macKontrol();
+}
+// ===== BUYUK PAKET 28 BITIS =====
+
 void setup() {
   Serial.begin(115200);
   delay(1500);
@@ -2766,6 +3633,7 @@ void setup() {
   miknrofonKur();
   hoparlorKur();
   wifiBaglan();
+  if (WiFi.status() != WL_CONNECTED) kurulumAP();
   zamanBaslat();
   alarmYukle();
   webBaslat();
@@ -2788,6 +3656,8 @@ void loop() {
       ozelGunKontrol();
       hatirlaticiKontrol();
       haftalikAnlarKontrol();
+      paket28Periyodik();
+      gKonustu = false;
       telefonMesajiIsle();
       guncellemeKontrol();      // uyurken yeni surum var mi diye bak
       return;
@@ -2806,6 +3676,8 @@ void loop() {
     ozelGunKontrol();
     hatirlaticiKontrol();
     haftalikAnlarKontrol();
+    paket28Periyodik();
+    if (gKonustu) { gKonustu = false; return; }
     telefonMesajiIsle();
     if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
     gUyku = true;
@@ -2874,8 +3746,10 @@ void loop() {
   }
 
   // Adi gecmiyorsa ve sohbet penceresi kapaliysa cevap verme
+  if (gKisi.length() && millis() > gKisiBitis) gKisi = "";
   bool adiVar = adiGeciyor(duyulan);
-  if (!adiVar && millis() > sohbetBitis) {
+  bool tarifSoz = tarifSozMu(sadelestir(duyulan));
+  if (!adiVar && !tarifSoz && millis() > sohbetBitis) {
     gDurum = D_BOSTA;
     Serial.println("(Adimi duymadim, yoksayiyorum. Hey Finduk diye basla.)");
     delay(500);
@@ -2884,6 +3758,19 @@ void loop() {
 
   String bilgi = "";
   String sd = sadelestir(duyulan);
+  // --- Paket 28: yerel (API'siz) komutlar ---
+  if (tarifSoz && tarifKomutu(sd)) { sohbetBitis = millis() + SOHBET_SURE; gDurum = D_BOSTA; return; }
+  if (sd.indexOf("ben demet") >= 0 || sd.indexOf("demet konusuyor") >= 0) { gKisi = "demet"; gKisiBitis = millis() + 20UL * 60000UL; }
+  else if (sd.indexOf("ben oguzhan") >= 0 || sd.indexOf("oguzhan konusuyor") >= 0) gKisi = "";
+  if (sd.indexOf("misafir") >= 0 && (sd.indexOf("kapat") >= 0 || sd.indexOf("gitti") >= 0 || sd.indexOf("bitti") >= 0)) gMisafir = false;
+  else if (sd.indexOf("misafir modu") >= 0 || sd.indexOf("misafir geldi") >= 0 || sd.indexOf("misafirler geldi") >= 0) { gMisafir = true; gMisafirBitis = millis() + 4UL * 3600000UL; }
+  if (!gMisafir && sd.indexOf("kasa") >= 0 && (sd.indexOf("kasayi") >= 0 || sd.indexOf("kasam") >= 0 || sd.indexOf("kasa ac") >= 0) && sd.indexOf("ekle") < 0 && sd.indexOf("kaydet") < 0) {
+    String kc = kasaAc(sd);
+    konus(kc.length() ? kc : String("Parola eslesmedi."));
+    sohbetBitis = millis() + SOHBET_SURE;
+    gDurum = D_BOSTA;
+    return;
+  }
   bool hv = havaMi(sd);
   bool hb = (!hv && haberMi(sd));
   bool nm = (!hv && !hb && namazMi(sd));
@@ -2933,7 +3820,7 @@ void loop() {
     }
   }
 
-  {
+  if (!gMisafir) {
     String ek = "";
     if (notMi(sd)) {
       String nl = notlariAl();
@@ -2967,6 +3854,15 @@ void loop() {
       String nb = namazBilgisi();
       ek += String("GUN OZETI icin: ") + havaBilgisi() + " " + nb + " Plan: " + planAl() + ". Notlar: " + notlariAl() + ". Alarmlar: " + alarmListesi() + ". " + listeleriAl() + " ";
     }
+    if (sd.indexOf("vardiya") >= 0 || sd.indexOf("nobet") >= 0 || sd.indexOf("uyku duzeni") >= 0) ek += vardiyaOzet() + " ";
+    if (sd.indexOf("muayene") >= 0 || sd.indexOf("sigorta") >= 0 || sd.indexOf("kasko") >= 0 || sd.indexOf("arac bakim") >= 0 || sd.indexOf("araba") >= 0 || sd.indexOf("yag degis") >= 0 || sd.indexOf("lastik") >= 0) ek += aracOzet() + " ";
+    if (sd.indexOf("yemek") >= 0 || sd.indexOf("ne pisir") >= 0 || sd.indexOf("ne yesek") >= 0 || sd.indexOf("menu") >= 0 || sd.indexOf("kahvalti") >= 0) ek += String("Kayitli yemek plani: ") + satirlariAl("yemekplan") + " ";
+    if (sd.indexOf("hediye") >= 0 || sd.indexOf("surpriz") >= 0 || sd.indexOf("yildonum") >= 0 || sd.indexOf("dogum gunu") >= 0 || sd.indexOf("evlilik") >= 0) ek += String("Kayitli ozel gunler: ") + ozelGunler(366) + " ";
+    if (sd.indexOf("tekerleme") >= 0 || sd.indexOf("siir") >= 0 || sd.indexOf("gunun sarki") >= 0) { String ip = ""; for (int i = 0; i < hN; i++) ip += hSoru[i] + ". "; ek += String("GUNUN TEKERLEMESI icin bugunku konusma ipuclari: ") + ip + " Guzel anlar: " + haftaninAnlari() + " "; }
+    if (sd.indexOf("gunlugun") >= 0) ek += String("Finduk'un kendi gunlugu (son girisler): ") + satirlariAl("rgunluk") + " ";
+    if (sd.indexOf("bir yil once") >= 0 || sd.indexOf("gecmis yil") >= 0) ek += String("Gecmis yillarin bugunku anilari: ") + yilOnceAni() + " ";
+    { String ca = cihazAdlari(); if (ca.length()) ek += String("Kayitli ev cihazlari (cihaz komutuyla acilip kapanir): ") + ca + " "; }
+    if (nvsOku("tvip").length()) ek += "Televizyon tanimli, tv komutuyla kontrol edebilirsin. ";
     if (ek.length() > 0) bilgi = (bilgi.length() > 0) ? bilgi + " " + ek : ek;
   }
 
@@ -2982,9 +3878,14 @@ void loop() {
     Serial.print("): ");
     Serial.println(cevap);
     hafizayaEkle(duyulan, hamCevap);
+    nvsYaz("son_gorus", String(simdiEpoch()));
+    gSonEtkilesim = millis();
+    sayacArttir("say_k");
+    if (gKisi.length()) gKisiBitis = millis() + 20UL * 60000UL;
     gMood = mood;
     konus(cevap);
     for (int i = 0; i < komutN; i++) {      // konusma bitince uygulamaya komutlari yolla
+      if (gMisafir && !komutlar[i].startsWith("goz") && !komutlar[i].startsWith("misafir")) continue;
       komutIsle(komutlar[i]);
       delay(300);
     }
