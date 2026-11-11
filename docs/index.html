@@ -159,6 +159,8 @@ details summary{cursor:pointer;color:var(--soluk);font-size:14px}
         <button onclick="kmt('#komut:tv:uygulama|youtube')">YouTube</button>
         <button onclick="kmt('#komut:tv:uygulama|disney')">Disney+</button>
       </div>
+      <div class="satir" style="margin-top:10px"><input id="tvFilm" placeholder="Film ya da dizi adı"><button class="dar ana" onclick="const t=temiz(tvFilm.value);if(t){kmt('#komut:tvfilm:'+t);tvFilm.value=''}">TV'de aç</button></div>
+      <p class="ipucu">Finduk filmin hangi platformda olduğunu bulup televizyonda açar.</p>
       <p class="ipucu" id="tvNot"></p>
     </div>
 

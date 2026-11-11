@@ -77,7 +77,7 @@ const char* KISILIK =
   " GIZLI KASA: Kullanici sesli parolayla saklanacak ozel bir not verirse [kasa:tekkelimeparola|not] yaz (parola en az 4 harf, tek kelime). Notu sen soyleme, kasayi robot parolayi duyunca kendisi acar. Silmek icin [kasasil:parola]. "
   " MISAFIR MODU: Misafir geldigini soylerse [misafir:ac], gidince [misafir:kapat] yaz. "
   " EV CIHAZLARI: Sana kayitli ev cihazi bildirilirse acmak veya kapatmak icin [cihaz:ad|ac] ya da [cihaz:ad|kapat] yaz. "
-  " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE). Uygulama acmak icin [tv:uygulama|netflix] yaz (netflix youtube prime disney). "
+  " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE). Uygulama acmak icin [tv:uygulama|platform adi] yaz (netflix, youtube, prime, disney, hbo max, blutv, exxen, tod, tabii, mubi gibi; TV de yukluyse acilir). Kullanici bir FILM veya DIZIYI televizyonda acmani isterse [tvfilm:filmin adi] yaz; robot filmin hangi platformda oldugunu kendisi bulur, aciyor ve sonucu kendisi soyler, sen sadece kisaca bakiyorum de, platform tahmin etme. Sinema Odasi favorilerinden birini acman istenirse sana verilen Sinema Odasi bilgisinde film adi varsa ondan sec, yoksa kullanicinin sevdigini bildigin bir film sec ve hangisini sectigini soyle. "
   " WIFI KURULUM: Kullanici yeni Wi-Fi ayarlamak isterse [kurulum:ac] yaz. Telefon Finduk-Kurulum agina baglanip 192.168.4.1/kurulum sayfasini acar. "
   "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. TELEFONUMU BUL: Kullanici telefonunu bulamazsa [telefonbul:1] yaz, telefonuna sesli acil bildirim gider (sessizdeyse duyulmayabilir). ALISKANLIK: Kullanici takip etmek istedigi bir aliskanlik soylerse [aliskanlik:su icmek] yaz, yaptigini soylerse [yaptim:su icmek] yaz (ad tanimdakiyle ayni olsun), istemezse [aliskanliksil:ad]; seri veya bu hafta sorulursa sana verilen kayitlardan kac gun ust uste yapildigini hesapla, kisa ve cesaretlendirici ol, dirdir etme. HIKAYE: Kullanici bir hikaye, ani veya tarif kaydetmek isterse kisa bir baslik sec, [hikaye:baslik] yaz ve anlatmaya baslamasini soyle; bundan sonra anlattiklari oldugu gibi kaydedilir, bitince hikaye bitti demesi yeterli, bunu da soyle. GUN OZETI: Her aksam 21.30da telefona gun ozeti gider; kullanici kapatmak isterse [ozet:kapat], acmak isterse [ozet:ac], simdi isterse [ozet:simdi] yaz. TELEFONDAN YAZMA: Kullanici telefondan da yazabilir; mesajlari birkac dakikada bir okunur. OZEL GUNLER: Her yil tekrar eden dogum gunu, yildonumu gibi gunleri [ozelgun:02-16|evlilik yildonumu] diye kaydet (ay-gun), silmek icin [ozelgunsil:ad]; yedi gun once, bir gun once ve o gun telefona hatirlatilir; bugun ozel gun ise sohbette sicakca hatirlat ve hediye veya kutlama fikri ver. TEKRARLAYAN HATIRLATICI: Belli gun ve saatte tekrar eden hatirlatma icin [hatirlat:19:00|pzt,per|cop cikacak] yaz; gunler hergun, haftaici, haftasonu veya pzt,sal,car,per,cum,cmt,paz (bosluksuz, saat iki haneli); silmek icin [hatirlatsil:mesajdan bir kelime] ya da [hatirlatsil:hepsi]. GUZEL ANLAR: Iyi geceler denince bazen bugunun guzel bir anini sor; kullanici guzel bir an, sevindigi veya sukrettigi bir sey anlatirsa [gunluk:kisa ozet] yaz; pazar aksami haftanin anlari telefona gider. EMANET: Biri evdeki baskasina mesaj birakmak isterse [emanet:Demet|mesaj] yaz; bekleyen emanet varsa ve konusan kisi o kisiyse veya kim oldugunu soylerse mesaji ilet ve [emanetsil:Demet] yaz; kime ait oldugu belli degilse kime mesaj oldugunu soyle, icerigi sahibine sakla. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
@@ -1216,7 +1216,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "kurulum" || ad == "radyo") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "tvfilm" || ad == "kurulum" || ad == "radyo") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -3494,13 +3494,49 @@ bool tvBekle(WiFiClientSecure& c, unsigned long ms) {
   return c.available() > 0;
 }
 
-bool tvTus(String tus) {
+int tvBayt(WiFiClientSecure& c) {
+  if (!c.available()) tvBekle(c, 1500);
+  return c.read();
+}
+
+// Sunucudan gelen tek bir WebSocket cercevesini okur (en fazla 24 KB saklar)
+String tvCerceveOku(WiFiClientSecure& c, unsigned long ms) {
+  if (!tvBekle(c, ms)) return "";
+  int b0 = tvBayt(c), b1 = tvBayt(c);
+  if (b0 < 0 || b1 < 0) return "";
+  unsigned long len = b1 & 0x7F;
+  if (len == 126) { int h = tvBayt(c), l = tvBayt(c); len = ((unsigned long)(h & 0xFF) << 8) | (l & 0xFF); }
+  else if (len == 127) { len = 0; for (int i = 0; i < 8; i++) len = (len << 8) | (tvBayt(c) & 0xFF); }
+  String yuk;
+  yuk.reserve(len < 24000 ? len : 24000);
+  unsigned long okunan = 0, b2 = millis();
+  while (okunan < len && millis() - b2 < 5000) {
+    if (c.available()) { char ch = (char)c.read(); if (okunan < 24000) yuk += ch; okunan++; }
+    else if (!c.connected()) break;
+    else delay(2);
+  }
+  return yuk;
+}
+
+void tvYaz(WiFiClientSecure& c, const String& js) {
+  int n = js.length();
+  uint8_t mask[4] = {0x21, 0x43, 0x65, 0x87};
+  c.write((uint8_t)0x81);
+  if (n < 126) c.write((uint8_t)(0x80 | n));
+  else { c.write((uint8_t)(0x80 | 126)); c.write((uint8_t)(n >> 8)); c.write((uint8_t)(n & 0xFF)); }
+  c.write(mask, 4);
+  uint8_t parca[128];
+  int k = 0;
+  for (int i = 0; i < n; i++) {
+    parca[k++] = (uint8_t)(js[i] ^ mask[i % 4]);
+    if (k == 128) { c.write(parca, k); k = 0; }
+  }
+  if (k) c.write(parca, k);
+}
+
+bool tvBaglan(WiFiClientSecure& c) {
   String ip = nvsOku("tvip");
   if (ip.length() < 7) return false;
-  tus = sadelestir(tus);
-  tus.toUpperCase();
-  for (unsigned int i = 0; i < tus.length(); i++) if (!(isalnum(tus[i]) || tus[i] == '_')) return false;
-  WiFiClientSecure c;
   c.setInsecure();
   c.setTimeout(6);
   if (!c.connect(ip.c_str(), 8002)) return false;
@@ -3519,60 +3555,223 @@ bool tvTus(String tus) {
   }
   if (baslik.indexOf(" 101") < 0) { c.stop(); return false; }
   unsigned long bekle = tok.length() ? 4000UL : 20000UL;
-  bool baglandi = false;
   b = millis();
-  while (millis() - b < bekle && !baglandi) {
-    if (!tvBekle(c, 500)) continue;
-    int b0 = c.read();
-    if (!c.available()) tvBekle(c, 500);
-    int b1 = c.read();
-    if (b0 < 0 || b1 < 0) break;
-    int len = b1 & 0x7F;
-    if (len == 126) { int h = c.read(); int l = c.read(); len = ((h & 0xFF) << 8) | (l & 0xFF); }
-    else if (len == 127) break;
-    String yuk;
-    unsigned long b2 = millis();
-    while ((int)yuk.length() < len && millis() - b2 < 3000) {
-      if (c.available()) yuk += (char)c.read();
-      else delay(2);
-    }
+  while (millis() - b < bekle) {
+    String yuk = tvCerceveOku(c, 500);
+    if (yuk.length() == 0) { if (!c.connected()) break; continue; }
     if (yuk.indexOf("ms.channel.connect") >= 0) {
-      baglandi = true;
       String t2 = degerBul(yuk, "token");
       if (t2.length() > 3 && t2 != tok) nvsYaz("tvtoken", t2);
-    } else if (yuk.indexOf("ms.channel.timeOut") >= 0 || yuk.indexOf("unauthorized") >= 0) break;
+      return true;
+    }
+    if (yuk.indexOf("ms.channel.timeOut") >= 0 || yuk.indexOf("unauthorized") >= 0) break;
   }
-  if (!baglandi) { c.stop(); return false; }
-  String js = String("{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"") + tus + "\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}";
-  int n = js.length();
-  uint8_t mask[4] = {0x21, 0x43, 0x65, 0x87};
-  c.write((uint8_t)0x81);
-  if (n < 126) c.write((uint8_t)(0x80 | n));
-  else { c.write((uint8_t)(0x80 | 126)); c.write((uint8_t)(n >> 8)); c.write((uint8_t)(n & 0xFF)); }
-  c.write(mask, 4);
-  for (int i = 0; i < n; i++) c.write((uint8_t)(js[i] ^ mask[i % 4]));
+  c.stop();
+  return false;
+}
+
+bool tvTus(String tus) {
+  tus = sadelestir(tus);
+  tus.toUpperCase();
+  for (unsigned int i = 0; i < tus.length(); i++) if (!(isalnum(tus[i]) || tus[i] == '_')) return false;
+  WiFiClientSecure c;
+  if (!tvBaglan(c)) return false;
+  tvYaz(c, String("{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"") + tus + "\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}");
   delay(400);
   c.stop();
   return true;
 }
 
-bool tvUygulama(const String& ad) {
+String jsonKacir(const String& s) {
+  String o;
+  for (unsigned int i = 0; i < s.length(); i++) {
+    char ch = s[i];
+    if (ch == '"' || ch == '\\') { o += '\\'; o += ch; }
+    else if ((uint8_t)ch >= 32) o += ch;
+  }
+  return o;
+}
+
+// Uygulamayi WebSocket ile acar; metaTag doluysa icindeki sayfaya (film) gider. Olmazsa REST ile dener.
+bool tvAppBaslat(const String& appId, const String& meta) {
+  WiFiClientSecure c;
+  if (tvBaglan(c)) {
+    tvYaz(c, String("{\"method\":\"ms.channel.emit\",\"params\":{\"event\":\"ed.apps.launch\",\"to\":\"host\",\"data\":{\"appId\":\"") + jsonKacir(appId) + "\",\"action_type\":\"DEEP_LINK\",\"metaTag\":\"" + jsonKacir(meta) + "\"}}}");
+    String y = tvCerceveOku(c, 2500);
+    c.stop();
+    Serial.println(String("TV uygulama ac (") + appId + "): " + y.substring(0, 120));
+    if (y.indexOf("\"data\":200") >= 0 || y.indexOf("\"data\":true") >= 0 || y.length() == 0) return true;
+  }
   String ip = nvsOku("tvip");
-  if (ip.length() < 7) return false;
-  String a = sadelestir(ad);
-  String id = "";
-  if (a.indexOf("netflix") >= 0) id = "3201907018807";
-  else if (a.indexOf("youtube") >= 0) id = "111299001912";
-  else if (a.indexOf("prime") >= 0) id = "3201910019365";
-  else if (a.indexOf("disney") >= 0) id = "3201901017640";
-  if (id.length() == 0) return false;
   HTTPClient http;
   http.setTimeout(5000);
-  if (!http.begin(String("http://") + ip + ":8001/api/v2/applications/" + id)) return false;
+  if (!http.begin(String("http://") + ip + ":8001/api/v2/applications/" + appId)) return false;
   int kod = http.POST("");
   http.end();
-  Serial.println(String("TV uygulama -> HTTP ") + kod);
   return kod == 200 || kod == 201;
+}
+
+// TV'deki yuklu uygulamalari ogrenir, NVS'e "appId ad" satirlari olarak yazar
+int tvAppleriOgren() {
+  WiFiClientSecure c;
+  if (!tvBaglan(c)) return 0;
+  tvYaz(c, "{\"method\":\"ms.channel.emit\",\"params\":{\"event\":\"ed.installedApp.get\",\"to\":\"host\"}}");
+  String y;
+  unsigned long b = millis();
+  while (millis() - b < 6000) {
+    y = tvCerceveOku(c, 1500);
+    if (y.indexOf("ed.installedApp.get") >= 0) break;
+  }
+  c.stop();
+  String liste;
+  int n = 0, p = 0;
+  while (n < 60) {
+    int a = y.indexOf("\"appId\":\"", p);
+    if (a < 0) break;
+    a += 9;
+    int e = y.indexOf('"', a);
+    if (e < 0) break;
+    String id = y.substring(a, e);
+    int sonraki = y.indexOf("\"appId\":\"", e);
+    int na = y.indexOf("\"name\":\"", e);
+    String ad;
+    if (na >= 0 && (sonraki < 0 || na < sonraki)) { na += 8; int ne = y.indexOf('"', na); if (ne > na) ad = y.substring(na, ne); }
+    p = e;
+    ad = sadelestir(ad);
+    if (id.length() && ad.length()) { liste += id + " " + ad + "\n"; n++; }
+  }
+  if (n > 0) nvsYaz("tvapps", liste);
+  Serial.println(String("TV uygulamalari: ") + n);
+  return n;
+}
+
+String platformAnahtar(String ad) {
+  ad = sadelestir(ad);
+  ad.replace("amazon ", "");
+  ad.replace(" standard with ads", "");
+  ad.replace(" with ads", "");
+  ad.replace("+", " plus");
+  ad.trim();
+  if (ad.startsWith("apple tv")) return "apple tv";
+  if (ad.startsWith("prime video")) return "prime";
+  if (ad.startsWith("hbo max") || ad == "max") return "max";
+  if (ad.startsWith("tv plus") || ad.startsWith("tv+")) return "tv+";
+  int sp = ad.indexOf(' ');
+  String ilk = (sp > 0) ? ad.substring(0, sp) : ad;
+  return ilk;
+}
+
+// Platform adina gore TV'deki uygulamanin kimligini bulur
+String tvAppBul(const String& platform) {
+  String k = platformAnahtar(platform);
+  if (k.length() < 2) return "";
+  for (int deneme = 0; deneme < 2; deneme++) {
+    String s = nvsOku("tvapps");
+    int bas = 0;
+    while (bas < (int)s.length()) {
+      int e = s.indexOf('\n', bas);
+      if (e < 0) e = s.length();
+      String satir = s.substring(bas, e);
+      bas = e + 1;
+      int sp = satir.indexOf(' ');
+      if (sp <= 0) continue;
+      String ad = satir.substring(sp + 1);
+      if (ad.indexOf(k) >= 0 || (k == "max" && ad.indexOf("hbo") >= 0)) return satir.substring(0, sp);
+    }
+    if (deneme == 0 && tvAppleriOgren() == 0) break;
+  }
+  if (k == "netflix") return "3201907018807";
+  if (k == "youtube") return "111299001912";
+  if (k == "prime") return "3201910019365";
+  if (k == "disney") return "3201901017640";
+  if (k == "apple tv") return "3201807016597";
+  return "";
+}
+
+bool tvUygulama(const String& ad) {
+  String id = tvAppBul(ad);
+  if (id.length() == 0) return false;
+  return tvAppBaslat(id, "");
+}
+
+// JustWatch'ta filmi arar (Turkiye katalogu)
+String jwAra(const String& ad) {
+  WiFiClientSecure c;
+  c.setInsecure();
+  HTTPClient http;
+  http.setTimeout(9000);
+  if (!http.begin(c, "https://apis.justwatch.com/graphql")) return "";
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("User-Agent", "Mozilla/5.0");
+  String q = String("{\"query\":\"query S($f: TitleFilter!, $c: Country!, $l: Language!, $n: Int!) { popularTitles(country: $c, filter: $f, first: $n) { edges { node { objectType content(country: $c, language: $l) { title originalReleaseYear } offers(country: $c, platform: WEB) { monetizationType standardWebURL package { clearName technicalName } } } } } }\",\"variables\":{\"f\":{\"searchQuery\":\"") + jsonKacir(ad) + "\"},\"c\":\"TR\",\"l\":\"tr\",\"n\":1}}";
+  int kod = http.POST(q);
+  String r = (kod == 200) ? http.getString() : String("");
+  http.end();
+  Serial.println(String("JustWatch -> HTTP ") + kod + ", " + r.length() + " bayt");
+  return r;
+}
+
+void tvFilmAc(const String& ad0) {
+  String ad = ad0;
+  ad.trim();
+  if (ad.length() == 0) return;
+  if (nvsOku("tvip").length() < 7) { konus("Televizyon tanimli degil."); return; }
+  String r = jwAra(ad);
+  if (r.indexOf("\"edges\"") < 0) { konus("Film arama servisine ulasamadim."); return; }
+  String baslik = degerBul(r, "title");
+  if (baslik.length() == 0) { konus(ad + " filmini bulamadim."); return; }
+  // Teklifleri tek tek gez
+  String nfxId = "", ytId = "", aboneUrl = "", abonePlat = "", kiraPlat = "";
+  int p = 0;
+  while (true) {
+    int a = r.indexOf("\"monetizationType\":\"", p);
+    if (a < 0) break;
+    int sonraki = r.indexOf("\"monetizationType\":\"", a + 10);
+    String par = (sonraki < 0) ? r.substring(a) : r.substring(a, sonraki);
+    p = a + 10;
+    String tur = degerBul(par, "monetizationType");
+    String url = degerBul(par, "standardWebURL");
+    String plat = degerBul(par, "clearName");
+    bool abone = (tur == "FLATRATE" || tur == "FREE" || tur == "ADS");
+    int t = url.indexOf("netflix.com/title/");
+    if (abone && t >= 0 && nfxId.length() == 0) {
+      int s = t + 18, e = s;
+      while (e < (int)url.length() && isdigit(url[e])) e++;
+      nfxId = url.substring(s, e);
+    }
+    int y = url.indexOf("watch?v=");
+    if (abone && y >= 0 && ytId.length() == 0) ytId = url.substring(y + 8, y + 19);
+    if (abone && abonePlat.length() == 0 && t < 0) { abonePlat = plat; aboneUrl = url; }
+    if (!abone && kiraPlat.length() == 0) kiraPlat = plat;
+  }
+  bool ok = false;
+  String mesaj;
+  if (nfxId.length()) {
+    ok = tvAppBaslat("3201907018807", String("m=") + nfxId + "&source_type_payload=groupIndex%3D2%26tileIndex%3D6%26action%3Dmdp%26movieId%3D" + nfxId);
+    mesaj = baslik + " Netflix'te, televizyonda aciyorum.";
+  } else if (ytId.length()) {
+    ok = tvAppBaslat(tvAppBul("youtube"), String("v=") + ytId);
+    mesaj = baslik + " YouTube'da ucretsiz, aciyorum.";
+  } else if (abonePlat.length()) {
+    String id = tvAppBul(abonePlat);
+    if (id.length()) {
+      ok = tvAppBaslat(id, aboneUrl);
+      mesaj = baslik + ", " + abonePlat + " platformunda var. Uygulamayi actim, film dogrudan acilmazsa aramaya adini yazman yeterli.";
+    } else {
+      mesaj = baslik + ", " + abonePlat + " platformunda var ama bu uygulama televizyonda yuklu degil.";
+      ok = true;
+    }
+  } else if (kiraPlat.length()) {
+    mesaj = baslik + " abonelikle izlenebilecek bir platformda yok, sadece " + kiraPlat + " uzerinden kiralanabiliyor ya da satin alinabiliyor.";
+    ok = true;
+  } else {
+    mesaj = baslik + " su an Turkiye'deki dijital platformlarin hicbirinde gorunmuyor.";
+    ok = true;
+  }
+  if (!ok) mesaj = "Televizyona ulasamadim. Televizyon acik mi?";
+  gUyku = false;
+  konus(mesaj);
+  bildirBaslik("TV", mesaj, 2, "tv");
 }
 
 void tvKomut(const String& ar) {
@@ -3584,6 +3783,7 @@ void tvKomut(const String& ar) {
   bool ok = false;
   if (tur == "tus") ok = tvTus(deger);
   else if (tur == "uygulama") ok = tvUygulama(deger);
+  else if (tur == "film") { tvFilmAc(deger); return; }
   if (!ok) bildir("TV komutu gonderilemedi (IP, TV acik mi, izin verildi mi bak)");
 }
 
@@ -3657,6 +3857,7 @@ bool paket28Komut(const String& ad, const String& ar) {
   else if (ad == "mac") macKur(ar);
   else if (ad == "cihaz") { if (!cihazKomut(ar)) bildir("Cihaz komutu calismadi (kayitli mi, acik mi bak)"); }
   else if (ad == "tv") tvKomut(ar);
+  else if (ad == "tvfilm") tvFilmAc(ar);
   else if (ad == "kurulum") kurulumAP();
   else return false;
   return true;
