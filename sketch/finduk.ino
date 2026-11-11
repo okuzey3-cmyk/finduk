@@ -2681,15 +2681,15 @@ void sesYaz() {
   // Kucuk hoparlor cizirtisina karsi: derin basi kes (yuksek geciren ~180 Hz), %75 pay birak, tepeleri yumusak sinirla
   static float hpX = 0, hpY = 0;
   if (gSesYeniBasladi) { hpX = 0; hpY = 0; gSesYeniBasladi = false; }
-  const float hpA = 0.955f;
+  const float hpA = 0.94f;
   int vol = MAC_SES ? 0 : sesYuzdeSimdi();
   for (int i = 0; i < yaz_n / 2; i++) {
     float x = (float)s[i];
     hpY = hpA * (hpY + x - hpX);
     hpX = x;
-    float v = hpY * (float)vol * 0.0075f;
+    float v = hpY * (float)vol * 0.0055f;
     float a = fabsf(v);
-    const float diz = 14000.0f;
+    const float diz = 11000.0f;
     if (a > diz) { a = diz + (a - diz) / (1.0f + (a - diz) / 6000.0f); v = (v < 0) ? -a : a; }
     if (v > 30000.0f) v = 30000.0f;
     if (v < -30000.0f) v = -30000.0f;
