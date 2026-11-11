@@ -12,8 +12,6 @@
 #include <Update.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
-#include "MP3DecoderHelix.h"
-using namespace libhelix;
 
 // Surum numarasini GitHub derlerken otomatik yazar (elle degistirme)
 #ifndef FW_SURUM
@@ -81,7 +79,6 @@ const char* KISILIK =
   " EV CIHAZLARI: Sana kayitli ev cihazi bildirilirse acmak veya kapatmak icin [cihaz:ad|ac] ya da [cihaz:ad|kapat] yaz. "
   " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE). Uygulama acmak icin [tv:uygulama|netflix] yaz (netflix youtube prime disney). "
   " WIFI KURULUM: Kullanici yeni Wi-Fi ayarlamak isterse [kurulum:ac] yaz. Telefon Finduk-Kurulum agina baglanip 192.168.4.1/kurulum sayfasini acar. "
-  " RADYO: Kullanici radyo isterse [radyo:istasyon adi] yaz, ornek [radyo:Kral FM]. Radyoyu durdurmak icin ayar sayfasindaki Radyoyu durdur dugmesi veya robotun BOOT tusu kullanilir, bunu kullaniciya soyle. "
   "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. TELEFONUMU BUL: Kullanici telefonunu bulamazsa [telefonbul:1] yaz, telefonuna sesli acil bildirim gider (sessizdeyse duyulmayabilir). ALISKANLIK: Kullanici takip etmek istedigi bir aliskanlik soylerse [aliskanlik:su icmek] yaz, yaptigini soylerse [yaptim:su icmek] yaz (ad tanimdakiyle ayni olsun), istemezse [aliskanliksil:ad]; seri veya bu hafta sorulursa sana verilen kayitlardan kac gun ust uste yapildigini hesapla, kisa ve cesaretlendirici ol, dirdir etme. HIKAYE: Kullanici bir hikaye, ani veya tarif kaydetmek isterse kisa bir baslik sec, [hikaye:baslik] yaz ve anlatmaya baslamasini soyle; bundan sonra anlattiklari oldugu gibi kaydedilir, bitince hikaye bitti demesi yeterli, bunu da soyle. GUN OZETI: Her aksam 21.30da telefona gun ozeti gider; kullanici kapatmak isterse [ozet:kapat], acmak isterse [ozet:ac], simdi isterse [ozet:simdi] yaz. TELEFONDAN YAZMA: Kullanici telefondan da yazabilir; mesajlari birkac dakikada bir okunur. OZEL GUNLER: Her yil tekrar eden dogum gunu, yildonumu gibi gunleri [ozelgun:02-16|evlilik yildonumu] diye kaydet (ay-gun), silmek icin [ozelgunsil:ad]; yedi gun once, bir gun once ve o gun telefona hatirlatilir; bugun ozel gun ise sohbette sicakca hatirlat ve hediye veya kutlama fikri ver. TEKRARLAYAN HATIRLATICI: Belli gun ve saatte tekrar eden hatirlatma icin [hatirlat:19:00|pzt,per|cop cikacak] yaz; gunler hergun, haftaici, haftasonu veya pzt,sal,car,per,cum,cmt,paz (bosluksuz, saat iki haneli); silmek icin [hatirlatsil:mesajdan bir kelime] ya da [hatirlatsil:hepsi]. GUZEL ANLAR: Iyi geceler denince bazen bugunun guzel bir anini sor; kullanici guzel bir an, sevindigi veya sukrettigi bir sey anlatirsa [gunluk:kisa ozet] yaz; pazar aksami haftanin anlari telefona gider. EMANET: Biri evdeki baskasina mesaj birakmak isterse [emanet:Demet|mesaj] yaz; bekleyen emanet varsa ve konusan kisi o kisiyse veya kim oldugunu soylerse mesaji ilet ve [emanetsil:Demet] yaz; kime ait oldugu belli degilse kime mesaj oldugunu soyle, icerigi sahibine sakla. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
 // Mikrofon
@@ -114,7 +111,6 @@ volatile unsigned long gMoodBitis = 0;
 volatile int gOzel = 0;
 volatile unsigned long gOzelBitis = 0;
 volatile bool gUyku = false;   // uyku modu
-volatile bool gRadyoDur = false;   // radyoyu durdur istegi
 unsigned long gSonFiyat = 0;    // fiyat alarmi son kontrol
 String gHikayeBaslik = "";      // hikaye kayit modu acikken baslik
 String gHikayeMetin = "";
@@ -1896,7 +1892,6 @@ void webAna() {
   h += "<h2>Wi-Fi degistir</h2><form action=/ayar method=post><input name=wifiad placeholder='Ag adi' style='width:100%'><input type=password name=wifisifre placeholder='Sifre' style='width:100%'><button>Kaydet ve yeniden baslat</button></form>";
   h += String("<h2>Televizyon (Samsung)</h2><p>IP: ") + htmlKacir(nvsOku("tvip")) + "</p><form action=/ayar method=post><input name=tvip placeholder='192.168.1.50' style='width:100%'><button>Kaydet</button></form>";
   h += String("<h2>Ev cihazlari</h2><div class=k>") + htmlKacir(cihazAdlari()) + "</div><form action=/ayar method=post><input name=cad placeholder='ad (tek kelime)' style='width:100%'><input name=con placeholder='ac adresi http://...' style='width:100%'><input name=coff placeholder='kapat adresi http://...' style='width:100%'><button>Ekle</button></form><form action=/sil><input type=hidden name=ne value=cihaz><button>Cihazlari sil</button></form>";
-  h += "<h2>Radyo</h2><form action=/radyodur><button>Radyoyu durdur</button></form>";
   h += "<h2>Alarmlar</h2><div class=k>" + htmlKacir(alarmListesi()) + "</div><form action=/sil><input type=hidden name=ne value=alarm><button>Alarmlari sil</button></form>";
   h += "</body></html>";
   webSunucu.send(200, "text/html; charset=utf-8", h);
@@ -1949,7 +1944,6 @@ void webBaslat() {
   webSunucu.on("/sil", webSil);
   webSunucu.begin();
   xTaskCreate(webGorevi, "web", 8192, NULL, 1, NULL);
-  webSunucu.on("/radyodur", []() { gRadyoDur = true; webSunucu.sendHeader("Location", "/"); webSunucu.send(303); });
   gWebVar = true;
   Serial.println(String("Ayar sayfasi: http://finduk.local veya http://") + WiFi.localIP().toString());
 }
@@ -3599,7 +3593,6 @@ bool paket28Komut(const String& ad, const String& ar) {
   else if (ad == "cihaz") { if (!cihazKomut(ar)) bildir("Cihaz komutu calismadi (kayitli mi, acik mi bak)"); }
   else if (ad == "tv") tvKomut(ar);
   else if (ad == "kurulum") kurulumAP();
-  else if (ad == "radyo") radyoCal(ar);
   else return false;
   return true;
 }
@@ -3618,123 +3611,6 @@ void paket28Periyodik() {
   macKontrol();
 }
 // ===== BUYUK PAKET 28 BITIS =====
-
-// ===== BUYUK PAKET 29: INTERNET RADYOSU BASLA =====
-static int gRadyoSR = 0;
-
-void radyoPcm(MP3FrameInfo& info, short* pcm, size_t len, void* ref) {
-  if (info.samprate > 0 && info.samprate != gRadyoSR) {
-    gRadyoSR = info.samprate;
-    i2s_set_clk(I2S_NUM_1, gRadyoSR, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
-  }
-  int ch = info.nChans > 0 ? info.nChans : 2;
-  int n = (int)len / ch;
-  static int16_t cikis[1152];
-  int vol = (sesYuzdeSimdi() * 7) / 10;
-  int i = 0;
-  while (i < n) {
-    int m = 0;
-    while (i < n && m < 1152) {
-      int32_t v = (ch == 2) ? ((int32_t)pcm[2 * i] + (int32_t)pcm[2 * i + 1]) / 2 : (int32_t)pcm[i];
-      cikis[m++] = (int16_t)((v * vol) / 100);
-      i++;
-    }
-    size_t yz = 0;
-    i2s_write(I2S_NUM_1, cikis, m * 2, &yz, portMAX_DELAY);
-  }
-}
-
-String radyoUrlBul(const String& ad) {
-  const char* hostlar[] = {"de1.api.radio-browser.info", "at1.api.radio-browser.info", "nl1.api.radio-browser.info"};
-  String q = urlKodla(ad);
-  for (int h = 0; h < 3; h++) {
-    for (int tr = 0; tr < 2; tr++) {
-      String yol = String("/json/stations/search?name=") + q + "&limit=3&order=votes&reverse=true&hidebroken=true&codec=MP3" + (tr == 0 ? "&countrycode=TR" : "");
-      String r = httpsGetGovde(hostlar[h], yol.c_str(), 5000);
-      String u = degerBul(r, "url_resolved");
-      if (u.length() > 10) return u;
-    }
-  }
-  return "";
-}
-
-void radyoCal(const String& ad) {
-  if (WiFi.status() != WL_CONNECTED) return;
-  String url = radyoUrlBul(ad);
-  if (url.length() < 10) { konus("Bu radyoyu bulamadim."); return; }
-  Serial.println(String("RADYO: ") + url);
-  WiFiClient duz;
-  WiFiClientSecure guvenli;
-  guvenli.setInsecure();
-  Client* c = nullptr;
-  bool tamam = false;
-  for (int hop = 0; hop < 4 && !tamam; hop++) {
-    bool https = url.startsWith("https://");
-    String rest = url.substring(https ? 8 : 7);
-    int sl = rest.indexOf('/');
-    String hostport = (sl < 0) ? rest : rest.substring(0, sl);
-    String yol = (sl < 0) ? String("/") : rest.substring(sl);
-    String host = hostport;
-    int port = https ? 443 : 80;
-    int pc = hostport.indexOf(':');
-    if (pc > 0) { host = hostport.substring(0, pc); port = hostport.substring(pc + 1).toInt(); }
-    if (c) c->stop();
-    c = https ? (Client*)&guvenli : (Client*)&duz;
-    if (!c->connect(host.c_str(), port)) { Serial.println("Radyo baglanamadi"); c = nullptr; break; }
-    c->print(String("GET ") + yol + " HTTP/1.0\r\nHost: " + host + "\r\nUser-Agent: Finduk\r\nConnection: close\r\n\r\n");
-    String durum = "", yer = "";
-    unsigned long b = millis();
-    bool ilk = true;
-    while (millis() - b < 8000) {
-      if (!c->available()) { if (!c->connected()) break; delay(5); continue; }
-      String satir = c->readStringUntil('\n');
-      satir.trim();
-      if (ilk) { durum = satir; ilk = false; continue; }
-      if (satir.length() == 0) break;
-      String sl2 = satir;
-      sl2.toLowerCase();
-      if (sl2.startsWith("location:")) { yer = satir.substring(9); yer.trim(); }
-    }
-    if (durum.indexOf(" 200") > 0 || durum.startsWith("ICY 200")) tamam = true;
-    else if (yer.length() > 7 && (durum.indexOf(" 301") > 0 || durum.indexOf(" 302") > 0 || durum.indexOf(" 307") > 0 || durum.indexOf(" 308") > 0)) url = yer;
-    else { Serial.println(String("Radyo yaniti: ") + durum); c->stop(); c = nullptr; break; }
-  }
-  if (!tamam || !c) { konus("Radyoya baglanamadim."); return; }
-  MP3DecoderHelix mp3(radyoPcm);
-  if (!mp3.begin()) { c->stop(); konus("Radyo cozucu acilamadi."); return; }
-  gUyku = false;
-  gRadyoDur = false;
-  gRadyoSR = 0;
-  pinMode(0, INPUT_PULLUP);
-  uint8_t buf[1024];
-  unsigned long bas = millis(), sonVeri = millis();
-  while (!gRadyoDur && millis() - bas < 90UL * 60000UL) {
-    if (digitalRead(0) == LOW) break;
-    if (alarmVadesiGeldi()) break;
-    int n = c->available();
-    if (n <= 0) {
-      if (!c->connected() || millis() - sonVeri > 8000) break;
-      delay(5);
-      continue;
-    }
-    if (n > (int)sizeof(buf)) n = sizeof(buf);
-    n = c->read(buf, n);
-    if (n <= 0) continue;
-    sonVeri = millis();
-    mp3.write(buf, n);
-    gMood = M_MUTLU;
-    gMoodBitis = millis() + 3000;
-  }
-  mp3.end();
-  c->stop();
-  i2s_zero_dma_buffer(I2S_NUM_1);
-  i2s_set_clk(I2S_NUM_1, 24000, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
-  gRadyoDur = false;
-  gMoodBitis = millis();
-  gMood = M_NORMAL;
-  Serial.println("Radyo kapandi.");
-}
-// ===== BUYUK PAKET 29 BITIS =====
 
 void setup() {
   Serial.begin(115200);
