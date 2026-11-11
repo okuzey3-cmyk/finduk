@@ -338,7 +338,7 @@ function durumCiz() {
   $('yuz').classList.toggle('uyuyor', uyku);
   const yas = durumZamani ? Math.round((Date.now() / 1000 - durumZamani) / 60) : null;
   $('durumYazi').textContent = durumZamani
-    ? (uyku ? 'Uyuyor' : 'Uyanık') + ' · sürüm ' + (d.surum || '?') + ' · ' + (yas < 1 ? 'az önce' : yas + ' dk önce')
+    ? (uyku ? 'Uyuyor' : 'Uyanık') + ' · sürüm ' + (d.surum || '?') + ' · ' + (yas < 1 ? 'az önce' : yas < 60 ? yas + ' dk önce' : yas < 1440 ? Math.round(yas / 60) + ' sa önce' : Math.round(yas / 1440) + ' gün önce')
     : 'Henüz durum gelmedi. Robot fişte mi?';
   if (d.ses) { $('ses').value = d.ses; $('sesDeger').textContent = d.ses; }
   const m = [];
