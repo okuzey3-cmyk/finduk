@@ -111,6 +111,7 @@ volatile unsigned long gMoodBitis = 0;
 volatile int gOzel = 0;
 volatile unsigned long gOzelBitis = 0;
 volatile bool gUyku = false;   // uyku modu
+bool gSesYeniBasladi = true;   // ses filtresi sifirlama
 unsigned long gSonFiyat = 0;    // fiyat alarmi son kontrol
 String gHikayeBaslik = "";      // hikaye kayit modu acikken baslik
 String gHikayeMetin = "";
@@ -2661,6 +2662,7 @@ void sesYaz() {
   int yaz_n = gSesSon ? (sesN / 2) * 2 : ((sesN - SES_TUT) / 2) * 2;
   if (yaz_n <= 0) return;
   int16_t* s = (int16_t*)sesTampon;
+  if (gSesIlk) gSesYeniBasladi = true;
   if (gSesIlk) {                                   // yumusak giris (tik sesini onler)
     int m = yaz_n / 2; if (m > 480) m = 480;
     for (int i = 0; i < m; i++) s[i] = (int16_t)(((int32_t)s[i] * i) / m);
@@ -2676,8 +2678,22 @@ void sesYaz() {
     Serial.write(sesTampon, yaz_n);
   }
   long toplamMutlak = 0;
+  // Kucuk hoparlor cizirtisina karsi: derin basi kes (yuksek geciren ~180 Hz), %75 pay birak, tepeleri yumusak sinirla
+  static float hpX = 0, hpY = 0;
+  if (gSesYeniBasladi) { hpX = 0; hpY = 0; gSesYeniBasladi = false; }
+  const float hpA = 0.955f;
+  int vol = MAC_SES ? 0 : sesYuzdeSimdi();
   for (int i = 0; i < yaz_n / 2; i++) {
-    s[i] = (int16_t)(((int32_t)s[i] * (MAC_SES ? 0 : sesYuzdeSimdi())) / 100);
+    float x = (float)s[i];
+    hpY = hpA * (hpY + x - hpX);
+    hpX = x;
+    float v = hpY * (float)vol * 0.0075f;
+    float a = fabsf(v);
+    const float diz = 14000.0f;
+    if (a > diz) { a = diz + (a - diz) / (1.0f + (a - diz) / 6000.0f); v = (v < 0) ? -a : a; }
+    if (v > 30000.0f) v = 30000.0f;
+    if (v < -30000.0f) v = -30000.0f;
+    s[i] = (int16_t)v;
     toplamMutlak += abs((int)s[i]);
   }
   // gozler icin ses seviyesi kaydi
