@@ -31,6 +31,8 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install esp32:esp32@3.3.12
           arduino-cli lib install "Adafruit GFX Library" "Adafruit SSD1306" "Adafruit BusIO"
+          arduino-cli config set library.enable_unsafe_install true
+          arduino-cli lib install --git-url https://github.com/pschatzmann/arduino-libhelix#f6e55a307c7577c5e3dfe1bf424a61075235fa08
           arduino-cli board details --fqbn esp32:esp32:esp32s3 | grep -iE "16MB|Partition" | head -20 || true
 
       - name: Derle
