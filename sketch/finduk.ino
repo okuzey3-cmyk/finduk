@@ -1230,7 +1230,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "tvfilm" || ad == "kurulum" || ad == "radyo" || ad == "dolgu" || ad == "nobet") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "tvfilm" || ad == "kurulum" || ad == "radyo" || ad == "dolgu" || ad == "nobet" || ad == "takim") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -4038,6 +4038,7 @@ void paket28Periyodik() {
   aracKontrol();
   vardiyaKontrol();
   macKontrol();
+  gunMaciKontrol();
 }
 // ===== BUYUK PAKET 28 BITIS =====
 
@@ -4144,6 +4145,7 @@ String ruhHaliMetni() {
 String paket29Sistem() {
   String s = String(" RUH HALIN: ") + ruhHaliMetni() + " Bunu sadece tonuna yansit, rol yaptigini ya da ruh halini aciklama, kisa kal.";
   s += " NOBET MODU: Kullanici evden cikiyorum, ev bos ya da nobet modu derse [nobet:ac] yaz (hassas isterse [nobet:ac|hassas]), eve donunce ya da kapat derse [nobet:kapat]. Nobette robot sessizce uyur, yuksek ses duyarsa duydugunu yaziya cevirip telefona haber verir. Durust ol: bu sadece yuksek seslere bakar, gercek bir guvenlik alarmi degildir. Adini soyleyince nobet kapanir.";
+  s += " TAKIM: Kullanici tuttugu takimi soylerse [takim:ekle|Fenerbahce], birakirsa [takim:sil|Fenerbahce] yaz (ASCII, tek takim). Varsayilan takip edilen takim Galatasaray. Robot takimlarin bugun/yarin macini kendisi internetten bulup aksamlari sormadan haber verir.";
   s += " DUSUNME SESI: Kullanici hmm sesini (dusunme sesi) istemezse [dolgu:kapat], tekrar isterse [dolgu:ac] yaz.";
   return s;
 }
@@ -4263,10 +4265,148 @@ void nobetDongusu() {
   if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
 }
 
+// --- Gunun maci: favori takimlarin macini internetten bulur, sormadan haber verir ---
+long utcEpoch(int y, int m, int d, int H, int M) {
+  y -= (m <= 2);
+  long era = (y >= 0 ? y : y - 399) / 400;
+  long yoe = y - era * 400;
+  long doy = (153L * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+  long doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+  long gun = era * 146097L + doe - 719468L;
+  return gun * 86400L + H * 3600L + M * 60L;
+}
+
+String takimIdBul(const String& takim) {
+  String anahtar = String("tid_");
+  for (unsigned int i = 0; i < takim.length() && anahtar.length() < 14; i++) anahtar += isalnum(takim[i]) ? takim[i] : '_';
+  String id = nvsOku(anahtar.c_str());
+  if (id.length()) return id;
+  String q = takim;
+  q.replace(" ", "%20");
+  String yol = String("/api/v1/json/3/searchteams.php?t=") + q;
+  String r = httpsGetGovde("www.thesportsdb.com", yol.c_str(), 9000);
+  id = degerBul(r, "idTeam");
+  if (id.length() == 0) {   // arama bulamazsa Super Lig listelerinden takimi tani
+    const char* yollar[2] = {"/api/v1/json/3/eventsnextleague.php?id=4339", "/api/v1/json/3/eventspastleague.php?id=4339"};
+    for (int k = 0; k < 2 && id.length() == 0; k++) {
+      String l = httpsGetGovde("www.thesportsdb.com", yollar[k], 14000);
+      int bas = 0;
+      while (id.length() == 0) {
+        int a = l.indexOf("{\"idEvent\"", bas);
+        if (a < 0) break;
+        int b = l.indexOf("{\"idEvent\"", a + 10);
+        String seg = (b < 0) ? l.substring(a) : l.substring(a, b);
+        bas = (b < 0) ? l.length() : b;
+        if (sadelestir(degerBul(seg, "strHomeTeam")).indexOf(takim) >= 0) id = degerBul(seg, "idHomeTeam");
+        else if (sadelestir(degerBul(seg, "strAwayTeam")).indexOf(takim) >= 0) id = degerBul(seg, "idAwayTeam");
+      }
+    }
+  }
+  if (id.length()) nvsYaz(anahtar.c_str(), id);
+  return id;
+}
+
+// Bir takimin bugun/yarin maclarini bulur (bitenler skorla). Bulduklarini metne ekler.
+bool takimMaciBul(const String& takim, long now, String& metin) {
+  String id = takimIdBul(takim);
+  if (id.length() == 0) return false;
+  bool tamam = false;
+  const char* yolSon[2] = {"eventsnext.php", "eventslast.php"};
+  long bugunNo = (now + 3 * 3600L) / 86400L;
+  for (int k = 0; k < 2; k++) {
+    String yol = String("/api/v1/json/3/") + yolSon[k] + "?id=" + id;
+    String r = httpsGetGovde("www.thesportsdb.com", yol.c_str(), 9000);
+    if (r.length() < 30) continue;
+    tamam = true;
+    int bas = 0;
+    while (true) {
+      int a = r.indexOf("{\"idEvent\"", bas);
+      if (a < 0) break;
+      int b = r.indexOf("{\"idEvent\"", a + 10);
+      String seg = (b < 0) ? r.substring(a) : r.substring(a, b);
+      bas = (b < 0) ? r.length() : b;
+      String ts = degerBul(seg, "strTimestamp");
+      if (ts.length() < 16) {
+        String d0 = degerBul(seg, "dateEvent"), t0 = degerBul(seg, "strTime");
+        if (d0.length() < 10 || t0.length() < 5) continue;
+        ts = d0 + "T" + t0;
+      }
+      long t = utcEpoch(ts.substring(0, 4).toInt(), ts.substring(5, 7).toInt(), ts.substring(8, 10).toInt(), ts.substring(11, 13).toInt(), ts.substring(14, 16).toInt());
+      long fark = (t + 3 * 3600L) / 86400L - bugunNo;
+      if (fark < 0 || fark > 1) continue;
+      String ev = degerBul(seg, "strHomeTeam"), dep = degerBul(seg, "strAwayTeam"), lig = degerBul(seg, "strLeague");
+      String sh = degerBul(seg, "intHomeScore"), sa = degerBul(seg, "intAwayScore");
+      long yerel = t + 3 * 3600L;
+      char sa5[8];
+      snprintf(sa5, sizeof(sa5), "%02d:%02d", (int)((yerel % 86400L) / 3600L), (int)((yerel % 3600L) / 60L));
+      if (t < now && sh.length() > 0 && sa.length() > 0) {
+        if (fark == 0) metin += String("BUGUN BITTI: ") + ev + " " + sh + "-" + sa + " " + dep + " (" + lig + "). ";
+      } else if (t >= now - 3 * 3600L && t < now + 36 * 3600L) {
+        metin += String(fark == 0 ? "BUGUN " : "YARIN ") + sa5 + ": " + ev + " - " + dep + " (" + lig + "). ";
+        if (fark == 0 && t > now) macKur(takim + "|" + sa5 + "|" + bugunTarih());
+      }
+    }
+  }
+  return tamam;
+}
+
+void gunMaciKontrol() {
+  static unsigned long sonDeneme = 0;
+  long now = simdiEpoch();
+  if (now == 0 || gMisafir || WiFi.status() != WL_CONNECTED || millis() < 90000UL) return;
+  struct tm z;
+  time_t tt = (time_t)now;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 15 || z.tm_hour >= 23) return;
+  String g = bugunTarih();
+  if (nvsOku("gm_gun") == g) return;
+  if (sonDeneme != 0 && millis() - sonDeneme < 15UL * 60000UL) return;
+  sonDeneme = millis();
+  String takimlar = nvsOku("takimlar");
+  if (takimlar.length() == 0) takimlar = "galatasaray";
+  String metin = "";
+  bool hepsi = true;
+  int bas = 0;
+  while (bas < (int)takimlar.length()) {
+    int e = takimlar.indexOf(',', bas);
+    if (e < 0) e = takimlar.length();
+    String t = takimlar.substring(bas, e);
+    bas = e + 1;
+    t.trim();
+    if (t.length() == 0) continue;
+    if (!takimMaciBul(t, now, metin)) hepsi = false;
+  }
+  if (!hepsi && metin.length() == 0) return;   // ag/sunucu sorunu: 15 dk sonra tekrar dene
+  nvsYaz("gm_gun", g);
+  if (metin.length() == 0) return;             // bugun/yarin maci yok, sessiz kal
+  if (metin.length() > 350) metin = metin.substring(0, 350);
+  bildirBaslik("Mac haberi", metin, 3, "soccer");
+  robotKonusur("(Takiminin macini kendiliginden hatirlat)", String("GUNUN MACI: Kullanici bir sey sormadi, takiminin maci var. Kisa (en fazla 2 cumle), dogal ve heyecanli bir yorum yap, saati soyle, bitmis maci varsa skoruna tepki ver. Bilgi (internetten): ") + metin + " Bilgide olmayan bir seyi uydurma.");
+}
+
 bool paket29Komut(const String& ad, const String& ar) {
   if (ad == "dolgu") {
     String a = sadelestir(ar);
     nvsYaz("dolgu", (a.indexOf("kapat") >= 0 || a == "0") ? "0" : "1");
+  } else if (ad == "takim") {
+    int c = ar.indexOf('|');
+    String islem = (c > 0) ? sadelestir(ar.substring(0, c)) : String("ekle");
+    String t = sadelestir((c > 0) ? ar.substring(c + 1) : ar);
+    t.trim();
+    if (t.length() == 0) return true;
+    String liste = nvsOku("takimlar");
+    if (liste.length() == 0) liste = "galatasaray";
+    if (islem.indexOf("sil") >= 0) {
+      String l2 = String(",") + liste + ",";
+      l2.replace(String(",") + t + ",", ",");
+      while (l2.startsWith(",")) l2 = l2.substring(1);
+      while (l2.endsWith(",")) l2.remove(l2.length() - 1);
+      liste = l2;
+    } else if ((String(",") + liste + ",").indexOf(String(",") + t + ",") < 0) {
+      liste += String(",") + t;
+    }
+    nvsYaz("takimlar", liste);
+    nvsYaz("gm_gun", "");   // hemen yeniden bak
   } else if (ad == "nobet") {
     String a = sadelestir(ar);
     if (a.indexOf("kapat") >= 0) {
