@@ -41,6 +41,8 @@ jobs:
           sed -i "s/^#define FW_SURUM .*/#define FW_SURUM $N/" /tmp/finduk/finduk.ino
           grep -n "define FW_SURUM" /tmp/finduk/finduk.ino
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB" --output-dir /tmp/out /tmp/finduk
+          echo "--- rollback ayari ---"
+          find ~/.arduino15 -name sdkconfig -path "*esp32s3*" -exec grep -H "ROLLBACK" {} \; | head -10 || true
           mkdir -p /tmp/pub
           cp /tmp/out/finduk.ino.bin /tmp/pub/firmware.bin
           echo "$N" > /tmp/pub/version.txt

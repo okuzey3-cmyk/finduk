@@ -10,6 +10,8 @@
 #include <Preferences.h>
 #include <HTTPClient.h>
 #include <Update.h>
+#include <esp_ota_ops.h>
+#include "sdkconfig.h"
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
@@ -132,6 +134,15 @@ String gTarifBaslik = "";
 String gTarifAdim[12];
 int gTarifN = 0;
 int gTarifI = 0;
+// --- Paket 29 globalleri ---
+bool gGeriDogrulandi = false;
+unsigned long gMasalBitis = 0;     // uyku masali: ses kisik
+bool gNobet = false;
+unsigned long gNobetBitis = 0;
+unsigned long gNobetSon = 0;
+int gNobetSay = 0;
+int gNobetStt = 0;
+int gNobetEsik = 9000;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -644,6 +655,7 @@ void guncellemeKontrol() {
   }
   Serial.println(String("Yazilim surumu: bende ") + FW_SURUM + ", GitHub'da " + yeni);
   if (yeni <= FW_SURUM) return;
+  if (yeni <= nvsOku("kotu_s").toInt()) return;   // bozuk cikan surumu tekrar indirme
 
   Serial.println("Yeni surum var, indiriyorum...");
   gDurum = D_DUSUN;
@@ -779,6 +791,7 @@ bool bekleSes(unsigned long zamanAsimi, int esik) {
   while (true) {
     if (zamanAsimi > 0 && millis() - bas > zamanAsimi) return false;
     if (alarmVadesiGeldi()) return false;
+    geriDonDogrula();
     i2s_read(I2S_NUM_0, buf, sizeof(buf), &got, portMAX_DELAY);
     int n = got / 4;
     if (n <= 0) continue;
@@ -1216,7 +1229,7 @@ int komutlariAyikla(String& c, String* liste, int maks) {
     int k = c.indexOf(':', a);
     if (k < 0 || k > b) { bas = a + 1; continue; }
     String ad = c.substring(a + 1, k);
-    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "tvfilm" || ad == "kurulum" || ad == "radyo") {
+    if (ad == "sinema" || ad == "zamanlayici" || ad == "alarm" || ad == "alarmsil" || ad == "not" || ad == "notsil" || ad == "hafiza" || ad == "hafizasil" || ad == "liste" || ad == "kisilik" || ad == "goz" || ad == "mola" || ad == "plan" || ad == "plansil" || ad == "link" || ad == "supurge" || ad == "fiyat" || ad == "fiyatsil" || ad == "uyu" || ad == "telefonbul" || ad == "aliskanlik" || ad == "aliskanliksil" || ad == "yaptim" || ad == "hikaye" || ad == "ozet" || ad == "ozelgun" || ad == "ozelgunsil" || ad == "hatirlat" || ad == "hatirlatsil" || ad == "gunluk" || ad == "emanet" || ad == "emanetsil" || ad == "telefon" || ad == "geri" || ad == "gerisil" || ad == "espri" || ad == "esprisil" || ad == "macera" || ad == "karakter" || ad == "kisi" || ad == "misafir" || ad == "dil" || ad == "tarif" || ad == "vardiya" || ad == "su" || ad == "arac" || ad == "aracsil" || ad == "yemekplan" || ad == "yemekplansil" || ad == "kasa" || ad == "kasasil" || ad == "mac" || ad == "cihaz" || ad == "tv" || ad == "tvfilm" || ad == "kurulum" || ad == "radyo" || ad == "dolgu" || ad == "nobet") {
       String icerik = c.substring(a + 1, b);
       icerik.trim();
       if (n < maks) liste[n++] = icerik;
@@ -1563,6 +1576,7 @@ void komutIsle(const String& k) {
   else if (ad == "gerisil") { if (ar == "hepsi") nvsYaz("geri", ""); else satirSil("geri", ar); }
   else if (ad == "plansil") { if (ar == "hepsi") nvsYaz("plan", ""); else satirSil("plan", ar); }
   else if (paket28Komut(ad, ar)) { }
+  else if (paket29Komut(ad, ar)) { }
   else if (ad == "goz") {
     int z = 0; unsigned long sure = 8000;
     if (ar == "kutla") { z = 2; sure = 6000; }
@@ -1681,6 +1695,7 @@ String listeleriAl() {
 // Gece sessiz saat: 23:00-07:00 arasi ses kisik
 int sesYuzdeSimdi() {
   int v = gSesAyar;
+  if (millis() < gMasalBitis) { int q = v * 40 / 100; return q > 8 ? q : 8; }   // uyku masali: fisilti
   long t = simdiEpoch();
   if (t == 0) return v;
   time_t tt = (time_t)t;
@@ -2949,6 +2964,7 @@ String paket28Sistem() {
   if (kr.length()) s += String(" KARAKTER MODU ACIK: Su karakteri oynuyorsun: ") + kr + ". Cevaplarini bu agizla ver, kisa kal, Finduk oldugunu inkar etme.";
   String dl = nvsOku("dil_modu");
   if (dl.length()) s += String(" INGILIZCE PRATIK MODU ACIK (seviye: ") + dl + "). Kullanici Ingilizce pratik yapiyor. Cevabini basit Ingilizce ver (1-2 kisa cumle) ve bir soruyla devam et. Kullanici hata yaptiysa cevabin sonunda Kucuk duzeltme diyerek Turkce kisaca duzelt. Kullanici Turkce konusursa Turkce yardim et.";
+  s += paket29Sistem();
   return s;
 }
 
@@ -3021,10 +3037,10 @@ void kendiKonus() {
   struct tm z;
   localtime_r(&tt, &z);
   if (z.tm_hour < 9 || z.tm_hour >= 22) return;
-  if (millis() - gSonEtkilesim < 75UL * 60000UL) return;
-  if (gSonKendi != 0 && millis() - gSonKendi < 100UL * 60000UL) return;
-  if (sayacAl("say_kendi") >= 3) return;
-  if (esp_random() % 3 != 0) return;
+  if (millis() - gSonEtkilesim < 45UL * 60000UL) return;
+  if (gSonKendi != 0 && millis() - gSonKendi < 60UL * 60000UL) return;
+  if (sayacAl("say_kendi") >= 4) return;
+  if (esp_random() % 2 != 0) return;
   gSonKendi = millis();
   sayacArttir("say_kendi");
   String bilgi = "KENDILIGINDEN KONUSMA: Kimse sana bir sey sormadi, sessizlik oldu. Kisa (en fazla 2 cumle), dogal ve sicak bir sey soyle. Su seceneklerden birini sec: gunun nasil gectigini sor; ortak bir espriyi an; ilginc kucuk bir bilgi ver; tarihte bugun olan guzel bir olay anlat; ya da asagidaki ipuclarindan birini kullan. Kendini tanitma. Emin olmadigin bilgiyi uydurma.";
@@ -3396,7 +3412,15 @@ void tarifKur(const String& ar) {
     bas = e + 1;
     if (t.length()) gTarifAdim[gTarifN++] = t;
   }
-  if (gTarifN > 0) konus(String("Birinci adim: ") + gTarifAdim[0] + ". Hazir olunca sonraki de.");
+  if (gTarifN > 0) {
+    String msg = String("Birinci adim: ") + gTarifAdim[0] + ". Hazir olunca sonraki de.";
+    int sure = adimSuresi(gTarifAdim[0]);
+    if (sure > 0) {
+      zamanlayiciKur(String(sure) + "|" + gTarifBaslik + " icin 1. adim suresi doldu");
+      msg += String(" ") + sure + " dakikalik zamanlayiciyi kurdum.";
+    }
+    konus(msg);
+  }
 }
 
 bool tarifSozMu(const String& sd) {
@@ -3411,7 +3435,13 @@ bool tarifKomutu(const String& sd) {
   else if (sd.indexOf("tekrar") >= 0) { }
   else return false;
   if (gTarifI >= gTarifN) { gTarifN = 0; konus("Tarif bitti, afiyet olsun!"); return true; }
-  konus(String("Adim ") + (gTarifI + 1) + ": " + gTarifAdim[gTarifI]);
+  String msg = String("Adim ") + (gTarifI + 1) + ": " + gTarifAdim[gTarifI] + ".";
+  int sure = (sd.indexOf("sonraki") >= 0) ? adimSuresi(gTarifAdim[gTarifI]) : 0;
+  if (sure > 0) {
+    zamanlayiciKur(String(sure) + "|" + gTarifBaslik + " icin " + (gTarifI + 1) + ". adim suresi doldu");
+    msg += String(" ") + sure + " dakikalik zamanlayiciyi kurdum.";
+  }
+  konus(msg);
   return true;
 }
 
@@ -3878,9 +3908,264 @@ void paket28Periyodik() {
 }
 // ===== BUYUK PAKET 28 BITIS =====
 
+// ===== BUYUK PAKET 29: CANLILIK VE GUVENLIK PAKETI BASLA =====
+// --- Geri donus guvenligi: surum ust uste 3 kez cokerse (panic/watchdog) eski surume doner ---
+void geriDonDogrula() {
+  if (gGeriDogrulandi || millis() < 45000UL) return;
+  gGeriDogrulandi = true;
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
+  esp_ota_mark_app_valid_cancel_rollback();
+#endif
+  nvsYaz("bekle", "");
+  nvsYaz("cokme", "0");
+}
+
+void acilisKontrol() {
+  esp_reset_reason_t r = esp_reset_reason();
+  bool coktu = (r == ESP_RST_PANIC || r == ESP_RST_INT_WDT || r == ESP_RST_TASK_WDT || r == ESP_RST_WDT);
+  String bekle = nvsOku("bekle");
+  int c = nvsOku("cokme").toInt();
+  if (bekle.length() == 0) c = 0;
+  else if (coktu) c++;
+  nvsYaz("cokme", String(c));
+  nvsYaz("bekle", String(FW_SURUM));
+  if (c < 3) return;
+  const esp_partition_t* diger = esp_ota_get_next_update_partition(NULL);
+  esp_app_desc_t d;
+  esp_ota_img_states_t st;
+  if (!diger || esp_ota_get_partition_description(diger, &d) != ESP_OK) return;
+  if (esp_ota_get_state_partition(diger, &st) == ESP_OK && (st == ESP_OTA_IMG_INVALID || st == ESP_OTA_IMG_ABORTED)) return;
+  Serial.println("Bu surum surekli cokuyor, eski surume donuyorum.");
+  nvsYaz("kotu_s", String(FW_SURUM));
+  nvsYaz("cokme", "0");
+  nvsYaz("bekle", "");
+  if (esp_ota_set_boot_partition(diger) == ESP_OK) {
+    delay(300);
+    ESP.restart();
+  }
+}
+
+void kotuSurumBildir() {
+  String k = nvsOku("kotu_s");
+  if (k.length() && nvsOku("kotu_bil") != k) {
+    nvsYaz("kotu_bil", k);
+    bildir(String("Surum ") + k + " surekli coktu, eski surume (" + FW_SURUM + ") dondum. Daha yeni bir surum gelene kadar guncelleme beklenecek.");
+  }
+}
+
+// --- Hiz hissi: sesi duyunca kisa, yumusak bir "hmm" (internetsiz, kodla uretilir) ---
+void dusunmeSesi() {
+  if (nvsOku("dolgu") == "0") return;
+  int vol = sesYuzdeSimdi();
+  i2s_set_sample_rates(I2S_NUM_1, 24000);
+  const int toplam = 24000 * 420 / 1000;
+  static int16_t b[256];
+  float faz = 0;
+  int yaz = 0;
+  while (yaz < toplam) {
+    int n = toplam - yaz;
+    if (n > 256) n = 256;
+    for (int i = 0; i < n; i++) {
+      int k = yaz + i;
+      float t = (float)k / (float)toplam;
+      faz += 2.0f * 3.14159265f * (205.0f + 45.0f * t) / 24000.0f;   // hafif yukselen "hmm"
+      float zarf = 1.0f;
+      if (k < 1800) zarf = (float)k / 1800.0f;
+      if (toplam - k < 2400) zarf = (float)(toplam - k) / 2400.0f;
+      float v = 0;
+      for (int h = 1; h <= 6; h++) v += sinf((float)h * faz) / ((float)h * sqrtf((float)h));
+      b[i] = (int16_t)(v * 3600.0f * zarf * (float)vol / 100.0f);
+    }
+    size_t w = 0;
+    i2s_write(I2S_NUM_1, b, n * 2, &w, portMAX_DELAY);
+    yaz += n;
+  }
+  sus(80);
+}
+
+// --- Ruh hali: saate ve gune gore degisen huy ---
+String ruhHaliMetni() {
+  long now = simdiEpoch();
+  int h = 12;
+  if (now != 0) { time_t tt = (time_t)now; struct tm z; localtime_r(&tt, &z); h = z.tm_hour; }
+  String s;
+  if (h >= 5 && h < 11) s = "Sabah vakti: biraz uykulu, yavas ve nazlisin.";
+  else if (h < 17) s = "Gun ortasi: enerjik, merakli ve saka havasindasin.";
+  else if (h < 21) s = "Aksam: rahat, sicak ve keyiflisin.";
+  else if (h < 23) s = "Gun bitiyor: sakin ve yumusaksin, kisa konusursun.";
+  else s = "Gece: fisildar gibi, cok kisa ve uykulu konusursun, istersen uyku vaktini hatirlat.";
+  String g = bugunTarih();
+  int hs = 0;
+  for (unsigned int i = 0; i < g.length(); i++) hs += (unsigned char)g[i];
+  const char* huy[] = {
+    " Bugun ozellikle merakli bir gundesin, ara sira bir soru sor.",
+    " Bugun saka havasindasin, hafif esprili ol.",
+    " Bugun sakin ve dusunceli bir gundesin.",
+    " Bugun neseli ve hareketli bir gundesin.",
+    " Bugun biraz miskin ve uykucusun ama sevimlisin."
+  };
+  s += huy[hs % 5];
+  return s;
+}
+
+String paket29Sistem() {
+  String s = String(" RUH HALIN: ") + ruhHaliMetni() + " Bunu sadece tonuna yansit, rol yaptigini ya da ruh halini aciklama, kisa kal.";
+  s += " NOBET MODU: Kullanici evden cikiyorum, ev bos ya da nobet modu derse [nobet:ac] yaz (hassas isterse [nobet:ac|hassas]), eve donunce ya da kapat derse [nobet:kapat]. Nobette robot sessizce uyur, yuksek ses duyarsa duydugunu yaziya cevirip telefona haber verir. Durust ol: bu sadece yuksek seslere bakar, gercek bir guvenlik alarmi degildir. Adini soyleyince nobet kapanir.";
+  s += " DUSUNME SESI: Kullanici hmm sesini (dusunme sesi) istemezse [dolgu:kapat], tekrar isterse [dolgu:ac] yaz.";
+  return s;
+}
+
+// --- Uyku masali ve ek bilgi ---
+String paket29Bilgi(const String& sd) {
+  String o = "";
+  if (sd.indexOf("masal") >= 0 || sd.indexOf("uyutur") >= 0 || sd.indexOf("uyku hikaye") >= 0) {
+    gMasalBitis = millis() + 15UL * 60000UL;
+    o += "UYKU MASALI: Kullanici uyku masali istiyor. Cok yavas, sakin ve yumusak tonla, kisa cumlelerle 6-8 cumlelik huzurlu bir masal anlat (korkutucu olay yok; hayvanlar, yildizlar, deniz gibi sakin ogeler). Bu modda 2 cumle siniri yoktur. Sonda fisildar gibi iyi geceler de ve cevabin sonuna [uyu:1] yaz. ";
+  }
+  return o;
+}
+
+// --- Emanet mesaji kisi kendini tanitinca hemen ilet (API'siz) ---
+bool emanetTeslim(const String& kisi, const String& hitap) {
+  String s = nvsOku("emanet");
+  if (s.length() == 0) return false;
+  String mesaj = "", kalan = "";
+  int bas = 0;
+  while (bas < (int)s.length()) {
+    int e = s.indexOf('\n', bas);
+    if (e < 0) e = s.length();
+    String satir = s.substring(bas, e);
+    bas = e + 1;
+    satir.trim();
+    if (satir.length() == 0) continue;
+    int c = satir.indexOf(':');
+    String kime = (c > 0) ? sadelestir(satir.substring(0, c)) : String("");
+    if (c > 0 && kime.indexOf(kisi) >= 0) {
+      String m = satir.substring(c + 1);
+      m.trim();
+      mesaj += m + ". ";
+    } else {
+      kalan += satir + "\n";
+    }
+  }
+  if (mesaj.length() == 0) return false;
+  nvsYaz("emanet", kalan);
+  konus(hitap + ", sana birakilmis mesaj var. " + mesaj);
+  return true;
+}
+
+// --- Mutfak eli: adimda "10 dakika" gecerse zamanlayici otomatik kurulur ---
+int adimSuresi(const String& t) {
+  String s = sadelestir(t);
+  int n = s.length();
+  for (int i = 0; i < n; i++) {
+    if (s[i] >= '0' && s[i] <= '9') {
+      int j = i, v = 0;
+      while (j < n && s[j] >= '0' && s[j] <= '9') { v = v * 10 + (s[j] - '0'); j++; }
+      while (j < n && s[j] == ' ') j++;
+      if (s.startsWith("dakika", j) || s.startsWith("dk", j)) return (v > 0 && v <= 180) ? v : 0;
+      i = j;
+    }
+  }
+  return 0;
+}
+
+// --- Hos geldin selami (aksam fise takilinca gunde bir kez) ---
+void girisSelami() {
+  long now = simdiEpoch();
+  if (now == 0 || WiFi.status() != WL_CONNECTED) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour < 15 || z.tm_hour >= 23) return;
+  esp_reset_reason_t r = esp_reset_reason();
+  if (r != ESP_RST_POWERON && r != ESP_RST_SW) return;
+  String g = bugunTarih();
+  if (nvsOku("gs_gun") == g) return;
+  nvsYaz("gs_gun", g);
+  String bilgi = String("HOS GELDIN: Robot az once acildi, ev sahibi eve donmus olabilir. Kisa (en fazla 2 cumle), sicak bir iyi aksamlar ya da hos geldin de. Bekleyen emanet mesaj varsa kime ait oldugunu soyle ama icerigini soyleme: ") + emanetler() + ". Yaklasan ozel gun: " + ozelGunler(7) + ". Kendini tanitma, uzatma.";
+  robotKonusur("(Eve hos geldin de)", bilgi);
+}
+
+// --- Nobet modu: sessizce dinler, yuksek ses olursa telefona haber verir ---
+void nobetOlay() {
+  int tepe = kaydet();
+  if (gSesliMs < MIN_SESLI_MS) return;
+  String duyulan = "";
+  if (WiFi.status() == WL_CONNECTED && gNobetStt < 40) {
+    gNobetStt++;
+    String ham = geminiSesiYaziyaCevir();
+    duyulan = degerBul(ham, "text");
+    if (duyulan == "BOS") duyulan = "";
+  }
+  if (duyulan.length() && adiGeciyor(duyulan)) {
+    gNobet = false;
+    gUyku = false;
+    gMood = M_MUTLU;
+    gMoodBitis = millis() + 3000;
+    konus("Hos geldin! Nobeti kapattim.");
+    return;
+  }
+  if (millis() - gNobetSon < 120000UL || gNobetSay >= 20) return;
+  gNobetSon = millis();
+  gNobetSay++;
+  String m = String("Evde yuksek ses var (seviye ") + tepe + ", " + (gSesliMs / 1000) + " sn). Saat " + zamanYazi() + ".";
+  if (duyulan.length()) m += String(" Duyulan: ") + duyulan.substring(0, 80);
+  bildirBaslik("Finduk nobetci", m, 4, "warning");
+}
+
+void nobetDongusu() {
+  if (millis() > gNobetBitis) {
+    gNobet = false;
+    bildir("Nobet suresi doldu, nobet modu kapandi.");
+    return;
+  }
+  Serial.println("Nobet: sessizce dinliyorum...");
+  if (alarmCal()) return;
+  if (bekleSes(60000UL, gNobetEsik)) {
+    nobetOlay();
+    return;
+  }
+  telefonMesajiIsle();
+  if (millis() - sonGuncelKontrol > GUNCEL_ARALIK) guncellemeKontrol();
+}
+
+bool paket29Komut(const String& ad, const String& ar) {
+  if (ad == "dolgu") {
+    String a = sadelestir(ar);
+    nvsYaz("dolgu", (a.indexOf("kapat") >= 0 || a == "0") ? "0" : "1");
+  } else if (ad == "nobet") {
+    String a = sadelestir(ar);
+    if (a.indexOf("kapat") >= 0) {
+      gNobet = false;
+    } else {
+      gNobet = true;
+      gNobetBitis = millis() + 10UL * 3600000UL;
+      gNobetEsik = (a.indexOf("hassas") >= 0) ? 6000 : 9000;
+      gNobetSay = 0;
+      gNobetStt = 0;
+      gNobetSon = 0;
+      gUyku = true;
+    }
+  } else return false;
+  return true;
+}
+
+void paket29Hazirla() {
+  geriDonDogrula();
+  long now = simdiEpoch();
+  if (now == 0) return;
+  time_t tt = (time_t)now;
+  struct tm z;
+  localtime_r(&tt, &z);
+  if (z.tm_hour >= 22 || z.tm_hour < 6) { gMood = M_UYKULU; gMoodBitis = millis() + 90000UL; }   // gece gozler uykulu
+}
+// ===== BUYUK PAKET 29 BITIS =====
+
 void setup() {
   Serial.begin(115200);
   delay(1500);
+  acilisKontrol();
 
   // Gozler ayri gorevde: oncelik 2, ikinci cekirdek (Wi-Fi islerinden etkilenmesin)
   xTaskCreatePinnedToCore(gozGorevi, "goz", 8192, NULL, 2, NULL, 1);
@@ -3905,14 +4190,18 @@ void setup() {
   webBaslat();
   molaYukle();
   bildir(String("Finduk acildi. Surum ") + FW_SURUM + ". " + resetNedeni());
+  kotuSurumBildir();
   Serial.println("Finduk: kablosuz guncelleme calisiyor.");
   guncellemeKontrol();
+  girisSelami();
 }
 
 void loop() {
   Serial.println();
   Serial.println("Dinliyorum... (konusmaya basla)");
   gDurum = D_BOSTA;
+  paket29Hazirla();
+  if (gUyku && gNobet) { nobetDongusu(); return; }
   if (gUyku) {
     Serial.println("Uyuyorum... (bir ses cikar, uyanayim)");
     if (!bekleSes(60000UL, ESIK_UYKU)) {
@@ -4026,8 +4315,8 @@ void loop() {
   String sd = sadelestir(duyulan);
   // --- Paket 28: yerel (API'siz) komutlar ---
   if (tarifSoz && tarifKomutu(sd)) { sohbetBitis = millis() + SOHBET_SURE; gDurum = D_BOSTA; return; }
-  if (sd.indexOf("ben demet") >= 0 || sd.indexOf("demet konusuyor") >= 0) { gKisi = "demet"; gKisiBitis = millis() + 20UL * 60000UL; }
-  else if (sd.indexOf("ben oguzhan") >= 0 || sd.indexOf("oguzhan konusuyor") >= 0) gKisi = "";
+  if (sd.indexOf("ben demet") >= 0 || sd.indexOf("demet konusuyor") >= 0) { gKisi = "demet"; gKisiBitis = millis() + 20UL * 60000UL; if (!gMisafir) emanetTeslim("demet", "Demet"); }
+  else if (sd.indexOf("ben oguzhan") >= 0 || sd.indexOf("oguzhan konusuyor") >= 0) { gKisi = ""; if (!gMisafir) emanetTeslim("oguzhan", "Oguzhan"); }
   if (sd.indexOf("misafir") >= 0 && (sd.indexOf("kapat") >= 0 || sd.indexOf("gitti") >= 0 || sd.indexOf("bitti") >= 0)) gMisafir = false;
   else if (sd.indexOf("misafir modu") >= 0 || sd.indexOf("misafir geldi") >= 0 || sd.indexOf("misafirler geldi") >= 0) { gMisafir = true; gMisafirBitis = millis() + 4UL * 3600000UL; }
   if (!gMisafir && sd.indexOf("kasa") >= 0 && (sd.indexOf("kasayi") >= 0 || sd.indexOf("kasam") >= 0 || sd.indexOf("kasa ac") >= 0) && sd.indexOf("ekle") < 0 && sd.indexOf("kaydet") < 0) {
@@ -4037,6 +4326,7 @@ void loop() {
     gDurum = D_BOSTA;
     return;
   }
+  dusunmeSesi();
   bool hv = havaMi(sd);
   bool hb = (!hv && haberMi(sd));
   bool nm = (!hv && !hb && namazMi(sd));
@@ -4132,6 +4422,7 @@ void loop() {
     if (ek.length() > 0) bilgi = (bilgi.length() > 0) ? bilgi + " " + ek : ek;
   }
 
+  { String p29 = paket29Bilgi(sd); if (p29.length()) bilgi = bilgi.length() ? bilgi + " " + p29 : p29; }
   String ham = claudeCevapla(duyulan, bilgi);
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
