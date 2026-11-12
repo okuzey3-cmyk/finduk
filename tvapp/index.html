@@ -17,7 +17,7 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0}
 </div>
 <div id="bildir"></div>
 <script>
-var SITE="https://okuzey3-cmyk.github.io/Sinema-Odas-/?tv=1";
+var SITE="https://okuzey3-cmyk.github.io/Sinema-Odas-/tv.html";
 var cerceve=document.getElementById("cerceve"),ayar=document.getElementById("ayar"),ipk=document.getElementById("ip"),bil=document.getElementById("bildir");
 function ipAl(){try{return localStorage.getItem("finduk_ip")||""}catch(e){return ""}}
 function bildirGoster(m){bil.textContent=m;bil.style.display="block";setTimeout(function(){bil.style.display="none"},3500)}
@@ -32,6 +32,7 @@ window.addEventListener("message",function(ev){
   if(ev.origin!=="https://okuzey3-cmyk.github.io")return;
   var d=ev.data||{};
   if(d.tip==="finduk-ayar"){ayarAc();return}
+  if(d.tip==="finduk-geri"){try{tizen.application.getCurrentApplication().exit()}catch(e){}return}
   if(d.tip!=="finduk-tv")return;
   var ip=ipAl();
   if(!ip){ayarAc();return}
@@ -39,6 +40,7 @@ window.addEventListener("message",function(ev){
   bildirGoster((d.platform||"")+" aciliyor: "+(d.film||""));
   fetch("http://"+ip+"/tv?"+q,{mode:"no-cors"}).catch(function(){bildirGoster("Finduk'a ulasilamadi, adresi kontrol et")});
 });
+cerceve.onload=function(){try{cerceve.focus();cerceve.contentWindow.focus()}catch(e){}};
 cerceve.src=SITE;
 if(!ipAl())setTimeout(ayarAc,2500);
 </script></body></html>
