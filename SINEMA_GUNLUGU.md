@@ -16,3 +16,9 @@
 - Yeni komutlar: `neizlesem|gul;kisa;cift` ("3 soruda film seç" penceresini açıp ruh hali, süre, kiminle sorularını cevaplar; eksik yazılırsa o adımda durur), `nebaska` (aynı seçimle başka 6 film), `nebastan`, `ovsec|N` (açık penceredeki N. filmi açar), `filmgecesi` (açık biletin film gecesi menüsü), `kadifesor` (açık yapımı Kadife'ye sorar).
 - Durum bilgisi: açık pencerenin adımı, seçenekleri, önerilen filmler ve film gecesi menüsü Finduk'a bildirilir. `kapat` artık açık pencereyi de kapatır.
 - Nasıl denenir: "Finduk, gülmek istiyorum, kısa bir film, ikimiz izleyeceğiz". Sahte DOM (jsdom) ile denendi; gerçek telefonda ve robotta denenmedi.
+
+## 2026-11-12
+- Yeni komutlar: `eslestir|ayni film` (birlikte film eşleştirme penceresini aynı telefon modunda açar; `eslestir|dizi` dizi seçer, sadece `eslestir` mod seçimine kadar açar), `begen` / `gec` (eşleştirme kartını beğenir ya da geçer), `oyla|izleyecek` ya da `oyla|kadife` (3 adaylı oylama penceresini açar, adaylar `ovsec|N` ile işaretlenir), `kadifeses|ac` / `kadifeses|kapat` (Kadife'nin sesli yanıtı).
+- Güvenlik: WhatsApp ile gönderen düğmeler `dugme` komutuyla basılamasın diye YASAK listesine whatsapp, gönder, bildir, paylaş, yedekle eklendi; oylama/eşleştirme gönderimini kullanıcı kendisi yapar.
+- Durum bilgisi: eşleştirme kartında görünen yapım ve oylamada seçilen adaylar bildirilir. sinemaMi dizisi 28 kelime (esles, oylama, kartta, secilen eklendi), döngü 28.
+- Nasıl denenir: "Finduk, Demet'le film eşleştirelim, aynı telefondayız". Sahte DOM (jsdom) ile denendi (aday yüklenmesi ağ olmadığı için denenemedi); gerçek telefonda ve robotta denenmedi.
