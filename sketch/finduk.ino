@@ -9,6 +9,7 @@
 #include <math.h>
 #include <Preferences.h>
 #include <HTTPClient.h>
+#include <WiFiUdp.h>
 #include <Update.h>
 #include <esp_ota_ops.h>
 #include "sdkconfig.h"
@@ -79,7 +80,7 @@ const char* KISILIK =
   " GIZLI KASA: Kullanici sesli parolayla saklanacak ozel bir not verirse [kasa:tekkelimeparola|not] yaz (parola en az 4 harf, tek kelime). Notu sen soyleme, kasayi robot parolayi duyunca kendisi acar. Silmek icin [kasasil:parola]. "
   " MISAFIR MODU: Misafir geldigini soylerse [misafir:ac], gidince [misafir:kapat] yaz. "
   " EV CIHAZLARI: Sana kayitli ev cihazi bildirilirse acmak veya kapatmak icin [cihaz:ad|ac] ya da [cihaz:ad|kapat] yaz. "
-  " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE). Uygulama acmak icin [tv:uygulama|platform adi] yaz (netflix, youtube, prime, disney, hbo max, blutv, exxen, tod, tabii, mubi gibi; TV de yukluyse acilir). Kullanici bir FILM veya DIZIYI televizyonda acmani isterse [tvfilm:filmin adi] yaz; robot filmin hangi platformda oldugunu kendisi bulur, aciyor ve sonucu kendisi soyler, sen sadece kisaca bakiyorum de, platform tahmin etme. Sinema Odasi favorilerinden birini acman istenirse sana verilen Sinema Odasi bilgisinde film adi varsa ondan sec, yoksa kullanicinin sevdigini bildigin bir film sec ve hangisini sectigini soyle. "
+  " TELEVIZYON: Samsung televizyon icin [tv:tus|KEY_VOLUP] gibi yaz (KEY_POWER KEY_VOLUP KEY_VOLDOWN KEY_MUTE KEY_HOME KEY_RETURN KEY_ENTER KEY_UP KEY_DOWN KEY_LEFT KEY_RIGHT KEY_PLAY KEY_PAUSE KEY_FF KEY_REWIND KEY_STOP KEY_INFO KEY_MENU KEY_SOURCE KEY_GUIDE KEY_TOOLS). Kanal icin [tv:kanal|+] veya [tv:kanal|-] ya da numara [tv:kanal|35]. TV kapaliysa [tv:ac|1] ile uyandirabilirsin (uygulama, film ve kanal komutlari da kapali TV'yi kendisi uyandirir, bu 40 saniyeye kadar surebilir, kullaniciya soyle). Sinema Odasi uygulamasini televizyonda acmak icin [tv:web|sinema] yaz. Uygulama acmak icin [tv:uygulama|platform adi] yaz (netflix, youtube, prime, disney, hbo max, blutv, exxen, tod, tabii, mubi gibi; TV de yukluyse acilir). Kullanici bir FILM veya DIZIYI televizyonda acmani isterse [tvfilm:filmin adi] yaz; robot filmin hangi platformda oldugunu kendisi bulur, aciyor ve sonucu kendisi soyler, sen sadece kisaca bakiyorum de, platform tahmin etme. Sinema Odasi favorilerinden birini acman istenirse sana verilen Sinema Odasi bilgisinde film adi varsa ondan sec, yoksa kullanicinin sevdigini bildigin bir film sec ve hangisini sectigini soyle. "
   " WIFI KURULUM: Kullanici yeni Wi-Fi ayarlamak isterse [kurulum:ac] yaz. Telefon Finduk-Kurulum agina baglanip 192.168.4.1/kurulum sayfasini acar. "
   "Dolar, euro, altin sorulursa sana verilen kurlari soyle, yorum yapma, tahmin etme. Mac, takim veya baska guncel konu sorulursa sana verilen bilgi yoksa bilmedigini soyle. Ezan vaktinde hatirlatma istenirse sana verilen vakitle alarm kur. MOLA: Kullanici belirli araliklarla mola hatirlatmasi isterse [mola:dakika] yaz (en az 15), kapatmak icin [mola:0]. PLAN: Kullanici bir gun icin plan ya da randevu soylerse [plan:Pazartesi saat 15 dis hekimi] yaz, silmek icin [plansil:dis hekimi] veya [plansil:hepsi]; bugunun gunune bak ve plani sorulunca soyle. Dini gun, kandil ya da bayram sorulursa sana verilen hicri tarih bilgisini kullan, tarih konusunda kesin konusma, Diyanet'e bakmasini hatirlat. GOZLER: Oyunda kullanici kazanirsa veya sevincli bir an olursa [goz:kutla], oyun baslarken [goz:oyun], saat gosterilmesini isterse [goz:saat] yaz. TELEFON: Kullanici bir urunun linkini telefonuna istersa [link:trendyol|erkek kot pantolon] yaz (site: trendyol, hepsiburada, amazon veya google; arama ifadesi kisa ve net, puana gore siralanir), sana belirli bir urun secme, telefonda aramayi acan link gider; kisa bir mesaj istenirse [telefon:mesaj] yaz. SUPURGE: Kullanici robot supurgeyi baslatmak, durdurmak, sarja gondermek veya bulmak isterse [supurge:baslat], [supurge:durdur], [supurge:sarj], [supurge:bul] yaz ve kisa onayla; komut yaklasik bir dakikada ulasir, hemen basladi deme, komutu gonderdim de. IYI GECELER: Kullanici iyi geceler derse sicak ve kisa cevap ver, yarinin havasini tek cumleyle soyle, kayitli alarm yoksa yarin icin alarm isteyip istemedigini sor; alarm zaten varsa saatini hatirlat ve sonuna [uyu:1] yaz. Kullanici alarm saatini soylerse alarmi kur ve [uyu:1] ekle. CEVIRI: Kullanici bir seyi cevirmeni veya ne demek oldugunu sorarsa ceviriyi soyle, yabanci cumleyi yavas ve net soyle, Turkce okunusunu da ekle, sonuna [telefon:asil metin = ceviri] yaz ki telefonuna da gitsin. FIYAT ALARMI: Kullanici dolar, euro veya gram altin belli bir fiyata gelince haber istenirse [fiyat:dolar|>|45] yaz (yukari icin >, asagi icin <; varlik dolar, euro veya altin), Finduk yarim saatte bir bakip telefonuna bildirir; iptal icin [fiyatsil:dolar] veya [fiyatsil:hepsi]. Yatirim tavsiyesi verme. TELEFONUMU BUL: Kullanici telefonunu bulamazsa [telefonbul:1] yaz, telefonuna sesli acil bildirim gider (sessizdeyse duyulmayabilir). ALISKANLIK: Kullanici takip etmek istedigi bir aliskanlik soylerse [aliskanlik:su icmek] yaz, yaptigini soylerse [yaptim:su icmek] yaz (ad tanimdakiyle ayni olsun), istemezse [aliskanliksil:ad]; seri veya bu hafta sorulursa sana verilen kayitlardan kac gun ust uste yapildigini hesapla, kisa ve cesaretlendirici ol, dirdir etme. HIKAYE: Kullanici bir hikaye, ani veya tarif kaydetmek isterse kisa bir baslik sec, [hikaye:baslik] yaz ve anlatmaya baslamasini soyle; bundan sonra anlattiklari oldugu gibi kaydedilir, bitince hikaye bitti demesi yeterli, bunu da soyle. GUN OZETI: Her aksam 21.30da telefona gun ozeti gider; kullanici kapatmak isterse [ozet:kapat], acmak isterse [ozet:ac], simdi isterse [ozet:simdi] yaz. TELEFONDAN YAZMA: Kullanici telefondan da yazabilir; mesajlari birkac dakikada bir okunur. OZEL GUNLER: Her yil tekrar eden dogum gunu, yildonumu gibi gunleri [ozelgun:02-16|evlilik yildonumu] diye kaydet (ay-gun), silmek icin [ozelgunsil:ad]; yedi gun once, bir gun once ve o gun telefona hatirlatilir; bugun ozel gun ise sohbette sicakca hatirlat ve hediye veya kutlama fikri ver. TEKRARLAYAN HATIRLATICI: Belli gun ve saatte tekrar eden hatirlatma icin [hatirlat:19:00|pzt,per|cop cikacak] yaz; gunler hergun, haftaici, haftasonu veya pzt,sal,car,per,cum,cmt,paz (bosluksuz, saat iki haneli); silmek icin [hatirlatsil:mesajdan bir kelime] ya da [hatirlatsil:hepsi]. GUZEL ANLAR: Iyi geceler denince bazen bugunun guzel bir anini sor; kullanici guzel bir an, sevindigi veya sukrettigi bir sey anlatirsa [gunluk:kisa ozet] yaz; pazar aksami haftanin anlari telefona gider. EMANET: Biri evdeki baskasina mesaj birakmak isterse [emanet:Demet|mesaj] yaz; bekleyen emanet varsa ve konusan kisi o kisiyse veya kim oldugunu soylerse mesaji ilet ve [emanetsil:Demet] yaz; kime ait oldugu belli degilse kime mesaj oldugunu soyle, icerigi sahibine sakla. GERI SAYIM: Kullanici onemli bir tarih soylerse [geri:2027-02-16|evlilik yildonumu] yaz, silmek icin [gerisil:ad] veya [gerisil:hepsi]; kac gun kaldi sorulursa sana verilen sayimi soyle. Gun ozeti istenirse sana verilen saat, hava, namaz, alarm, not ve listeleri kisa ve duzenli soyle.";
 
@@ -3564,12 +3565,63 @@ void tvYaz(WiFiClientSecure& c, const String& js) {
   if (k) c.write(parca, k);
 }
 
+bool gTvUyanabilir = true;   // sesi/oynat tuslari TV'yi uyandirmasin
+
+// TV'nin Wi-Fi MAC adresini bir kez ogrenir (uyandirma icin)
+void tvMacOgren(const String& ip) {
+  HTTPClient http;
+  http.setTimeout(4000);
+  if (!http.begin(String("http://") + ip + ":8001/api/v2/")) return;
+  int kod = http.GET();
+  String r = (kod == 200) ? http.getString() : String("");
+  http.end();
+  String mac = degerBul(r, "wifiMac");
+  if (mac.length() == 17) { nvsYaz("tvmac", mac); Serial.println(String("TV MAC ogrenildi: ") + mac); }
+}
+
+// Wake-on-LAN: TV beklemedeyse uyandirir
+void tvMagicPaket() {
+  String m = nvsOku("tvmac");
+  if (m.length() != 17) return;
+  uint8_t mac[6];
+  for (int i = 0; i < 6; i++) mac[i] = (uint8_t)strtol(m.substring(i * 3, i * 3 + 2).c_str(), NULL, 16);
+  uint8_t paket[102];
+  memset(paket, 0xFF, 6);
+  for (int i = 0; i < 16; i++) memcpy(paket + 6 + i * 6, mac, 6);
+  WiFiUDP udp;
+  for (int k = 0; k < 3; k++) {
+    udp.beginPacket(WiFi.broadcastIP(), 9);
+    udp.write(paket, sizeof(paket));
+    udp.endPacket();
+    udp.beginPacket(IPAddress(255, 255, 255, 255), 9);
+    udp.write(paket, sizeof(paket));
+    udp.endPacket();
+    delay(120);
+  }
+}
+
+// TV kapaliysa uyandirip WebSocket portu acilana kadar bekler (en fazla ~40 sn)
+bool tvUyandirBekle(WiFiClientSecure& c, const String& ip) {
+  if (!gTvUyanabilir || nvsOku("tvmac").length() != 17) return false;
+  Serial.println("TV kapali gorunuyor, uyandiriyorum...");
+  tvMagicPaket();
+  unsigned long b = millis();
+  while (millis() - b < 40000UL) {
+    delay(3000);
+    if (millis() - b > 12000UL && (millis() - b) % 9000UL < 3100UL) tvMagicPaket();
+    if (c.connect(ip.c_str(), 8002)) { delay(4000); return true; }
+  }
+  return false;
+}
+
 bool tvBaglan(WiFiClientSecure& c) {
   String ip = nvsOku("tvip");
   if (ip.length() < 7) return false;
   c.setInsecure();
   c.setTimeout(6);
-  if (!c.connect(ip.c_str(), 8002)) return false;
+  if (!c.connect(ip.c_str(), 8002)) {
+    if (!tvUyandirBekle(c, ip)) return false;
+  }
   String tok = nvsOku("tvtoken");
   String yol = "/api/v2/channels/samsung.remote.control?name=RmluZHVr";
   if (tok.length()) yol += String("&token=") + tok;
@@ -3592,6 +3644,7 @@ bool tvBaglan(WiFiClientSecure& c) {
     if (yuk.indexOf("ms.channel.connect") >= 0) {
       String t2 = degerBul(yuk, "token");
       if (t2.length() > 3 && t2 != tok) nvsYaz("tvtoken", t2);
+      if (nvsOku("tvmac").length() != 17) tvMacOgren(ip);
       return true;
     }
     if (yuk.indexOf("ms.channel.timeOut") >= 0 || yuk.indexOf("unauthorized") >= 0) break;
@@ -3604,8 +3657,11 @@ bool tvTus(String tus) {
   tus = sadelestir(tus);
   tus.toUpperCase();
   for (unsigned int i = 0; i < tus.length(); i++) if (!(isalnum(tus[i]) || tus[i] == '_')) return false;
+  gTvUyanabilir = !(tus.startsWith("KEY_VOL") || tus == "KEY_MUTE" || tus == "KEY_PLAY" || tus == "KEY_PAUSE" || tus == "KEY_FF" || tus == "KEY_REWIND" || tus == "KEY_STOP");
   WiFiClientSecure c;
-  if (!tvBaglan(c)) return false;
+  bool bagli = tvBaglan(c);
+  gTvUyanabilir = true;
+  if (!bagli) return false;
   tvYaz(c, String("{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"") + tus + "\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}");
   delay(400);
   c.stop();
@@ -3804,6 +3860,51 @@ void tvFilmAc(const String& ad0) {
   bildirBaslik("TV", mesaj, 2, "tv");
 }
 
+// Kanal: ya yukari/asagi ya da numara (once rakamlar, sonra Tamam)
+bool tvKanal(String d) {
+  d = sadelestir(d);
+  d.trim();
+  WiFiClientSecure c;
+  if (!tvBaglan(c)) return false;
+  String dizi[8];
+  int n = 0;
+  if (d == "+" || d.indexOf("yukari") >= 0 || d.indexOf("ileri") >= 0 || d.indexOf("sonraki") >= 0) dizi[n++] = "KEY_CHUP";
+  else if (d == "-" || d.indexOf("asagi") >= 0 || d.indexOf("geri") >= 0 || d.indexOf("onceki") >= 0) dizi[n++] = "KEY_CHDOWN";
+  else {
+    for (unsigned int i = 0; i < d.length() && n < 6; i++) if (d[i] >= '0' && d[i] <= '9') dizi[n++] = String("KEY_") + d[i];
+    if (n == 0) { c.stop(); return false; }
+    dizi[n++] = "KEY_ENTER";
+  }
+  for (int i = 0; i < n; i++) {
+    tvYaz(c, String("{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"") + dizi[i] + "\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}");
+    delay(450);
+  }
+  c.stop();
+  return true;
+}
+
+// TV'yi uyandir (kapaliysa); aciksa bir sey yapmaz
+bool tvAc() {
+  String ip = nvsOku("tvip");
+  if (ip.length() < 7) return false;
+  WiFiClientSecure c;
+  c.setInsecure();
+  c.setTimeout(4);
+  if (c.connect(ip.c_str(), 8002)) { c.stop(); return true; }
+  gTvUyanabilir = true;
+  bool ok = tvUyandirBekle(c, ip);
+  c.stop();
+  return ok;
+}
+
+// TV'nin tarayicisinda bir web sayfasi acar ("sinema" = Demet'in Sinema Odasi)
+bool tvWeb(String adres) {
+  adres.trim();
+  if (sadelestir(adres).indexOf("sinema") == 0) adres = "https://okuzey3-cmyk.github.io/Sinema-Odas-/";
+  if (!adres.startsWith("https://")) return false;
+  return tvAppBaslat("org.tizen.browser", adres);
+}
+
 void tvKomut(const String& ar) {
   int c = ar.indexOf('|');
   if (c <= 0) return;
@@ -3812,7 +3913,10 @@ void tvKomut(const String& ar) {
   tur.trim();
   bool ok = false;
   if (tur == "tus") ok = tvTus(deger);
-  else if (tur == "uygulama") ok = tvUygulama(deger);
+  else if (tur == "kanal") ok = tvKanal(deger);
+  else if (tur == "ac") ok = tvAc();
+  else if (tur == "web") ok = tvWeb(deger);
+  else if (tur == "uygulama") { if (sadelestir(deger).indexOf("sinema") >= 0) ok = tvWeb("sinema"); else ok = tvUygulama(deger); }
   else if (tur == "film") { tvFilmAc(deger); return; }
   if (!ok) bildir("TV komutu gonderilemedi (IP, TV acik mi, izin verildi mi bak)");
 }

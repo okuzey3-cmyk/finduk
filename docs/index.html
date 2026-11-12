@@ -158,6 +158,19 @@ details summary{cursor:pointer;color:var(--soluk);font-size:14px}
         <button onclick="kmt('#komut:tv:uygulama|netflix')">Netflix</button>
         <button onclick="kmt('#komut:tv:uygulama|youtube')">YouTube</button>
         <button onclick="kmt('#komut:tv:uygulama|disney')">Disney+</button>
+        <button onclick="kmt('#komut:tv:ac|1')"><span class="ikon">📺</span>TV'yi uyandır</button>
+        <button onclick="kmt('#komut:tv:kanal|+')"><span class="ikon">➕</span>Kanal +</button>
+        <button onclick="kmt('#komut:tv:kanal|-')"><span class="ikon">➖</span>Kanal −</button>
+        <button onclick="tv('KEY_REWIND')"><span class="ikon">⏪</span>Geri sar</button>
+        <button onclick="tv('KEY_PLAY')"><span class="ikon">▶️</span>Oynat</button>
+        <button onclick="tv('KEY_FF')"><span class="ikon">⏩</span>İleri sar</button>
+        <button onclick="tv('KEY_PAUSE')"><span class="ikon">⏸</span>Duraklat</button>
+        <button onclick="tv('KEY_UP')"><span class="ikon">⬆️</span>Yukarı</button>
+        <button onclick="tv('KEY_ENTER')"><span class="ikon">🆗</span>Tamam</button>
+        <button onclick="tv('KEY_LEFT')"><span class="ikon">⬅️</span>Sol</button>
+        <button onclick="tv('KEY_DOWN')"><span class="ikon">⬇️</span>Aşağı</button>
+        <button onclick="tv('KEY_RIGHT')"><span class="ikon">➡️</span>Sağ</button>
+        <button onclick="kmt('#komut:tv:web|sinema')"><span class="ikon">🎬</span>Sinema Odası</button>
       </div>
       <div class="satir" style="margin-top:10px"><input id="tvFilm" placeholder="Film ya da dizi adı"><button class="dar ana" onclick="const t=temiz(tvFilm.value);if(t){kmt('#komut:tvfilm:'+t);tvFilm.value=''}">TV'de aç</button></div>
       <p class="ipucu">Finduk filmin hangi platformda olduğunu bulup televizyonda açar.</p>
