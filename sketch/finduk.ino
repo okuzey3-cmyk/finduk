@@ -1951,6 +1951,14 @@ void webGorevi(void* p) {
   }
 }
 
+void webTv() {
+  webSunucu.sendHeader("Access-Control-Allow-Origin", "*");
+  String url = webSunucu.arg("url"), plat = webSunucu.arg("platform"), film = webSunucu.arg("film");
+  webSunucu.send(200, "text/plain", "tamam");
+  if (nvsOku("tvip").length() < 7 || (url.length() == 0 && film.length() == 0)) return;
+  tvUrlAc(plat, url, film);
+}
+
 void webBaslat() {
   if (WiFi.status() != WL_CONNECTED) return;
   String sv = nvsOku("ses");
@@ -1959,6 +1967,7 @@ void webBaslat() {
   webSunucu.on("/", webAna);
   webSunucu.on("/ayar", webAyar);
   webSunucu.on("/sil", webSil);
+  webSunucu.on("/tv", webTv);
   webSunucu.begin();
   xTaskCreate(webGorevi, "web", 8192, NULL, 1, NULL);
   gWebVar = true;
@@ -3858,6 +3867,26 @@ void tvFilmAc(const String& ad0) {
   gUyku = false;
   konus(mesaj);
   bildirBaslik("TV", mesaj, 2, "tv");
+}
+
+// Sinema Odasi TV uygulamasindan gelen istek: platformun film adresiyle dogrudan acar, olmazsa JustWatch ile arar
+void tvUrlAc(const String& plat, const String& url, const String& film) {
+  bool ok = false;
+  int t = url.indexOf("netflix.com/title/");
+  int y = url.indexOf("watch?v=");
+  if (t >= 0) {
+    int s0 = t + 18, e = s0;
+    while (e < (int)url.length() && isdigit(url[e])) e++;
+    String id = url.substring(s0, e);
+    if (id.length()) ok = tvAppBaslat("3201907018807", String("m=") + id + "&source_type_payload=groupIndex%3D2%26tileIndex%3D6%26action%3Dmdp%26movieId%3D" + id);
+  } else if (y >= 0 && url.length() >= (unsigned int)(y + 19)) {
+    ok = tvAppBaslat(tvAppBul("youtube"), String("v=") + url.substring(y + 8, y + 19));
+  } else if (plat.length() && url.startsWith("http")) {
+    String id = tvAppBul(plat);
+    if (id.length()) ok = tvAppBaslat(id, url);
+  }
+  if (!ok && film.length()) { tvFilmAc(film); return; }
+  if (!ok) bildirBaslik("TV", String("TV'de acilamadi: ") + plat, 3, "tv");
 }
 
 // Kanal: ya yukari/asagi ya da numara (once rakamlar, sonra Tamam)
