@@ -22,3 +22,9 @@
 - Güvenlik: WhatsApp ile gönderen düğmeler `dugme` komutuyla basılamasın diye YASAK listesine whatsapp, gönder, bildir, paylaş, yedekle eklendi; oylama/eşleştirme gönderimini kullanıcı kendisi yapar.
 - Durum bilgisi: eşleştirme kartında görünen yapım ve oylamada seçilen adaylar bildirilir. sinemaMi dizisi 28 kelime (esles, oylama, kartta, secilen eklendi), döngü 28.
 - Nasıl denenir: "Finduk, Demet'le film eşleştirelim, aynı telefondayız". Sahte DOM (jsdom) ile denendi (aday yüklenmesi ağ olmadığı için denenemedi); gerçek telefonda ve robotta denenmedi.
+
+## 2026-11-13
+- Yeni komutlar (Keşfet ekranı): `salon|netflix,hbo` (Salonlarım'da sadece yazılan platformlar açık kalır), `salon|hepsi`, `salon|+hbo` / `salon|-prime` (tek platformu açar/kapatır), `salonyeni|ac` / `salonyeni|kapat` (sadece son 1 yılın yapımları), `paketsec|N` (Paketinde yeni çıkanlar şeridindeki N. yapım), `zevksec|N` (Senin zevkine göre şeridindeki N. yapım), `kadifeayar` (Kadife ayarlarını açar, sadece gösterir).
+- Durum bilgisi: açık/kapalı salonlar, Yeni modu, iki şeridin yapım adları ve Kadife ayarları açıksa Kadife'nin zevk notları Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (28 → 32 kelime: salon, paketim, zevk, platform; döngü 32).
+- Nasıl denenir: "Finduk, sadece Netflix ve HBO açık kalsın" ya da "Senin zevkine göre ilk filmi aç". Sahte DOM (jsdom) ile salon komutları denendi (bu sırada "salon" sınıf adındaki "on" harflerinden doğan bir hata bulunup düzeltildi); gerçek telefonda ve robotta denenmedi.
