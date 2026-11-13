@@ -50,10 +50,10 @@ BH = 88.0          # yükseklik
 TOP_T = 3.0
 BPOSTS = [(sx * 54.2, sy * 33.0) for sx in (-1, 1) for sy in (-1, 1)]
 FRONT_POST_H = 19.0            # ön vida direkleri kısa (hoparlörün altında biter)
-# Hoparlör: 8 ohm 5W kutulu, 100 x 45 x 21 mm
-SPK_L, SPK_H, SPK_D = 100.0, 45.0, 21.0
+# Hoparlör: 5W kutulu, kumpasla ölçüldü 100 x 40 x 20 mm (13 Kasım), +1 mm pay
+SPK_L, SPK_H, SPK_D = 101.0, 41.0, 21.0
 SP_ZC = 44.0                   # hoparlör merkezinin yüksekliği
-GR_L, GR_H = 88.0, 36.0        # ızgara bölgesi (uzun, kısa kenar)
+GR_L, GR_H = 88.0, 32.0        # ızgara bölgesi (uzun, kısa kenar)
 GR_HOLE_R, GR_PITCH = 1.5, 4.4
 WIN = 62.0
 WIN_ZC = SP_ZC

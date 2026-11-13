@@ -1,5 +1,5 @@
 import pickle, numpy as np, trimesh
-import finduk as f
+import finduk_cift as f
 P = pickle.load(open("parts.pkl","rb"))
 GAP = 8.0
 Zc = f.BH + f.NECK_H + GAP + f.HH/2
