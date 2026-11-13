@@ -52,12 +52,43 @@ window.addEventListener("message",function(ev){
   if(d.tip==="finduk-ayar"){ayarAc();return}
   if(d.tip==="finduk-geri"){try{tizen.application.getCurrentApplication().exit()}catch(e){}return}
   if(d.tip!=="finduk-tv")return;
-  var ip=ipAl();
-  if(!ip){ayarAc();return}
-  var q="url="+encodeURIComponent(d.url||"")+"&platform="+encodeURIComponent(d.platform||"")+"&film="+encodeURIComponent(d.film||"");
-  bildirGoster((d.platform||"")+" aciliyor: "+(d.film||""));
-  fetch("http://"+ip+"/tv?"+q,{mode:"no-cors"}).catch(function(){bildirGoster("Finduk'a ulasilamadi, adresi kontrol et")});
+  dogrudanAc(d.platform||"",d.url||"",d.film||"");
 });
+
+// --- Filmi/fragmani dogrudan TV'de ac (Finduk gerekmez) ---
+var BILINEN={netflix:"3201907018807",youtube:"111299001912",prime:"3201910019365",disney:"3201901017640"};
+function pAnahtar(p){p=(p||"").toLowerCase();if(p.indexOf("netflix")>=0)return"netflix";if(p.indexOf("youtube")>=0)return"youtube";if(p.indexOf("prime")>=0||p.indexOf("amazon")>=0)return"prime";if(p.indexOf("disney")>=0)return"disney";if(p.indexOf("tv+")>=0||p.indexOf("turkcell")>=0||p.indexOf("tvplus")>=0)return"tv+";return p.replace(/[^a-z0-9]/g,"")}
+function adlaBul(k,cb){
+  try{tizen.application.getAppsInfo(function(L){
+    var a=k==="tv+"?["tv+","tvplus","turkcell"]:[k==="prime"?"prime video":k];
+    for(var i=0;i<L.length;i++){var n=(L[i].name||"").toLowerCase();for(var j=0;j<a.length;j++)if(n.indexOf(a[j])>=0){cb(L[i].id);return}}
+    cb(null)},function(){cb(null)})}catch(e){cb(null)}
+}
+function kontrolAc(id,deger,ok,hata){
+  try{
+    var veri=deger?[new tizen.ApplicationControlData("PAYLOAD",[JSON.stringify({values:deger})])]:[];
+    var c=new tizen.ApplicationControl("http://tizen.org/appcontrol/operation/view",null,null,null,veri);
+    tizen.application.launchAppControl(c,id,ok,function(){try{tizen.application.launch(id,ok,hata)}catch(e){hata()}});
+  }catch(e){hata()}
+}
+function findukaGonder(plat,url,film){
+  var ip=ipAl();
+  if(!ip){bildirGoster(plat+" acilamadi");return}
+  var q="url="+encodeURIComponent(url)+"&platform="+encodeURIComponent(plat)+"&film="+encodeURIComponent(film);
+  fetch("http://"+ip+"/tv?"+q,{mode:"no-cors"}).catch(function(){bildirGoster("Acilamadi")});
+}
+function dogrudanAc(plat,url,film){
+  var k=pAnahtar(plat),deger="";
+  var y=url.indexOf("watch?v="),n=url.match(/netflix\.com\/(?:[a-z-]+\/)?title\/(\d+)/);
+  if(y>=0){k="youtube";deger="v="+url.substr(y+8,11)}
+  else if(n){k="netflix";deger="m="+n[1]+"&source_type=4"}
+  bildirGoster((k==="youtube"?"YouTube":plat)+" aciliyor: "+film);
+  var dene=function(id){
+    if(!id){findukaGonder(plat,url,film);return}
+    kontrolAc(id,deger,function(){},function(){findukaGonder(plat,url,film)});
+  };
+  if(BILINEN[k])dene(BILINEN[k]);else adlaBul(k,dene);
+}
 cerceve.onload=cerceveOdak;
 cerceve.src=SITE;
 </script></body></html>
