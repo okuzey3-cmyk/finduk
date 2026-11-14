@@ -45,6 +45,9 @@ jobs:
           find ~/.arduino15 -name sdkconfig -path "*esp32s3*" -exec grep -H "ROLLBACK" {} \; | head -10 || true
           mkdir -p /tmp/pub
           cp /tmp/out/finduk.ino.bin /tmp/pub/firmware.bin
+          cp /tmp/out/finduk.ino.bootloader.bin /tmp/pub/bootloader.bin
+          cp /tmp/out/finduk.ino.partitions.bin /tmp/pub/partitions.bin
+          find ~/.arduino15 -name boot_app0.bin | head -1 | xargs -I{} cp {} /tmp/pub/boot_app0.bin
           echo "$N" > /tmp/pub/version.txt
           ls -l /tmp/pub
 
@@ -55,6 +58,6 @@ jobs:
           git checkout -q -b firmware
           git config user.name "finduk-bot"
           git config user.email "finduk-bot@users.noreply.github.com"
-          git add firmware.bin version.txt
+          git add firmware.bin version.txt bootloader.bin partitions.bin boot_app0.bin
           git commit -q -m "Yazilim surumu ${{ github.run_number }}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" firmware
