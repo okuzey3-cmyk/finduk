@@ -28,3 +28,9 @@
 - Durum bilgisi: açık/kapalı salonlar, Yeni modu, iki şeridin yapım adları ve Kadife ayarları açıksa Kadife'nin zevk notları Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (28 → 32 kelime: salon, paketim, zevk, platform; döngü 32).
 - Nasıl denenir: "Finduk, sadece Netflix ve HBO açık kalsın" ya da "Senin zevkine göre ilk filmi aç". Sahte DOM (jsdom) ile salon komutları denendi (bu sırada "salon" sınıf adındaki "on" harflerinden doğan bir hata bulunup düzeltildi); gerçek telefonda ve robotta denenmedi.
+
+## 2026-11-14
+- Yeni komutlar: `benzer|N` (açık biletteki "Buna benzeyenler" şeridinin N. yapımını açar), `seri|N` (açık filmin serisindeki N. filmi açar; zaten açık olanı atlar).
+- Durum bilgisi: açık biletin benzer yapımları ve serinin filmleri (şu an açık olan işaretli) Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (32 → 34 kelime: benzer, seri; döngü 34). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, buna benzeyen ilk filmi aç" ya da "Serinin ikinci filmini aç". Sahte DOM (jsdom) ile denendi; gerçek telefonda ve robotta denenmedi.
