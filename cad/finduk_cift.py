@@ -27,7 +27,7 @@ TFT_W, TFT_H = 86.6, 50.6
 TFT_WIN_W, TFT_WIN_H = 58.0, 44.0
 TFT_DX, TFT_DY = 0.0, 0.0
 # OLED 0.96"
-OLED_W, OLED_H = 27.3, 27.8
+OLED_W, OLED_H = 26.9, 24.9      # kumpas 15 Kasım: 26.92 x 24.83
 OLED_WIN_W, OLED_WIN_H = 24.5, 13.0
 OLED_DY = -4.0     # kart merkezi, pencere merkezinin ne kadar altında
 RING_H = 3.5
@@ -50,19 +50,21 @@ BH = 88.0          # yükseklik
 TOP_T = 3.0
 BPOSTS = [(sx * 54.2, sy * 33.0) for sx in (-1, 1) for sy in (-1, 1)]
 FRONT_POST_H = 19.0            # ön vida direkleri kısa (hoparlörün altında biter)
-# Hoparlör: 5W kutulu, kumpasla ölçüldü 100 x 40 x 20 mm (13 Kasım), +1 mm pay
-SPK_L, SPK_H, SPK_D = 101.0, 41.0, 21.0
+# Hoparlör: çift kutulu, kumpas 15 Kasım: 99.57 x 44.54 x 21.22 (kulaklar dahil), +1 mm pay
+SPK_L, SPK_H, SPK_D = 100.6, 45.6, 22.2
 SP_ZC = 44.0                   # hoparlör merkezinin yüksekliği
-GR_L, GR_H = 88.0, 32.0        # ızgara bölgesi (uzun, kısa kenar)
+GR_L, GR_H = 88.0, 36.0        # ızgara bölgesi (uzun, kısa kenar)
 GR_HOLE_R, GR_PITCH = 1.5, 4.4
 WIN = 62.0
 WIN_ZC = SP_ZC
 SP_SCR = 33.0
 BASE_T = 4.0
 # Elektronik
-BRD_L, BRD_W = 63.4, 27.1      # ESP32-S3 (ölçülmüş)
-AMP_L, AMP_W = 18.8, 17.9      # MAX98357A (ölçülmüş)
-BRD_CX, BRD_CY = -24.8, 14.0   # USB-C sol duvara yakın olsun diye sola kaydırıldı
+BRD_L, BRD_W = 63.9, 28.2      # ESP32-S3 (kumpas 15 Kasım: 63.81 x 28.08)
+AMP_L, AMP_W = 18.8, 17.7      # MAX98357A (kumpas 15 Kasım: 18.73 x 17.61)
+BRD_CX, BRD_CY = -24.8, 0.0    # iki hoparlör arasındaki 31 mm boşlukta, USB-C sol duvarda
+PED_Z = 26.0                   # kart ve amfi ayakların üstünde: altındaki dupont kablolar için ~25 mm boşluk
+AMP_CX, AMP_CY = 30.0, 0.0
 
 
 # ---------------- YARDIMCI ----------------
@@ -242,7 +244,7 @@ def body():
         cuts.append(cy((x, -BD / 2 - 1, SP_ZC + dz), (x, fy + 0.6, SP_ZC + dz), GR_HOLE_R, n=14))
     for x, dz in grille_centers():                                                             # arka hoparlor izgarasi
         cuts.append(cy((x, fy2 - 0.6, SP_ZC + dz), (x, BD / 2 + 1, SP_ZC + dz), GR_HOLE_R, n=14))
-    cuts.append(bx(-BW / 2 - 1, -BW / 2 + WALL + 1, BRD_CY - 6, BRD_CY + 6, 3.7, 10.7))        # USB-C
+    cuts.append(bx(-BW / 2 - 1, -BW / 2 + WALL + 1, BRD_CY - 11.5, BRD_CY + 11.5, PED_Z + 1.0, PED_Z + 6.0))  # 2x USB-C
     return Dif(m, *cuts)
 
 
@@ -281,23 +283,14 @@ def base():
                rr(-BW / 2 + WALL + 1.85, BW / 2 - WALL - 1.85, -BD / 2 + WALL + 1.85, BD / 2 - WALL - 1.85, -1, 3.5, ro - 1.6))
     notch = [cy((x, y, -1), (x, y, 3.5), POST_R + 0.8) for x, y in BPOSTS]
     spig = Dif(spig, *notch)
-    # ESP32 rayları
-    b0, b1 = BRD_CY - BRD_W / 2, BRD_CY + BRD_W / 2
-    xa, xb = BRD_CX - BRD_L / 2 + 9, BRD_CX + BRD_L / 2 - 1
+    # ESP32: iki ayak (pim sıraları arasında, kart çift taraflı bantla oturur; pimler ve dupontlar ayakların yanından aşağı iner)
     pr = []
-    pr.append(bx(xa, xb, b0 - 0.3 - 1.2, b0 - 0.3, -0.2, 6.8))
-    pr.append(bx(xa, xb, b1 + 0.3, b1 + 0.3 + 1.2, -0.2, 6.8))
-    pr.append(bx(xa, xb, b0 - 0.3, b0 + 2.7, -0.2, 4.0))
-    pr.append(bx(xa, xb, b1 - 2.7, b1 + 0.3, -0.2, 4.0))
-    pr.append(bx(BRD_CX + BRD_L / 2 + 0.3, BRD_CX + BRD_L / 2 + 1.5, BRD_CY - 6, BRD_CY + 6, -0.2, 6.8))
-    # amfi yuvası
-    ax, ay = 0.0, -12.0
-    pr.append(bx(ax - AMP_L / 2 - 1.2, ax - AMP_L / 2 - 0.1, ay - 4, ay + 4, -0.2, 7.0))
-    pr.append(bx(ax + AMP_L / 2 + 0.1, ax + AMP_L / 2 + 1.2, ay - 4, ay + 4, -0.2, 7.0))
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            pr.append(bx(ax + sx * (AMP_L / 2 - 2.0) - 2.0, ax + sx * (AMP_L / 2 - 2.0) + 2.0,
-                         ay + sy * (AMP_W / 2 - 2.0) - 2.0, ay + sy * (AMP_W / 2 - 2.0) + 2.0, -0.2, 3.5))
+    x0, x1 = BRD_CX - BRD_L / 2, BRD_CX + BRD_L / 2
+    for xa, xb in ((x0 + 6, x0 + 18), (x1 - 18, x1 - 6)):
+        pr.append(bx(xa, xb, BRD_CY - 8.5, BRD_CY + 8.5, -0.2, PED_Z))
+    # USB tarafında kartın kaymasını önleyen küçük dayama yok: USB-C deliği zaten tutar
+    # amfi ayağı (pim sırası -y kenarında, ayak diğer yarıda)
+    pr.append(bx(AMP_CX - AMP_L / 2 + 2, AMP_CX + AMP_L / 2 - 2, AMP_CY - AMP_W / 2 + 5.5, AMP_CY + AMP_W / 2 - 1.5, -0.2, PED_Z))
     m = U(plate, spig, *pr)
     cuts = []
     for x, y in BPOSTS:

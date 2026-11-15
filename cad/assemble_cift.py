@@ -21,8 +21,8 @@ A["spk_ref"]=None
 pickle.dump(A, open("assembled.pkl","wb"))
 # dummy electronics
 def box(x0,x1,y0,y1,z0,z1): return f.bx(x0,x1,y0,y1,z0,z1)
-esp = box(f.BRD_CX-f.BRD_L/2, f.BRD_CX+f.BRD_L/2, f.BRD_CY-f.BRD_W/2, f.BRD_CY+f.BRD_W/2, 4.0, 5.6)
-amp = box(-f.AMP_L/2, f.AMP_L/2, -12-f.AMP_W/2, -12+f.AMP_W/2, 3.5, 5.1)
+esp = box(f.BRD_CX-f.BRD_L/2, f.BRD_CX+f.BRD_L/2, f.BRD_CY-f.BRD_W/2, f.BRD_CY+f.BRD_W/2, f.PED_Z, f.PED_Z+1.6)
+amp = box(f.AMP_CX-f.AMP_L/2, f.AMP_CX+f.AMP_L/2, f.AMP_CY-f.AMP_W/2, f.AMP_CY+f.AMP_W/2, f.PED_Z, f.PED_Z+1.2)
 fy = -f.BD/2 + f.WALL
 spk = f.bx(-f.SPK_L/2-0.3, f.SPK_L/2+0.3, fy+0.4, fy+0.4+f.SPK_D, f.SP_ZC-f.SPK_H/2, f.SP_ZC+f.SPK_H/2)
 fy2 = f.BD/2 - f.WALL
