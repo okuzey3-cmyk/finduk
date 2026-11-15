@@ -2627,6 +2627,7 @@ bool adiGeciyor(const String& metin) {
 
 // ---------- KONUSMA (TTS) ----------
 
+void halkaPompa(bool hepsi);
 int hamBayt() {
   if (rpos < rlen) return rbuf[rpos++];
   unsigned long t0 = millis();
@@ -2643,6 +2644,7 @@ int hamBayt() {
     } else {
       if (!gOkuC->connected()) return -1;
       if (millis() - t0 > 30000) return -1;
+      halkaPompa(false);                   // veri beklerken birikmis sesi calmaya devam et
       delay(1);
     }
   }
@@ -2677,6 +2679,42 @@ int govdeBayt() {
 }
 
 static int gSesHiz = 24000;
+int gSesHizDis() { return gSesHiz; }
+// --- Ses halkasi (PSRAM): internet yavaslayinca sesin kopmamasi icin once ~1 sn biriktirip sonra calar ---
+static uint8_t* sesHalka = nullptr;
+static const int HALKA = 512 * 1024;
+static volatile int hBas = 0, hSon = 0, hSay = 0;
+static bool hCal = false;
+void halkaSifirla() { hBas = hSon = hSay = 0; hCal = false; }
+void halkaPompa(bool hepsi) {
+  if (!sesHalka || hSay <= 0) return;
+  if (!hCal) {
+    if (!hepsi && hSay < gSesHizDis() * 2) return;   // ~1 sn on tampon
+    hCal = true;
+  }
+  while (hSay > 0) {
+    int parca = HALKA - hBas; if (parca > hSay) parca = hSay; if (parca > 2048) parca = 2048;
+    size_t w = 0;
+    i2s_write(I2S_NUM_1, sesHalka + hBas, parca, &w, hepsi ? portMAX_DELAY : 0);
+    hBas = (hBas + (int)w) % HALKA; hSay -= (int)w;
+    if ((int)w < parca && !hepsi) break;
+  }
+}
+void halkaEkle(const uint8_t* p, int n) {
+  if (!sesHalka) { size_t w = 0; i2s_write(I2S_NUM_1, p, n, &w, portMAX_DELAY); return; }
+  while (n > 0) {
+    if (hSay >= HALKA - 2048) {            // halka doldu: bir parca calarak yer ac
+      hCal = true;
+      int parca = HALKA - hBas; if (parca > 2048) parca = 2048;
+      size_t w = 0; i2s_write(I2S_NUM_1, sesHalka + hBas, parca, &w, portMAX_DELAY);
+      hBas = (hBas + (int)w) % HALKA; hSay -= (int)w;
+    }
+    int c = HALKA - hSay; if (c > n) c = n; if (c > HALKA - hSon) c = HALKA - hSon;
+    memcpy(sesHalka + hSon, p, c);
+    hSon = (hSon + c) % HALKA; hSay += c; p += c; n -= c;
+  }
+  halkaPompa(false);
+}
 static uint8_t sesTampon[4000];
 static int sesN = 0;
 static bool gSesSon = false;     // son parca mi (kuyrugu da yaz)
@@ -2730,7 +2768,7 @@ void sesYaz() {
   lvH = hh;
 
   size_t yazildi = 0;
-  i2s_write(I2S_NUM_1, sesTampon, yaz_n, &yazildi, portMAX_DELAY);
+  halkaEkle(sesTampon, yaz_n); yazildi = yaz_n;
   int kalan = sesN - yaz_n;
   for (int i = 0; i < kalan; i++) sesTampon[i] = sesTampon[yaz_n + i];
   sesN = kalan;
@@ -2814,6 +2852,7 @@ bool konusAl(const String& metin, bool akis) {
           if (rate < 8000 || rate > 96000) rate = 24000;
           gSesHiz = rate;
           i2s_set_sample_rates(I2S_NUM_1, rate);
+          halkaSifirla();
 
           gDurum = D_KONUS;
           delay(30);
@@ -2852,6 +2891,7 @@ bool konusAl(const String& metin, bool akis) {
     gSesSon = true;
     sesYaz();
     gSesSon = false;
+    halkaPompa(true);                      // biriken sesin hepsini cal
     {   // kuyrukta kalan sesin kesilmemesi icin biraz sessizlik yaz, sonra kapat
       static uint8_t sus[1024];
       memset(sus, 0, sizeof(sus));
@@ -4527,6 +4567,7 @@ void setup() {
   xTaskCreatePinnedToCore(gozGorevi, "goz", 8192, NULL, 2, NULL, 1);
 
   wav = (uint8_t*)heap_caps_malloc(WAV_BYTES_MAX, MALLOC_CAP_SPIRAM);
+  sesHalka = (uint8_t*)heap_caps_malloc(HALKA, MALLOC_CAP_SPIRAM);
   if (!wav) wav = (uint8_t*)malloc(WAV_BYTES_MAX);
   if (!wav) {
     Serial.println("HAFIZA YETMEDI");
