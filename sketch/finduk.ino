@@ -162,6 +162,14 @@ const unsigned long MIN_SESLI_MS = 250;    // bundan kisa sesler (tik, alkis) yo
 int gN = 0;                                // son kaydin ornek sayisi
 int gWavBytes = 44;                        // son kaydin wav boyutu
 unsigned long gSesliMs = 0;                // son kayitta sesli sure
+// --- Soz kesme (robot konusurken araya girme) ---
+int gYanki = 2;                  // 0 kapali, 1 sabit esik, 2 ogrenen yanki bastirma
+float gYankiK = 1.0f;            // ogrenilen yanki orani (mikrofona donen ses / hoparlore giden ses)
+const int ESIK_KES = 9000;       // sabit esik modunda araya girme esigi
+volatile bool gKesildi = false;  // kullanici robotun sozunu kesti
+bool gKesDinle = false;          // konusurken mikrofon izleniyor mu
+String gYarim = "";              // kesilen cevabin soylenmeyen kismi
+unsigned long gYarimZaman = 0;
 
 // Hafiza: son 5 konusma
 #define HAFIZA 5
@@ -779,7 +787,8 @@ void hoparlorKur() {
 // Ses gelene kadar bekler. zamanAsimi=0 ise sonsuza dek bekler. Ses gelirse true, sure dolarsa false.
 // Sesin ilk anini kacirmamak icin son 768 ornek (48 ms) surekli saklanir
 #define ONKAYIT 768
-static int16_t onTampon[ONKAYIT];
+#define KESON 8000
+static int16_t onTampon[KESON];
 static int onN = 0;
 
 bool bekleSes(unsigned long zamanAsimi, int esik) {
@@ -1900,6 +1909,11 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi</h2><form action=/ayar><input type=range name=ses min=10 max=90 value=" + String((int)gSesAyar) + " style='width:100%'><button>Kaydet</button></form>";
+  h += String("<h2>Soz kesme</h2><p>Robot konusurken konusursan susar ve seni dinler. Devam et dersen kaldigi yerden surdurur.</p><form action=/ayar><select name=yanki>") +
+       "<option value=2" + (gYanki == 2 ? " selected" : "") + ">Akilli (yankiyi ogrenir)</option>" +
+       "<option value=1" + (gYanki == 1 ? " selected" : "") + ">Basit (yuksek sesle araya gir)</option>" +
+       "<option value=0" + (gYanki == 0 ? " selected" : "") + ">Kapali</option></select><button>Kaydet</button></form>" +
+       "<p style='font-size:13px;color:#666'>Ogrenilen yanki: " + String(gYankiK, 2) + "</p>";
   h += "<h2>Konusma tarzi</h2><form action=/ayar><select name=tarz><option>samimi</option><option>esprili</option><option>ciddi</option><option>sakin</option></select><button>Kaydet</button></form>";
   h += String("<p>Su an: ") + htmlKacir(nvsOku("kisilik")) + "</p>";
   h += "<h2>Hafiza</h2><div class=k>" + htmlKacir(satirlariAl("hafiza")) + "</div><form action=/sil><input type=hidden name=ne value=hafiza><button>Hafizayi sil</button></form>";
@@ -1924,6 +1938,7 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("yanki")) { int y = webSunucu.arg("yanki").toInt(); if (y >= 0 && y <= 2) { gYanki = y; nvsYaz("yanki", String(y)); } }
   if (webSunucu.hasArg("tvip")) { String t = webSunucu.arg("tvip"); t.trim(); if (t.length() >= 7 && t.length() < 40) nvsYaz("tvip", t); }
   if (webSunucu.hasArg("cad")) cihazEkle(webSunucu.arg("cad"), webSunucu.arg("con"), webSunucu.arg("coff"));
   bool yb = false;
@@ -2628,6 +2643,7 @@ bool adiGeciyor(const String& metin) {
 // ---------- KONUSMA (TTS) ----------
 
 void halkaPompa(bool hepsi);
+void mikDinle();
 int hamBayt() {
   if (rpos < rlen) return rbuf[rpos++];
   unsigned long t0 = millis();
@@ -2645,6 +2661,7 @@ int hamBayt() {
       if (!gOkuC->connected()) return -1;
       if (millis() - t0 > 30000) return -1;
       halkaPompa(false);                   // veri beklerken birikmis sesi calmaya devam et
+      mikDinle();
       delay(1);
     }
   }
@@ -2685,19 +2702,83 @@ static uint8_t* sesHalka = nullptr;
 static const int HALKA = 512 * 1024;
 static volatile int hBas = 0, hSon = 0, hSay = 0;
 static bool hCal = false;
-void halkaSifirla() { hBas = hSon = hSay = 0; hCal = false; }
+static unsigned long gCalBas = 0;          // calmanin gercekten basladigi an
+static float refTepe[64]; static unsigned long refZ[64]; static int refH = 0;
+void halkaSifirla() { hBas = hSon = hSay = 0; hCal = false; gCalBas = 0; }
+void refKaydet(const uint8_t* p, int n) {   // hoparlore giden sesin tepe degeri (yanki tahmini icin)
+  const int16_t* q = (const int16_t*)p; int m = n / 2, t = 0;
+  for (int i = 0; i < m; i++) { int a = abs((int)q[i]); if (a > t) t = a; }
+  refH = (refH + 1) & 63; refTepe[refH] = (float)t; refZ[refH] = millis();
+}
+float refMaks(unsigned long simdi) {         // son 700 ms icinde hoparlore giden en yuksek ses
+  float m = 0;
+  for (int i = 0; i < 64; i++) if (simdi - refZ[i] < 700 && refTepe[i] > m) m = refTepe[i];
+  return m;
+}
 void halkaPompa(bool hepsi) {
   if (!sesHalka || hSay <= 0) return;
   if (!hCal) {
     if (!hepsi && hSay < gSesHizDis() * 2) return;   // ~1 sn on tampon
-    hCal = true;
+    hCal = true; gCalBas = millis();
   }
   while (hSay > 0) {
     int parca = HALKA - hBas; if (parca > hSay) parca = hSay; if (parca > 2048) parca = 2048;
     size_t w = 0;
     i2s_write(I2S_NUM_1, sesHalka + hBas, parca, &w, hepsi ? portMAX_DELAY : 0);
+    if (w > 0) refKaydet(sesHalka + hBas, (int)w);
     hBas = (hBas + (int)w) % HALKA; hSay -= (int)w;
     if ((int)w < parca && !hepsi) break;
+  }
+  if (!hepsi) mikDinle();
+}
+
+// Robot konusurken mikrofonu dinler; kullanici araya girerse gKesildi olur.
+// Mod 1: sabit esik. Mod 2: hoparlorden mikrofona donen yankiyi ogrenir, ondan belirgin yuksek ses gelirse araya girme sayar.
+static int kesSay = 0;
+static unsigned long konusBas = 0;
+void mikDinle() {
+  if (!gKesDinle || gKesildi) return;
+  int32_t buf[256];
+  size_t got = 0;
+  while (true) {
+    got = 0;
+    i2s_read(I2S_NUM_0, buf, sizeof(buf), &got, 0);
+    int n = got / 4;
+    if (n <= 0) break;
+    long long top = 0;
+    for (int i = 0; i < n; i++) top += (buf[i] >> 14);
+    int ort = (int)(top / n), tepe = 0;
+    memmove(onTampon, onTampon + n, (KESON - n) * sizeof(int16_t));
+    for (int i = 0; i < n; i++) {
+      int32_t v = (buf[i] >> 14) - ort;
+      if (abs((int)v) > tepe) tepe = abs((int)v);
+      if (v > 32767) v = 32767; if (v < -32768) v = -32768;
+      onTampon[KESON - n + i] = (int16_t)v;
+    }
+    unsigned long simdi = millis();
+    if (simdi - konusBas < 500) { kesSay = 0; continue; }        // ilk an: acilis tiki
+    bool ses;
+    if (gYanki == 1) {
+      ses = tepe > ESIK_KES;
+    } else {
+      float ref = refMaks(simdi);
+      float yanki = gYankiK * ref;
+      ses = tepe > yanki * 2.5f + 2500.0f;
+      if (!ses && ref > 1500.0f) {                                  // yankiyi ogren
+        float r = (float)tepe / ref;
+        if (r > gYankiK) gYankiK = gYankiK * 0.9f + r * 0.1f;
+        else gYankiK = gYankiK * 0.999f + r * 0.001f;
+        if (gYankiK < 0.05f) gYankiK = 0.05f;
+        if (gYankiK > 4.0f) gYankiK = 4.0f;
+      }
+    }
+    if (ses) kesSay++; else if (kesSay > 0) kesSay--;
+    if (kesSay >= 10) {                                             // ~160 ms surekli konusma
+      gKesildi = true;
+      onN = KESON;
+      Serial.println("(Soz kesildi, dinliyorum)");
+      break;
+    }
   }
 }
 void halkaEkle(const uint8_t* p, int n) {
@@ -2830,6 +2911,7 @@ bool konusAl(const String& metin, bool akis) {
   bool calindi = false;
 
   while (true) {
+    if (gKesildi) break;
     int b = govdeBayt();
     if (b < 0) break;
 
@@ -2888,11 +2970,16 @@ bool konusAl(const String& metin, bool akis) {
   }
 
   if (calindi) {
-    gSesSon = true;
-    sesYaz();
-    gSesSon = false;
-    halkaPompa(true);                      // biriken sesin hepsini cal
-    {   // kuyrukta kalan sesin kesilmemesi icin biraz sessizlik yaz, sonra kapat
+    if (!gKesildi) {
+      gSesSon = true;
+      sesYaz();
+      gSesSon = false;
+      if (!hCal && hSay > 0) { hCal = true; gCalBas = millis(); }
+      while (hSay > 0 && !gKesildi) { halkaPompa(false); mikDinle(); delay(2); }
+      if (gKesDinle) { unsigned long t = millis(); while (millis() - t < 350 && !gKesildi) { mikDinle(); delay(4); } }
+    }
+    if (gKesildi) { i2s_zero_dma_buffer(I2S_NUM_1); halkaSifirla(); sesN = 0; }
+    else {   // kuyrukta kalan sesin kesilmemesi icin biraz sessizlik yaz, sonra kapat
       static uint8_t sus[1024];
       memset(sus, 0, sizeof(sus));
       for (int i = 0; i < 20; i++) {
@@ -2920,9 +3007,39 @@ bool konusAl(const String& metin, bool akis) {
 
 // Once akisli (parca parca, hizli baslar), olmazsa tek parca dener
 bool konus(const String& metin) {
-  if (konusAl(metin, true)) return true;
-  Serial.println("(Akisli ses olmadi, normal deneniyor)");
-  return konusAl(metin, false);
+  // Konusurken mikrofonu ac: kullanici araya girerse robot susar ve dinler
+  gKesildi = false;
+  gKesDinle = (gYanki > 0) && !MAC_SES;
+  if (gKesDinle) {
+    int32_t b[256]; size_t g = 1; int say = 0;
+    while (g > 0 && say++ < 64) { g = 0; i2s_read(I2S_NUM_0, b, sizeof(b), &g, 0); }   // eski mikrofon verisini at
+    for (int i = 0; i < 64; i++) { refTepe[i] = 0; refZ[i] = 0; }
+  }
+  kesSay = 0;
+  konusBas = millis();
+  bool ok = konusAl(metin, true);
+  if (!ok && !gKesildi) {
+    Serial.println("(Akisli ses olmadi, normal deneniyor)");
+    konusBas = millis();
+    ok = konusAl(metin, false);
+  }
+  gKesDinle = false;
+  if (gKesildi) {
+    // Soylenmeyen kismi tahmin et (Turkce konusma ~14 harf/sn), cumle basina geri sar
+    unsigned long calinan = (gCalBas > 0 && millis() > gCalBas) ? millis() - gCalBas : 0;
+    int idx = (int)(calinan * 14UL / 1000UL);
+    if (idx > (int)metin.length()) idx = metin.length();
+    int c = idx;
+    while (c > 0 && metin[c - 1] != '.' && metin[c - 1] != '!' && metin[c - 1] != '?') c--;
+    String kalan = metin.substring(c); kalan.trim();
+    gYarim = kalan.length() > 3 ? kalan : String("");
+    gYarimZaman = millis();
+    sohbetBitis = millis() + SOHBET_SURE;
+    halkaSifirla();
+    return true;
+  }
+  { static unsigned long sonK = 0; if (gYanki == 2 && millis() - sonK > 600000UL) { sonK = millis(); nvsYaz("yankik", String(gYankiK, 3)); } }
+  return ok;
 }
 
 // ===== BUYUK PAKET 28: KARAKTER VE YASAM PAKETI BASLA =====
@@ -4577,6 +4694,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { String y = nvsOku("yanki"); if (y.length()) gYanki = y.toInt(); String k = nvsOku("yankik"); if (k.length()) { float f = k.toFloat(); if (f > 0.05f && f < 4.0f) gYankiK = f; } }
 
   miknrofonKur();
   hoparlorKur();
@@ -4620,7 +4738,9 @@ void loop() {
     sabahSelami();
     return;
   }
-  if (!bekleSes(UYKU_SURE, ESIK)) {
+  bool kesme = gKesildi;
+  gKesildi = false;
+  if (!kesme && !bekleSes(UYKU_SURE, ESIK)) {
     if (alarmCal()) return;
     hikayeBitir();
     fiyatKontrol();
@@ -4710,6 +4830,21 @@ void loop() {
 
   String bilgi = "";
   String sd = sadelestir(duyulan);
+  // --- Soz kesme: "devam et" denirse yarim kalan cevaba kaldigi yerden devam ---
+  if (gYarim.length() && millis() - gYarimZaman > 180000UL) gYarim = "";
+  if (gYarim.length() && sd.length() < 40 && (sd.indexOf("devam") >= 0 || sd.indexOf("kaldigin yer") >= 0 || sd.indexOf("anlatmaya devam") >= 0)) {
+    String y = gYarim; gYarim = "";
+    gDurum = D_KONUS;
+    konus(y);
+    sohbetBitis = millis() + SOHBET_SURE;
+    gDurum = D_BOSTA;
+    return;
+  }
+  if (gYarim.length()) {
+    bilgi = String("NOT: Az once sen konusurken kullanici sozunu kesti. Soyleyemedigin kisim su: \"") + gYarim +
+            "\". Simdi kullanicinin yeni sozune cevap ver. Ayni konuya devam etmek istiyorsa kaldigin yerden surdur, yarim kalani bastan tekrarlama.";
+    gYarim = "";
+  }
   // --- Paket 28: yerel (API'siz) komutlar ---
   if (tarifSoz && tarifKomutu(sd)) { sohbetBitis = millis() + SOHBET_SURE; gDurum = D_BOSTA; return; }
   if (sd.indexOf("ben demet") >= 0 || sd.indexOf("demet konusuyor") >= 0) { gKisi = "demet"; gKisiBitis = millis() + 20UL * 60000UL; if (!gMisafir) emanetTeslim("demet", "Demet"); }
@@ -4850,5 +4985,5 @@ void loop() {
     Serial.println(ham.length() > 700 ? ham.substring(ham.length() - 700) : ham);
   }
   gDurum = D_BOSTA;
-  delay(1000);
+  if (!gKesildi) delay(1000);
 }
