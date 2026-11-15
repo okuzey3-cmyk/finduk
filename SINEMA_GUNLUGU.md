@@ -34,3 +34,10 @@
 - Durum bilgisi: açık biletin benzer yapımları ve serinin filmleri (şu an açık olan işaretli) Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (32 → 34 kelime: benzer, seri; döngü 34). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, buna benzeyen ilk filmi aç" ya da "Serinin ikinci filmini aç". Sahte DOM (jsdom) ile denendi; gerçek telefonda ve robotta denenmedi.
+
+## 2026-11-15 — BÜYÜK GÜNCELLEME
+- Yeni komutlar: `gecehazirla|gul;kisa;cift` (çok adımlı: "3 soruda film seç"i cevaplar, ilk önerilen filmi açar, film gecesi menüsünü getirir; `;2` ile ikinci öneri, sona `;fragman` ile fragman da başlar), `rafac|favori;2` / `rafac|izlenecek;Inception` / `rafac|izlenen;1` (raf sekmesini açıp sıraya ya da film adına göre filmi açar).
+- Durum bilgisi: yeni "Alışkanlıkların" bölümü (en çok izlenen/favori türler, puan ortalaması, son izlenenler, 5 yıldızlılar, son favoriler, izlenecek sayısı) ve açık biletteki senin puanın/notun; durum metni sınırı 1800 → 2300 karakter.
+- Hata düzeltme: `puanla|8` gibi 1-10 puanlar 5 yıldıza çevrilir (önceden 5'ten büyük puan sessizce işe yaramıyordu).
+- Robot tarafı: yalnızca KISILIK komut cümleleri (sinemaMi aynı, 34 kelime). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, film gecesi hazırla, gülmek istiyoruz, kısa, ikimiz" ya da "Finduk, favorilerimden ikincisini aç" / "Ne tür filmleri seviyorum?". Sahte DOM (jsdom) ile rafac ve alışkanlık bilgisi denendi; gecehazirla'nın sonuç aşaması (ağ gerektiriyor) ve gerçek telefon/robot denenmedi.
