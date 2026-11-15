@@ -190,6 +190,22 @@ def neck():
     return Dif(m, *cuts)
 
 
+def neck_fixed():
+    """Servosuz sabit boyun: kafa iki M2 vida + somunla doğrudan boyna bağlanır."""
+    fl = cy((0, 0, 0), (0, 0, FL_T), FL_OD / 2, n=96)
+    tube = cy((0, 0, 0), (0, 0, NECK_H), NECK_OD / 2, n=96)
+    m = U(fl, tube)
+    cuts = [cy((0, 0, -1), (0, 0, NECK_H - 3.0), NECK_OD / 2 - WALL, n=96)]
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            x, y = sx * FL_R, sy * FL_R
+            cuts.append(cy((x, y, -1), (x, y, FL_T + 1), THRU_R))
+    for sx in (-10, 10):
+        cuts.append(cy((sx, 0, NECK_H - 4), (sx, 0, NECK_H + 1), 1.2))       # kafa vidaları (M2)
+    cuts.append(bx(-7, 7, -14.5, -7.5, NECK_H - 4, NECK_H + 1))                # kafa kablosu (kafadaki yuvayla hizalı)
+    return Dif(m, *cuts)
+
+
 # ---------------- GÖVDE (montaj yönünde; baskıda ters çevrilir) ----------------
 def grille_centers():
     """Ön duvardaki ızgara delik merkezleri: petek dizilim, uzun yuvarlak uçlu (stadyum) bölge içinde."""
@@ -312,11 +328,12 @@ if __name__ == "__main__":
     P["plate_tft"] = plate_tft()
     P["plate_oled"] = plate_oled()
     P["neck"] = neck()
+    P["neck_fixed"] = neck_fixed()
     P["body"] = body()
     P["base"] = base()
     names = {
         "head": "1_kafa.stl", "plate_tft": "2a_on_plaka_TFT.stl", "plate_oled": "2b_on_plaka_OLED.stl",
-        "neck": "3_boyun_MG90S.stl", "body": "4_govde_cift_hoparlor.stl", "base": "6_taban.stl",
+        "neck": "3_boyun_MG90S.stl", "neck_fixed": "3_boyun_SABIT_servosuz.stl", "body": "4_govde_cift_hoparlor.stl", "base": "6_taban.stl",
     }
     for k, n in names.items():
         m = P[k]
