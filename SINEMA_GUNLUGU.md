@@ -41,3 +41,9 @@
 - Hata düzeltme: `puanla|8` gibi 1-10 puanlar 5 yıldıza çevrilir (önceden 5'ten büyük puan sessizce işe yaramıyordu).
 - Robot tarafı: yalnızca KISILIK komut cümleleri (sinemaMi aynı, 34 kelime). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, film gecesi hazırla, gülmek istiyoruz, kısa, ikimiz" ya da "Finduk, favorilerimden ikincisini aç" / "Ne tür filmleri seviyorum?". Sahte DOM (jsdom) ile rafac ve alışkanlık bilgisi denendi; gecehazirla'nın sonuç aşaması (ağ gerektiriyor) ve gerçek telefon/robot denenmedi.
+
+## 2026-11-16
+- Yeni komutlar (Kadife): `kadifeoner|N` (Kadife'nin sohbetteki önerdiği N. devam çipine basar; Kadife yazıyorsa basmaz), `kadifehava|esprili/ciddi/uzun/samimi` (Kadife'nin konuşma havasını ayarlar; sadece bu ayarı yazar, Gemini anahtarına ve verilere dokunmaz).
+- Durum bilgisi: Kadife ekranında Kadife'nin havası, sesinin açık/kapalı olduğu, yazıp yazmadığı ve önerdiği devam çipleri Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, Kadife daha esprili olsun" ya da "Kadife'nin ilk önerisine bas". Sahte DOM (jsdom) ile hava komutu ve durum metni denendi; çip tıklaması jsdom'da Kadife meşgul göründüğü için denenemedi; gerçek telefon/robot denenmedi.
