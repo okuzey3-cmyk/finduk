@@ -47,3 +47,9 @@
 - Durum bilgisi: Kadife ekranında Kadife'nin havası, sesinin açık/kapalı olduğu, yazıp yazmadığı ve önerdiği devam çipleri Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, Kadife daha esprili olsun" ya da "Kadife'nin ilk önerisine bas". Sahte DOM (jsdom) ile hava komutu ve durum metni denendi; çip tıklaması jsdom'da Kadife meşgul göründüğü için denenemedi; gerçek telefon/robot denenmedi.
+
+## 2026-11-17
+- Yeni komut (Sahne): `biletci|N` ya da `biletci|Biletix` (Sahne ekranındaki N. biletçiyi / adını içeren biletçiyi açar; telefon tarayıcısı açılır pencereyi engellerse açılmayabilir). `sahnesec` artık tek seferde birden fazla seçim alır: `sahnesec|konser;Ankara`.
+- Durum bilgisi: Sahne'deki biletçiler artık numaralı bildirilir (1) Bubilet ...).
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "biletci" zaten "bilet" ile yakalanır). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, Ankara'da konserlere bak" ya da "İkinci biletçiyi aç". Sözdizimi node ile denendi; jsdom ile denenmedi, gerçek telefon/robot denenmedi.
