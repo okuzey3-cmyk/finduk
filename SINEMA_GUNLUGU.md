@@ -53,3 +53,9 @@
 - Durum bilgisi: Sahne'deki biletçiler artık numaralı bildirilir (1) Bubilet ...).
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "biletci" zaten "bilet" ile yakalanır). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, Ankara'da konserlere bak" ya da "İkinci biletçiyi aç". Sözdizimi node ile denendi; jsdom ile denenmedi, gerçek telefon/robot denenmedi.
+
+## 2026-11-18
+- Yeni komutlar: `oyuncu|2` / `oyuncu|Ayşe` / `oyuncu|yonetmen` (açık biletteki oyuncunun ya da yönetmenin kişi kartını açar), `kisifilm|N` (açık kişi kartındaki N. yapımı açar).
+- Durum bilgisi: oyuncular artık numaralı ve rolleriyle, yönetmen ve açık kişi kartı (ad, kısa biyografi, kişinin işleri) Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "oyuncu" zaten var). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, ikinci oyuncuyu aç" sonra "Onun üçüncü filmini aç". Sahte DOM (jsdom) ile oyuncu/yönetmen/kisifilm ve kişi kartı durumu denendi; açık biletteki oyuncu durum satırı ve gerçek telefon/robot denenmedi.
