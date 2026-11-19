@@ -59,3 +59,9 @@
 - Durum bilgisi: oyuncular artık numaralı ve rolleriyle, yönetmen ve açık kişi kartı (ad, kısa biyografi, kişinin işleri) Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "oyuncu" zaten var). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, ikinci oyuncuyu aç" sonra "Onun üçüncü filmini aç". Sahte DOM (jsdom) ile oyuncu/yönetmen/kisifilm ve kişi kartı durumu denendi; açık biletteki oyuncu durum satırı ve gerçek telefon/robot denenmedi.
+
+## 2026-11-19
+- Yeni komut: `gorevkadife` (açık "Bu ayın görevleri" penceresinde Kadife'den yapım önerisi ister). Hata düzeltme: `kapat` artık Rozetlerim penceresini de kapatıyor (önceden sadece ana ekrana dönüp pencere açık kalıyordu).
+- Durum bilgisi: Rafım ekranında bu ayın görevleri (n/hedef) ve kazanılan rozet sayısı/adları; görev ya da rozet penceresi açıkken ayrıntılı ilerleme ve sıradaki rozetler Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "gorev" ve "rozet" zaten var). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, bu ayın görevlerini aç, sonra Kadife'den öneri iste" ya da "Rozetlerimi aç, kaç tane kazandım?". Sahte DOM (jsdom) ile görev/rozet açma, durum metni ve kapat denendi; gerçek telefon/robot denenmedi.
