@@ -65,3 +65,9 @@
 - Durum bilgisi: Rafım ekranında bu ayın görevleri (n/hedef) ve kazanılan rozet sayısı/adları; görev ya da rozet penceresi açıkken ayrıntılı ilerleme ve sıradaki rozetler Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "gorev" ve "rozet" zaten var). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, bu ayın görevlerini aç, sonra Kadife'den öneri iste" ya da "Rozetlerimi aç, kaç tane kazandım?". Sahte DOM (jsdom) ile görev/rozet açma, durum metni ve kapat denendi; gerçek telefon/robot denenmedi.
+
+## 2026-11-20
+- Yeni komutlar: `durak|N` / `durak|Fransa` (açık Sinema Pasaportum penceresinde "Sıradaki duraklar"dan birine basar; çıkan filmler `ovsec|N` ile açılır), `gunlukgun|7` (Sinema Günlüğüm takviminde o günün izlenenlerini açar), `gunlukay|onceki` / `gunlukay|sonraki` (takvimde ay değiştirir).
+- Durum bilgisi: Pasaport damgaları (ülke, yapım sayısı), sıradaki duraklar ve günlük ayı/izlenen günler (yapım sayısıyla) Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "pasaport" ve "gunluk" zaten var). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, sinema pasaportumu aç, sonra Japonya durağına bas" ya da "Günlüğümü aç, geçen aya git". Sahte DOM (jsdom) ile üç komut ve durum metni denendi; gerçek telefon/robot denenmedi.
