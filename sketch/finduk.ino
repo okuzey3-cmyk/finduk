@@ -165,6 +165,8 @@ unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
 bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
 unsigned long gSure[4] = {0, 0, 0, 0};  // son cevap: duyma, dusunme, ses baslangici, toplam (ms)
+bool gWifiDusuk = false;         // Wi-Fi verici gucunu dusur (hoparlore karisan cizirti icin)
+bool gOnceIndir = false;         // cevabin sesini once tamamen indir, sonra cal (calarken internet sessiz)
 int gBasHz = 450;                // bas kesme frekansi: 260 az kes, 450 bas yok (telefon gibi net), 650 iyice ince
 int gYanki = 2;                  // 0 kapali, 1 sabit esik, 2 ogrenen yanki bastirma
 float gYankiK = 1.0f;            // ogrenilen yanki orani (mikrofona donen ses / hoparlore giden ses)
@@ -729,6 +731,7 @@ void wifiBaglan() {
     delay(500);
   }
   if (WiFi.status() == WL_CONNECTED) {
+    if (gWifiDusuk) WiFi.setTxPower(WIFI_POWER_11dBm);
     Serial.print("Wi-Fi tamam. IP: ");
     Serial.println(WiFi.localIP());
   } else {
@@ -1916,6 +1919,11 @@ void webAna() {
   h += String("<h2>Ne zaman cevap versin</h2><form action=/ayar><select name=sadeisim>") +
        "<option value=1" + (gSadeIsim ? " selected" : "") + ">Sadece Hey Finduk deyince (kendiliginden konusmaz)</option>" +
        "<option value=0" + (!gSadeIsim ? " selected" : "") + ">Sohbette 30 sn adsiz devam etsin, ara sira kendisi konussun</option></select><button>Kaydet</button></form>";
+  h += String("<h2>Cizirti testi</h2><p>Iki testi sirayla cal ve dinle. Sadece 2. testte cizirti varsa cizirtiyi internet (Wi-Fi) yapiyor demektir.</p>") +
+       "<p><a href='/sestest?t=1'><button type=button>1. test: internet sessiz</button></a> <a href='/sestest?t=2'><button type=button>2. test: internet calisirken</button></a></p>" +
+       "<form action=/ayar><p><label><input type=checkbox name=wifidusuk value=1" + (gWifiDusuk ? " checked" : "") + "> Wi-Fi gucunu dusur</label><br>" +
+       "<label><input type=checkbox name=onceindir value=1" + (gOnceIndir ? " checked" : "") + "> Cevabi once indir, sonra cal (calarken internet sessiz kalir, cevap biraz gec baslar)</label></p>" +
+       "<input type=hidden name=cizform value=1><button>Kaydet</button></form>";
   h += String("<h2>Bas</h2><p>Kucuk hoparlorde bas cizirti yapar. Bas yok en net sestir.</p><form action=/ayar><select name=bas>") +
        "<option value=450" + (gBasHz == 450 ? " selected" : "") + ">Bas yok (net, onerilen)</option>" +
        "<option value=650" + (gBasHz == 650 ? " selected" : "") + ">Iyice ince (cizirti surerse)</option>" +
@@ -1949,6 +1957,11 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("cizform")) {
+    gWifiDusuk = webSunucu.hasArg("wifidusuk"); gOnceIndir = webSunucu.hasArg("onceindir");
+    nvsYaz("wifidusuk", gWifiDusuk ? "1" : "0"); nvsYaz("onceindir", gOnceIndir ? "1" : "0");
+    WiFi.setTxPower(gWifiDusuk ? WIFI_POWER_11dBm : WIFI_POWER_19_5dBm);
+  }
   if (webSunucu.hasArg("sadeisim")) { gSadeIsim = webSunucu.arg("sadeisim") == "1"; nvsYaz("sadeisim", gSadeIsim ? "1" : "0"); }
   if (webSunucu.hasArg("bas")) { int b = webSunucu.arg("bas").toInt(); if (b >= 150 && b <= 900) { gBasHz = b; nvsYaz("bas", String(b)); } }
   if (webSunucu.hasArg("yanki")) { int y = webSunucu.arg("yanki").toInt(); if (y >= 0 && y <= 2) { gYanki = y; nvsYaz("yanki", String(y)); } }
@@ -1987,6 +2000,7 @@ void webTv() {
   tvUrlAc(plat, url, film);
 }
 
+void sesTesti(bool ag);
 void webBaslat() {
   if (WiFi.status() != WL_CONNECTED) return;
   String sv = nvsOku("ses");
@@ -1996,6 +2010,13 @@ void webBaslat() {
   webSunucu.on("/ayar", webAyar);
   webSunucu.on("/sil", webSil);
   webSunucu.on("/tv", webTv);
+  webSunucu.on("/sestest", []() {
+    int t = webSunucu.arg("t").toInt();
+    if (gDurum != D_BOSTA) { webSunucu.send(200, "text/html; charset=utf-8", "<meta http-equiv=refresh content='2;url=/'>Robot su an mesgul, birazdan tekrar dene."); return; }
+    webSunucu.send(200, "text/html; charset=utf-8", "<meta http-equiv=refresh content='5;url=/'>Ses testi caliyor (3 sn). Dinle...");
+    delay(200);
+    sesTesti(t == 2);
+  });
   webSunucu.begin();
   xTaskCreate(webGorevi, "web", 8192, NULL, 1, NULL);
   gWebVar = true;
@@ -2712,7 +2733,7 @@ static int gSesHiz = 24000;
 int gSesHizDis() { return gSesHiz; }
 // --- Ses halkasi (PSRAM): internet yavaslayinca sesin kopmamasi icin once ~1 sn biriktirip sonra calar ---
 static uint8_t* sesHalka = nullptr;
-static const int HALKA = 512 * 1024;
+static const int HALKA = 1536 * 1024;   // ~32 sn ses
 static volatile int hBas = 0, hSon = 0, hSay = 0;
 static bool hCal = false;
 static unsigned long gCalBas = 0;          // calmanin gercekten basladigi an
@@ -2731,7 +2752,7 @@ float refMaks(unsigned long simdi) {         // son 700 ms icinde hoparlore gide
 void halkaPompa(bool hepsi) {
   if (!sesHalka || hSay <= 0) return;
   if (!hCal) {
-    if (!hepsi && hSay < gSesHizDis() * 2 * 35 / 100) return;   // ~0.35 sn on tampon (hiz icin kisaltildi)
+    if (!hepsi && (gOnceIndir || hSay < gSesHizDis() * 2 * 35 / 100)) return;   // ~0.35 sn on tampon (hiz icin kisaltildi)
     hCal = true; gCalBas = millis();
   }
   while (hSay > 0) {
@@ -2743,6 +2764,42 @@ void halkaPompa(bool hepsi) {
     if ((int)w < parca && !hepsi) break;
   }
   if (!hepsi) mikDinle();
+}
+
+// --- Ses testi: cizirti internetten mi geliyor? 1: internet sessizken ton, 2: ayni ton internetten dosya inerken ---
+void sesTesti(bool ag) {
+  if (!sesHalka) return;
+  i2s_set_sample_rates(I2S_NUM_1, 24000);
+  gSesHiz = 24000;
+  halkaSifirla();
+  int vol = sesYuzdeSimdi();
+  const int N = 24000 * 3;
+  float f1 = 0, f2 = 0;
+  for (int i = 0; i < N; i++) {
+    f1 += 2.0f * 3.14159265f * 330.0f / 24000.0f; f2 += 2.0f * 3.14159265f * 495.0f / 24000.0f;
+    float z = 1.0f; if (i < 2400) z = i / 2400.0f; if (N - i < 2400) z = (N - i) / 2400.0f;
+    int16_t v = (int16_t)((sinf(f1) * 0.6f + sinf(f2) * 0.4f) * 9000.0f * z * (float)vol / 70.0f);
+    sesHalka[hSon] = v & 255; sesHalka[hSon + 1] = (v >> 8) & 255; hSon += 2; hSay += 2;
+  }
+  hCal = true; gCalBas = millis();
+  WiFiClientSecure c;
+  bool bagli = false;
+  if (ag) {
+    c.setInsecure();
+    if (c.connect("raw.githubusercontent.com", 443)) {
+      c.print("GET /okuzey3-cmyk/finduk/firmware/firmware.bin HTTP/1.1\r\nHost: raw.githubusercontent.com\r\nConnection: close\r\n\r\n");
+      bagli = true;
+    }
+  }
+  uint8_t cop[512];
+  while (hSay > 0) {
+    halkaPompa(false);
+    if (bagli && c.available()) c.read(cop, sizeof(cop));
+    else delay(1);
+  }
+  if (bagli) c.stop();
+  i2s_zero_dma_buffer(I2S_NUM_1);
+  halkaSifirla();
 }
 
 // Robot konusurken mikrofonu dinler; kullanici araya girerse gKesildi olur.
@@ -2844,7 +2901,14 @@ void sesYaz() {
     float w = 2.0f * 3.14159265f * (float)gBasHz / (float)gSesHiz, cs = cosf(w), al = sinf(w) / (2.0f * 0.7071f), a0 = 1.0f + al;
     b0 = (1.0f + cs) / 2.0f / a0; b1 = -(1.0f + cs) / a0; b2 = b0; a1 = -2.0f * cs / a0; a2 = (1.0f - al) / a0;
   }
-  if (gSesYeniBasladi) { z1 = 0; z2 = 0; zarf = 0; gSesYeniBasladi = false; }
+  static float lb0 = 1, lb1 = 0, lb2 = 0, la1 = 0, la2 = 0, l1 = 0, l2 = 0;
+  static int lpHiz = 0;
+  if (lpHiz != gSesHiz) {                      // tiz "ss" seslerinin kucuk hoparlorde cizirmasina karsi ~6.5 kHz alcak geciren
+    lpHiz = gSesHiz;
+    float w = 2.0f * 3.14159265f * 6500.0f / (float)gSesHiz, cs = cosf(w), al = sinf(w) / (2.0f * 0.7071f), a0 = 1.0f + al;
+    lb0 = (1.0f - cs) / 2.0f / a0; lb1 = (1.0f - cs) / a0; lb2 = lb0; la1 = -2.0f * cs / a0; la2 = (1.0f - al) / a0;
+  }
+  if (gSesYeniBasladi) { z1 = 0; z2 = 0; zarf = 0; l1 = 0; l2 = 0; gSesYeniBasladi = false; }
   int vol = MAC_SES ? 0 : sesYuzdeSimdi();
   const float tavan = 17000.0f;
   for (int i = 0; i < yaz_n / 2; i++) {
@@ -2852,7 +2916,10 @@ void sesYaz() {
     float y = b0 * x + z1;
     z1 = b1 * x - a1 * y + z2;
     z2 = b2 * x - a2 * y;
-    float v = y * (float)vol * 0.0062f;
+    float yl = lb0 * y + l1;
+    l1 = lb1 * y - la1 * yl + l2;
+    l2 = lb2 * y - la2 * yl;
+    float v = yl * (float)vol * 0.0062f;
     float a = fabsf(v);
     if (a > zarf) zarf += (a - zarf) * 0.4f; else zarf *= 0.9994f;
     if (zarf > tavan) v *= tavan / zarf;
@@ -4716,6 +4783,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { gWifiDusuk = nvsOku("wifidusuk") == "1"; gOnceIndir = nvsOku("onceindir") == "1"; if (gWifiDusuk) WiFi.setTxPower(WIFI_POWER_11dBm); }
   { String si = nvsOku("sadeisim"); if (si.length()) gSadeIsim = (si == "1"); }
   { String bs = nvsOku("bas"); if (bs.length()) { int b = bs.toInt(); if (b >= 150 && b <= 900) gBasHz = b; } }
   { String y = nvsOku("yanki"); if (y.length()) gYanki = y.toInt(); String k = nvsOku("yankik"); if (k.length()) { float f = k.toFloat(); if (f > 0.05f && f < 4.0f) gYankiK = f; } }
