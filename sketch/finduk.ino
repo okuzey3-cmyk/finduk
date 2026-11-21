@@ -2822,21 +2822,29 @@ void sesYaz() {
     Serial.write(sesTampon, yaz_n);
   }
   long toplamMutlak = 0;
-  // Kucuk hoparlor cizirtisina karsi: derin basi kes (yuksek geciren ~180 Hz), %75 pay birak, tepeleri yumusak sinirla
-  static float hpX = 0, hpY = 0;
-  if (gSesYeniBasladi) { hpX = 0; hpY = 0; gSesYeniBasladi = false; }
-  const float hpA = 0.94f;
+  // Cizirtiya karsi (v54): 1) kucuk hoparlorun veremedigi basi 2. derece filtreyle kes (~260 Hz),
+  // 2) ses tepeleri tavana carpmadan once yumusakca kisan kompresor (kirpma ve guc dususu cizirtisini onler)
+  static float b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z1 = 0, z2 = 0, zarf = 0;
+  static int bqHiz = 0;
+  if (bqHiz != gSesHiz) {
+    bqHiz = gSesHiz;
+    float w = 2.0f * 3.14159265f * 260.0f / (float)gSesHiz, cs = cosf(w), al = sinf(w) / (2.0f * 0.7071f), a0 = 1.0f + al;
+    b0 = (1.0f + cs) / 2.0f / a0; b1 = -(1.0f + cs) / a0; b2 = b0; a1 = -2.0f * cs / a0; a2 = (1.0f - al) / a0;
+  }
+  if (gSesYeniBasladi) { z1 = 0; z2 = 0; zarf = 0; gSesYeniBasladi = false; }
   int vol = MAC_SES ? 0 : sesYuzdeSimdi();
+  const float tavan = 17000.0f;
   for (int i = 0; i < yaz_n / 2; i++) {
     float x = (float)s[i];
-    hpY = hpA * (hpY + x - hpX);
-    hpX = x;
-    float v = hpY * (float)vol * 0.0055f;
+    float y = b0 * x + z1;
+    z1 = b1 * x - a1 * y + z2;
+    z2 = b2 * x - a2 * y;
+    float v = y * (float)vol * 0.0062f;
     float a = fabsf(v);
-    const float diz = 11000.0f;
-    if (a > diz) { a = diz + (a - diz) / (1.0f + (a - diz) / 6000.0f); v = (v < 0) ? -a : a; }
-    if (v > 30000.0f) v = 30000.0f;
-    if (v < -30000.0f) v = -30000.0f;
+    if (a > zarf) zarf += (a - zarf) * 0.4f; else zarf *= 0.9994f;
+    if (zarf > tavan) v *= tavan / zarf;
+    if (v > 20000.0f) v = 20000.0f;
+    if (v < -20000.0f) v = -20000.0f;
     s[i] = (int16_t)v;
     toplamMutlak += abs((int)s[i]);
   }
