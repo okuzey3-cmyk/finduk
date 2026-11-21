@@ -157,13 +157,14 @@ const int MAX_SANIYE = 5;                  // en uzun kayit (saniye)
 const int N_MAX = SR * MAX_SANIYE;
 const int WAV_BYTES_MAX = 44 + N_MAX * 2;
 const int ESIK_BITIS = 1500;               // bunun altindaki ses "sessizlik" sayilir
-const unsigned long SESSIZ_BITIS = 900;    // bu kadar sessizlikte kayit biter (ms)
+const unsigned long SESSIZ_BITIS = 750;    // bu kadar sessizlikte kayit biter (ms)
 const unsigned long MIN_SESLI_MS = 250;    // bundan kisa sesler (tik, alkis) yoksayilir
 int gN = 0;                                // son kaydin ornek sayisi
 int gWavBytes = 44;                        // son kaydin wav boyutu
 unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
 bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
+unsigned long gSure[4] = {0, 0, 0, 0};  // son cevap: duyma, dusunme, ses baslangici, toplam (ms)
 int gBasHz = 450;                // bas kesme frekansi: 260 az kes, 450 bas yok (telefon gibi net), 650 iyice ince
 int gYanki = 2;                  // 0 kapali, 1 sabit esik, 2 ogrenen yanki bastirma
 float gYankiK = 1.0f;            // ogrenilen yanki orani (mikrofona donen ses / hoparlore giden ses)
@@ -1911,6 +1912,7 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  if (gSure[3] > 0) h += "<h2>Son cevap hizi</h2><p>Duyma " + String(gSure[0] / 1000.0, 1) + " sn &middot; Dusunme " + String(gSure[1] / 1000.0, 1) + " sn &middot; Ses " + String(gSure[2] / 1000.0, 1) + " sn<br><b>Toplam " + String(gSure[3] / 1000.0, 1) + " sn</b> (sen sustuktan robot konusmaya baslayana kadar)</p>";
   h += String("<h2>Ne zaman cevap versin</h2><form action=/ayar><select name=sadeisim>") +
        "<option value=1" + (gSadeIsim ? " selected" : "") + ">Sadece Hey Finduk deyince (kendiliginden konusmaz)</option>" +
        "<option value=0" + (!gSadeIsim ? " selected" : "") + ">Sohbette 30 sn adsiz devam etsin, ara sira kendisi konussun</option></select><button>Kaydet</button></form>";
@@ -2729,7 +2731,7 @@ float refMaks(unsigned long simdi) {         // son 700 ms icinde hoparlore gide
 void halkaPompa(bool hepsi) {
   if (!sesHalka || hSay <= 0) return;
   if (!hCal) {
-    if (!hepsi && hSay < gSesHizDis() * 2) return;   // ~1 sn on tampon
+    if (!hepsi && hSay < gSesHizDis() * 2 * 35 / 100) return;   // ~0.35 sn on tampon (hiz icin kisaltildi)
     hCal = true; gCalBas = millis();
   }
   while (hSay > 0) {
@@ -4349,7 +4351,7 @@ void kotuSurumBildir() {
 
 // --- Hiz hissi: sesi duyunca kisa, yumusak bir "hmm" (internetsiz, kodla uretilir) ---
 void dusunmeSesi() {
-  if (nvsOku("dolgu") == "0") return;
+  if (nvsOku("dolgu") != "1") return;          // "hmm" sesi varsayilan KAPALI (cizirti + gecikme yapiyordu)
   int vol = sesYuzdeSimdi();
   i2s_set_sample_rates(I2S_NUM_1, 24000);
   const int toplam = 24000 * 420 / 1000;
@@ -4795,7 +4797,9 @@ void loop() {
   gDurum = D_DUSUN;
   Serial.println("Dusunuyor...");
 
+  unsigned long tKayitBitti = millis();
   String geminiHam = geminiSesiYaziyaCevir();
+  unsigned long tDuydu = millis();
 
   if (geminiHam.indexOf("429 Too Many") >= 0) {
     gDurum = D_BOSTA;
@@ -4997,7 +5001,9 @@ void loop() {
   }
 
   { String p29 = paket29Bilgi(sd); if (p29.length()) bilgi = bilgi.length() ? bilgi + " " + p29 : p29; }
+  unsigned long tDusunBas = millis();
   String ham = claudeCevapla(duyulan, bilgi);
+  unsigned long tDusundu = millis();
   String cevap = degerBul(ham, "text");
   if (cevap.length() > 0) {
     String hamCevap = cevap;          // etiketli hali hafiza icin
@@ -5008,13 +5014,18 @@ void loop() {
     Serial.print(mood);
     Serial.print("): ");
     Serial.println(cevap);
-    hafizayaEkle(duyulan, hamCevap);
-    nvsYaz("son_gorus", String(simdiEpoch()));
     gSonEtkilesim = millis();
-    sayacArttir("say_k");
     if (gKisi.length()) gKisiBitis = millis() + 20UL * 60000UL;
     gMood = mood;
     konus(cevap);
+    if (gCalBas > tDusundu) {
+      gSure[0] = tDuydu - tKayitBitti; gSure[1] = tDusundu - tDusunBas;
+      gSure[2] = gCalBas - tDusundu;   gSure[3] = gCalBas - tKayitBitti;
+      Serial.printf("SURELER duyma %lu, dusunme %lu, ses %lu, toplam %lu ms\n", gSure[0], gSure[1], gSure[2], gSure[3]);
+    }
+    hafizayaEkle(duyulan, hamCevap);          // yavas kayitlar konustuktan sonra
+    nvsYaz("son_gorus", String(simdiEpoch()));
+    sayacArttir("say_k");
     for (int i = 0; i < komutN; i++) {      // konusma bitince uygulamaya komutlari yolla
       if (gMisafir && !komutlar[i].startsWith("goz") && !komutlar[i].startsWith("misafir")) continue;
       komutIsle(komutlar[i]);
