@@ -4889,7 +4889,7 @@ static bool cDrop = false, cTurAktif = false;
 static String cGirdi, cCikti, cHata;
 static unsigned long cSesOut = 0;      // alinan ses bayti (maliyet)
 
-static int b64Deger(int c) {
+static int cB64Deger(int c) {
   if (c >= 'A' && c <= 'Z') return c - 'A';
   if (c >= 'a' && c <= 'z') return c - 'a' + 26;
   if (c >= '0' && c <= '9') return c - '0' + 52;
@@ -4991,7 +4991,7 @@ static void canliMesajBayt(uint8_t c) {
   if (cSt == 2) {                                       // ses verisi (base64)
     if (c == '"') { cSt = 0; return; }
     if (c == '\\') return;
-    int v = b64Deger(c);
+    int v = cB64Deger(c);
     if (c == '=') v = -2;
     if (v == -1) return;
     cQ[cQn++] = v;
