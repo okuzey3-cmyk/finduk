@@ -1908,7 +1908,7 @@ void webAna() {
              "button{background:#222;color:#fff;border:0;border-radius:8px}.k{background:#eee;padding:8px;border-radius:8px;font-size:15px}"
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
-  h += "<h2>Ses seviyesi</h2><form action=/ayar><input type=range name=ses min=10 max=90 value=" + String((int)gSesAyar) + " style='width:100%'><button>Kaydet</button></form>";
+  h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
   h += String("<h2>Soz kesme</h2><p>Robot konusurken konusursan susar ve seni dinler. Devam et dersen kaldigi yerden surdurur.</p><form action=/ayar><select name=yanki>") +
        "<option value=2" + (gYanki == 2 ? " selected" : "") + ">Akilli (yankiyi ogrenir)</option>" +
        "<option value=1" + (gYanki == 1 ? " selected" : "") + ">Basit (yuksek sesle araya gir)</option>" +
