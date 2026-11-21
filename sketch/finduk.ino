@@ -3107,6 +3107,7 @@ bool konusAl(const String& metin, bool akis) {
 
   if (!calindi) {
     Serial.println("Ses gelmedi. Durum: " + durum);
+    if (akis) gSonOlay += String(" -> cevabi seslendiremedim (") + durum.substring(0, 40) + ") " + bas.substring(0, 160);
     if (durum.indexOf("429") >= 0) Serial.println("(TTS limiti dolmus olabilir)");
     Serial.println(bas);
     return false;
@@ -5114,6 +5115,7 @@ void loop() {
     gSonEtkilesim = millis();
     if (gKisi.length()) gKisiBitis = millis() + 20UL * 60000UL;
     gMood = mood;
+    gSonOlay += String(" -> cevabim: \"") + cevap.substring(0, 120) + "\"";
     konus(cevap);
     if (gCalBas > tDusundu) {
       gSure[0] = tDuydu - tKayitBitti; gSure[1] = tDusundu - tDusunBas;
@@ -5132,6 +5134,7 @@ void loop() {
     sohbetBitis = millis() + SOHBET_SURE;     // 30 sn boyunca adini soylemeden devam edebilirsin
   } else {
     Serial.println("Claude cevap veremedi. Ham cevap:");
+    { int gb = ham.indexOf("\r\n\r\n"); gSonOlay += String(" -> Claude cevap vermedi: ") + (gb >= 0 ? ham.substring(gb + 4) : ham).substring(0, 220); }
     Serial.println(ham.length() > 700 ? ham.substring(ham.length() - 700) : ham);
   }
   gDurum = D_BOSTA;
