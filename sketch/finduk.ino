@@ -163,6 +163,7 @@ int gN = 0;                                // son kaydin ornek sayisi
 int gWavBytes = 44;                        // son kaydin wav boyutu
 unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
+int gBasHz = 450;                // bas kesme frekansi: 260 az kes, 450 bas yok (telefon gibi net), 650 iyice ince
 int gYanki = 2;                  // 0 kapali, 1 sabit esik, 2 ogrenen yanki bastirma
 float gYankiK = 1.0f;            // ogrenilen yanki orani (mikrofona donen ses / hoparlore giden ses)
 const int ESIK_KES = 9000;       // sabit esik modunda araya girme esigi
@@ -1909,6 +1910,10 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  h += String("<h2>Bas</h2><p>Kucuk hoparlorde bas cizirti yapar. Bas yok en net sestir.</p><form action=/ayar><select name=bas>") +
+       "<option value=450" + (gBasHz == 450 ? " selected" : "") + ">Bas yok (net, onerilen)</option>" +
+       "<option value=650" + (gBasHz == 650 ? " selected" : "") + ">Iyice ince (cizirti surerse)</option>" +
+       "<option value=260" + (gBasHz == 260 ? " selected" : "") + ">Biraz bas</option></select><button>Kaydet</button></form>";
   h += String("<h2>Soz kesme</h2><p>Robot konusurken konusursan susar ve seni dinler. Devam et dersen kaldigi yerden surdurur.</p><form action=/ayar><select name=yanki>") +
        "<option value=2" + (gYanki == 2 ? " selected" : "") + ">Akilli (yankiyi ogrenir)</option>" +
        "<option value=1" + (gYanki == 1 ? " selected" : "") + ">Basit (yuksek sesle araya gir)</option>" +
@@ -1938,6 +1943,7 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("bas")) { int b = webSunucu.arg("bas").toInt(); if (b >= 150 && b <= 900) { gBasHz = b; nvsYaz("bas", String(b)); } }
   if (webSunucu.hasArg("yanki")) { int y = webSunucu.arg("yanki").toInt(); if (y >= 0 && y <= 2) { gYanki = y; nvsYaz("yanki", String(y)); } }
   if (webSunucu.hasArg("tvip")) { String t = webSunucu.arg("tvip"); t.trim(); if (t.length() >= 7 && t.length() < 40) nvsYaz("tvip", t); }
   if (webSunucu.hasArg("cad")) cihazEkle(webSunucu.arg("cad"), webSunucu.arg("con"), webSunucu.arg("coff"));
@@ -2825,10 +2831,10 @@ void sesYaz() {
   // Cizirtiya karsi (v54): 1) kucuk hoparlorun veremedigi basi 2. derece filtreyle kes (~260 Hz),
   // 2) ses tepeleri tavana carpmadan once yumusakca kisan kompresor (kirpma ve guc dususu cizirtisini onler)
   static float b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z1 = 0, z2 = 0, zarf = 0;
-  static int bqHiz = 0;
-  if (bqHiz != gSesHiz) {
-    bqHiz = gSesHiz;
-    float w = 2.0f * 3.14159265f * 260.0f / (float)gSesHiz, cs = cosf(w), al = sinf(w) / (2.0f * 0.7071f), a0 = 1.0f + al;
+  static int bqHiz = 0, bqBas = 0;
+  if (bqHiz != gSesHiz || bqBas != gBasHz) {
+    bqHiz = gSesHiz; bqBas = gBasHz;
+    float w = 2.0f * 3.14159265f * (float)gBasHz / (float)gSesHiz, cs = cosf(w), al = sinf(w) / (2.0f * 0.7071f), a0 = 1.0f + al;
     b0 = (1.0f + cs) / 2.0f / a0; b1 = -(1.0f + cs) / a0; b2 = b0; a1 = -2.0f * cs / a0; a2 = (1.0f - al) / a0;
   }
   if (gSesYeniBasladi) { z1 = 0; z2 = 0; zarf = 0; gSesYeniBasladi = false; }
@@ -4702,6 +4708,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { String bs = nvsOku("bas"); if (bs.length()) { int b = bs.toInt(); if (b >= 150 && b <= 900) gBasHz = b; } }
   { String y = nvsOku("yanki"); if (y.length()) gYanki = y.toInt(); String k = nvsOku("yankik"); if (k.length()) { float f = k.toFloat(); if (f > 0.05f && f < 4.0f) gYankiK = f; } }
 
   miknrofonKur();
