@@ -169,6 +169,8 @@ unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
 bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
 unsigned long gSure[4] = {0, 0, 0, 0};  // son cevap: duyma, dusunme, ses baslangici, toplam (ms)
+bool gCanli = true;              // canli mod (Gemini Live): akici konusma
+extern bool gCanliTut;
 int gMikKay = 12;                // mikrofon kazanci: 14 = 1x (eski), 13 = 2x, 12 = 4x, 11 = 8x
 volatile int gMikTepe = 0;       // mikrofonun anlik ses seviyesi (panel testi icin)
 String gSonOlay = "";            // son duydugu / neden cevap vermedigi (panelde gorunur)
@@ -1941,6 +1943,13 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  { long gi = nvsOku("canli_gi").toInt(), co = nvsOku("canli_co").toInt();
+    float dolar = gi / 60.0f * 0.005f + co / 60.0f * 0.018f;
+    h += String("<h2>Konusma altyapisi</h2><form action=/ayar><select name=canli>") +
+         "<option value=1" + (gCanli ? " selected" : "") + ">Canli (Gemini Live, akici)</option>" +
+         "<option value=0" + (!gCanli ? " selected" : "") + ">Klasik (eski sistem)</option></select><button>Kaydet</button></form>" +
+         "<p style='font-size:14px;color:#555'>Canli mod kullanimi: dinleme " + String(gi / 60.0f, 1) + " dk, konusma " + String(co / 60.0f, 1) + " dk &asymp; $" + String(dolar, 2) +
+         " <a href='/ayar?canlisifir=1'>sifirla</a></p>"; }
   h += String("<h2>Mikrofon hassasiyeti</h2><form action=/ayar><select name=mikkay>") +
        "<option value=14" + (gMikKay == 14 ? " selected" : "") + ">Normal (eski)</option>" +
        "<option value=13" + (gMikKay == 13 ? " selected" : "") + ">2 kat</option>" +
@@ -1991,6 +2000,8 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("canli")) { gCanli = webSunucu.arg("canli") == "1"; nvsYaz("canli", gCanli ? "1" : "0"); }
+  if (webSunucu.hasArg("canlisifir")) { nvsYaz("canli_gi", "0"); nvsYaz("canli_co", "0"); }
   if (webSunucu.hasArg("mikkay")) { int m = webSunucu.arg("mikkay").toInt(); if (m >= 10 && m <= 14) { gMikKay = m; nvsYaz("mikkay", String(m)); } }
   if (webSunucu.hasArg("cizform")) {
     gWifiDusuk = webSunucu.hasArg("wifidusuk"); gOnceIndir = webSunucu.hasArg("onceindir");
@@ -2794,6 +2805,7 @@ float refMaks(unsigned long simdi) {         // son 700 ms icinde hoparlore gide
 }
 void halkaPompa(bool hepsi) {
   if (!sesHalka || hSay <= 0) return;
+  if (gCanliTut && !hepsi) return;      // canli mod: isim dogrulanana kadar calma
   if (!hCal) {
     if (!hepsi && (gOnceIndir || hSay < gSesHizDis() * 2 * 35 / 100)) return;   // ~0.35 sn on tampon (hiz icin kisaltildi)
     hCal = true; gCalBas = millis();
@@ -4834,6 +4846,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { String cn = nvsOku("canli"); if (cn.length()) gCanli = (cn == "1"); }
   { String mk = nvsOku("mikkay"); if (mk.length()) { int m = mk.toInt(); if (m >= 10 && m <= 14) gMikKay = m; } }
   { gWifiDusuk = nvsOku("wifidusuk") == "1"; gOnceIndir = nvsOku("onceindir") == "1"; if (gWifiDusuk) WiFi.setTxPower(WIFI_POWER_11dBm); }
   { String si = nvsOku("sadeisim"); if (si.length()) gSadeIsim = (si == "1"); }
@@ -4854,6 +4867,329 @@ void setup() {
   guncellemeKontrol();
   girisSelami();
 }
+
+// ======================= CANLI MOD (Gemini Live) =======================
+// Tek hat: ses dogrudan Gemini'ye gider, cevap dogrudan ses olarak doner. Araya girilebilir.
+const char* CANLI_MODEL = "models/gemini-3.8-live";
+#define CANLI_HATA  0      // baglanamadi -> klasik yola devam
+#define CANLI_TAMAM 1      // oturum yapildi
+#define CANLI_RED   2      // adi gecmedi, cevap verilmedi
+bool gCanliTut = false;    // true iken gelen ses tutulur, calinmaz (isim dogrulanana kadar)
+
+static WiFiClientSecure* cC = nullptr;
+// alici durumu
+static int  wsSt = 0, wsOp = 0, wsLenB = 0, wsLenN = 0;
+static bool wsFin = false, wsMsgFin = false;
+static uint64_t wsLen = 0, wsGot = 0;
+static uint8_t wsKucuk[130]; static int wsKN = 0;
+// mesaj ayristirici
+static String cCap; static int cSt = 0; static char cWin[7]; static int cQ[4]; static int cQn = 0;
+static bool cKapandi = false, cSetupOk = false, cTurBitti = false, cKesildiSrv = false, cGoAway = false;
+static bool cDrop = false, cTurAktif = false;
+static String cGirdi, cCikti, cHata;
+static unsigned long cSesOut = 0;      // alinan ses bayti (maliyet)
+
+static int b64Deger(int c) {
+  if (c >= 'A' && c <= 'Z') return c - 'A';
+  if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+  if (c >= '0' && c <= '9') return c - '0' + 52;
+  if (c == '+') return 62; if (c == '/') return 63;
+  return -1;
+}
+
+static bool wsYaz(const uint8_t* p, size_t n) {
+  size_t g = 0; unsigned long t = millis();
+  while (g < n) {
+    if (!cC->connected()) return false;
+    int w = cC->write(p + g, n - g);
+    if (w > 0) { g += w; t = millis(); } else { if (millis() - t > 5000) return false; delay(1); }
+  }
+  return true;
+}
+static bool wsBaslik(uint8_t op, size_t n) {            // istemci cercevesi: maske anahtari 0
+  uint8_t h[14]; int k = 0;
+  h[k++] = 0x80 | op;
+  if (n < 126) h[k++] = 0x80 | n;
+  else if (n < 65536) { h[k++] = 0x80 | 126; h[k++] = n >> 8; h[k++] = n & 255; }
+  else { h[k++] = 0x80 | 127; for (int i = 7; i >= 0; i--) h[k++] = (i < 4) ? ((uint64_t)n >> (8 * i)) & 255 : 0; }
+  h[k++] = 0; h[k++] = 0; h[k++] = 0; h[k++] = 0;
+  return wsYaz(h, k);
+}
+static bool wsMetin(const String& s) {
+  if (!wsBaslik(1, s.length())) return false;
+  return wsYaz((const uint8_t*)s.c_str(), s.length());
+}
+// 16 kHz ses parcasini gonder
+static bool canliSesGonder(const int16_t* s, int n) {
+  static char b64[4400];
+  const char* on = "{\"realtimeInput\":{\"audio\":{\"mimeType\":\"audio/pcm;rate=16000\",\"data\":\"";
+  const char* son = "\"}}}";
+  int o = b64Kodla((const uint8_t*)s, n * 2, b64);
+  size_t top = strlen(on) + o + strlen(son);
+  if (!wsBaslik(1, top)) return false;
+  return wsYaz((const uint8_t*)on, strlen(on)) && wsYaz((const uint8_t*)b64, o) && wsYaz((const uint8_t*)son, strlen(son));
+}
+
+static String jsonDeger(const String& j, int bas, const char* anahtar) {   // bas'tan sonraki "anahtar":"..." degeri
+  String k = String("\"") + anahtar + "\"";
+  int i = j.indexOf(k, bas); if (i < 0) return "";
+  i = j.indexOf(':', i + k.length()); if (i < 0) return "";
+  i++; while (i < (int)j.length() && (j[i] == ' ' || j[i] == '\n')) i++;
+  if (i >= (int)j.length() || j[i] != '"') return "";
+  String o; i++;
+  while (i < (int)j.length() && j[i] != '"') {
+    if (j[i] == '\\' && i + 1 < (int)j.length()) {
+      char c = j[i + 1];
+      if (c == 'n') o += ' '; else if (c == 'u' && i + 5 < (int)j.length()) { o += '?'; i += 4; } else o += c;
+      i += 2; continue;
+    }
+    o += j[i++];
+  }
+  return o;
+}
+
+static void canliSesBayt(uint8_t b) {
+  if (cDrop) return;
+  if (!cTurAktif) { cTurAktif = true; gSesIlk = true; gSesYeniBasladi = true; sesN = 0; gDurum = D_KONUS; konusBas = millis(); kesSay = 0; gKesildi = false; gKesDinle = (gYanki > 0); }
+  cSesOut++;
+  sesEkle(b);
+}
+
+static void canliMesajBitti() {
+  const String& j = cCap;
+  if (j.indexOf("setupComplete") >= 0) cSetupOk = true;
+  int it = j.indexOf("inputTranscription");
+  if (it >= 0) { String t = jsonDeger(j, it, "text"); if (t.length()) cGirdi += t; }
+  int ot = j.indexOf("outputTranscription");
+  if (ot >= 0) { String t = jsonDeger(j, ot, "text"); if (t.length()) cCikti += t; }
+  if (j.indexOf("\"interrupted\"") >= 0) cKesildiSrv = true;
+  if (j.indexOf("\"turnComplete\"") >= 0) cTurBitti = true;
+  if (j.indexOf("\"goAway\"") >= 0) cGoAway = true;
+  if (j.indexOf("\"error\"") >= 0) cHata = j.substring(0, 220);
+  int tc = j.indexOf("\"toolCall\"");
+  if (tc >= 0) {
+    String yanit = "{\"toolResponse\":{\"functionResponses\":[";
+    int p = tc; int adet = 0;
+    while (true) {
+      int fi = j.indexOf("\"id\"", p); if (fi < 0) break;
+      String id = jsonDeger(j, fi, "id");
+      String et = jsonDeger(j, fi, "etiket");
+      int sonr = j.indexOf("\"id\"", fi + 4);
+      p = (sonr > 0) ? sonr : j.length();
+      if (et.length()) { Serial.println("CANLI KOMUT: " + et); komutIsle(et); gSonOlay += String(" [komut: ") + et + "]"; }
+      if (adet++) yanit += ",";
+      yanit += String("{\"id\":\"") + id + "\",\"name\":\"komut\",\"response\":{\"sonuc\":\"tamam\"}}";
+      if (sonr < 0) break;
+    }
+    yanit += "]}}";
+    wsMetin(yanit);
+  }
+  cCap = ""; cSt = 0; memset(cWin, 0, sizeof(cWin));
+}
+
+static void canliMesajBayt(uint8_t c) {
+  if (cSt == 2) {                                       // ses verisi (base64)
+    if (c == '"') { cSt = 0; return; }
+    if (c == '\\') return;
+    int v = b64Deger(c);
+    if (c == '=') v = -2;
+    if (v == -1) return;
+    cQ[cQn++] = v;
+    if (cQn == 4) {
+      if (cQ[0] >= 0 && cQ[1] >= 0) canliSesBayt((cQ[0] << 2) | (cQ[1] >> 4));
+      if (cQ[1] >= 0 && cQ[2] >= 0) canliSesBayt(((cQ[1] & 15) << 4) | (cQ[2] >> 2));
+      if (cQ[2] >= 0 && cQ[3] >= 0) canliSesBayt(((cQ[2] & 3) << 6) | cQ[3]);
+      cQn = 0;
+    }
+    return;
+  }
+  if (cSt == 1) { if (c == '"') { cSt = 2; cQn = 0; } else if (c != ':' && c != ' ') cSt = 0; return; }
+  if (cCap.length() < 4000) cCap += (char)c;
+  memmove(cWin, cWin + 1, 5); cWin[5] = (char)c; cWin[6] = 0;
+  if (memcmp(cWin, "\"data\"", 6) == 0) cSt = 1;
+}
+
+// Gelen ne varsa isle (bloklamadan)
+static void canliOku() {
+  uint8_t buf[512];
+  while (cC && cC->available()) {
+    int n = cC->read(buf, sizeof(buf));
+    if (n <= 0) break;
+    for (int i = 0; i < n; i++) {
+      uint8_t b = buf[i];
+      switch (wsSt) {
+        case 0: wsFin = b & 0x80; wsOp = b & 0x0F; wsSt = 1; break;
+        case 1: { int l = b & 0x7F; wsLenN = 0; wsLen = 0;
+                  if (l < 126) { wsLen = l; wsGot = 0; wsKN = 0; wsSt = (wsLen == 0) ? 0 : 3; if (wsLen == 0 && wsFin && (wsOp <= 2)) canliMesajBitti(); }
+                  else { wsLenB = (l == 126) ? 2 : 8; wsSt = 2; } } break;
+        case 2: wsLen = (wsLen << 8) | b; if (++wsLenN == wsLenB) { wsGot = 0; wsKN = 0; wsSt = (wsLen == 0) ? 0 : 3; } break;
+        case 3:
+          wsGot++;
+          if (wsOp == 0 || wsOp == 1 || wsOp == 2) canliMesajBayt(b);
+          else if (wsKN < 125) wsKucuk[wsKN++] = b;
+          if (wsGot >= wsLen) {
+            wsSt = 0;
+            if (wsOp <= 2) { if (wsFin) canliMesajBitti(); }
+            else if (wsOp == 9) { wsBaslik(0xA, wsKN); wsYaz(wsKucuk, wsKN); }
+            else if (wsOp == 8) { cKapandi = true; if (wsKN > 2) { wsKucuk[wsKN] = 0; cHata = String("Kapandi: ") + (char*)(wsKucuk + 2); } }
+          }
+          break;
+      }
+    }
+  }
+  if (cC && !cC->connected() && !cC->available()) cKapandi = true;
+}
+
+static String canliSistem() {
+  String sistem = String(KISILIK);
+  String zy = zamanYazi();
+  if (zy.length()) sistem += String(" Su anki tarih ve saat (Istanbul): ") + zy + ".";
+  String hf = satirlariAl(gKisi == "demet" ? "hafiza_demet" : "hafiza");
+  if (!gMisafir && hf.length()) sistem += String(" Kullanici hakkinda hafizandaki bilgiler: ") + hf + ".";
+  String kt = nvsOku("kisilik"); if (!gMisafir && kt.length()) sistem += String(" Konusma tarzin: ") + kt + ".";
+  if (sesYuzdeSimdi() < gSesAyar) sistem += " Gece oldu, sakin ve kisa konus.";
+  sistem += paket28Sistem();
+  if (hN > 0) {
+    sistem += " Son konusmalar:";
+    for (int i = (hN > 4 ? hN - 4 : 0); i < hN; i++) sistem += String(" Kullanici: ") + hSoru[i] + " / Sen: " + hCevap[i] + ".";
+  }
+  sistem += " ONEMLI (sesli konusuyorsun): Cevaplarin konusma dilinde, kisa ve dogal olsun; dogal ses tonu, vurgu ve gerektiginde kahkaha kullanabilirsin. "
+            "Koseli parantezli etiketleri ([...]) ASLA sesli soyleme. Bir komut (TV, alarm, hatirlatma, not, sinema odasi vb.) gerekirse komut fonksiyonunu cagir; "
+            "etiket parametresine koseli parantezin icindeki metni aynen yaz (ornek: tv:ac). Duygu/mood etiketleri kullanma. "
+            "Guncel bilgi (hava, haber, mac, kur) gerekiyorsa Google aramasini kullan. Sana Finduk diye seslenilmeyen, baskasina soylenmis ya da televizyondan gelen konusmalara cevap verme, sessiz kal.";
+  return sistem;
+}
+
+static void canliKapat() {
+  if (cC) { if (cC->connected()) { wsBaslik(8, 0); } cC->stop(); delete cC; cC = nullptr; }
+}
+
+// Ilk soz pcm[] icinde (kaydet() ile kaydedildi). Donus: CANLI_HATA / CANLI_TAMAM / CANLI_RED
+int canliOturum() {
+  unsigned long t0 = millis();
+  cC = new WiFiClientSecure(); cC->setInsecure(); cC->setTimeout(10);
+  wsSt = 0; cCap = ""; cSt = 0; memset(cWin, 0, sizeof(cWin)); cQn = 0;
+  cKapandi = cSetupOk = cTurBitti = cKesildiSrv = cGoAway = false; cDrop = false; cTurAktif = false;
+  cGirdi = ""; cCikti = ""; cHata = ""; cSesOut = 0;
+  gDurum = D_DUSUN;
+  if (!cC->connect("generativelanguage.googleapis.com", 443)) { gSonOlay = "Canli mod: baglanamadi, klasik yola gectim."; canliKapat(); return CANLI_HATA; }
+  String ist = String("GET /ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=") + GEMINI_KEY + " HTTP/1.1\r\n"
+               "Host: generativelanguage.googleapis.com\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+               "Sec-WebSocket-Key: ZmluZHVrcm9ib3QxMjM0NQ==\r\nSec-WebSocket-Version: 13\r\n\r\n";
+  wsYaz((const uint8_t*)ist.c_str(), ist.length());
+  String durum = cC->readStringUntil('\n');
+  if (durum.indexOf("101") < 0) { gSonOlay = String("Canli mod: sunucu kabul etmedi (") + durum.substring(0, 60) + "), klasik yola gectim."; canliKapat(); return CANLI_HATA; }
+  while (true) { String l = cC->readStringUntil('\n'); if (l.length() <= 1) break; }
+
+  String setup = String("{\"setup\":{\"model\":\"") + CANLI_MODEL + "\",\"generationConfig\":{\"responseModalities\":[\"AUDIO\"],"
+                 "\"speechConfig\":{\"voiceConfig\":{\"prebuiltVoiceConfig\":{\"voiceName\":\"" + SES_ADI + "\"}}}},"
+                 "\"systemInstruction\":{\"parts\":[{\"text\":\"" + jsonKacis(canliSistem()) + "\"}]},"
+                 "\"tools\":[{\"googleSearch\":{}},{\"functionDeclarations\":[{\"name\":\"komut\",\"description\":\"Robotun komutlarini calistirir (TV, alarm, hatirlatma, not, sinema odasi, goz, uyku vb.). Etiketi koseli parantez olmadan ver.\","
+                 "\"parameters\":{\"type\":\"OBJECT\",\"properties\":{\"etiket\":{\"type\":\"STRING\",\"description\":\"Komut etiketi, ornek: tv:ac\"}},\"required\":[\"etiket\"]}}]}],"
+                 "\"inputAudioTranscription\":{},\"outputAudioTranscription\":{}}}";
+  if (!wsMetin(setup)) { gSonOlay = "Canli mod: ayar gonderilemedi, klasik yola gectim."; canliKapat(); return CANLI_HATA; }
+  unsigned long ts = millis();
+  while (!cSetupOk && !cKapandi && millis() - ts < 6000) { canliOku(); delay(2); }
+  if (!cSetupOk) { gSonOlay = String("Canli mod: kurulum olmadi. ") + cHata + " Klasik yola gectim."; canliKapat(); return CANLI_HATA; }
+
+  // Kanal hazir: hoparloru 24 kHz'e al
+  i2s_set_sample_rates(I2S_NUM_1, 24000); gSesHiz = 24000; halkaSifirla(); sesN = 0;
+  // Ilk sozu gonder
+  for (int i = 0; i < gN; i += 1600) { int n = gN - i; if (n > 1600) n = 1600; if (!canliSesGonder(pcm + i, n)) break; canliOku(); }
+  wsMetin("{\"realtimeInput\":{\"audioStreamEnd\":true}}");
+  unsigned long gonderilenMs = (unsigned long)gN * 1000UL / SR;
+
+  bool kapi = !gSadeIsim;              // isim kapisi: sadece "Hey Finduk" modunda ilk turda isim aranir
+  gCanliTut = !kapi;
+  enum { BEKLE, KONUS, DINLE } durumC = BEKLE;
+  unsigned long sonSes = millis(), turBitisZ = 0, bekleBas = millis();
+  static int16_t mk[1600]; int mkN = 0; float dc = 0; static int32_t rb[256];
+  bool reddet = false;
+  int turSay = 0;
+
+  while (true) {
+    canliOku();
+    if (cKapandi) break;
+    if (!kapi && adiGeciyor(cGirdi)) { kapi = true; gCanliTut = false; }
+    if (gCanliTut && !kapi && cTurBitti) {        // tur bitti ama ismi duymadik
+      unsigned long g = millis(); while (millis() - g < 800 && !adiGeciyor(cGirdi)) { canliOku(); delay(5); }
+      if (!adiGeciyor(cGirdi)) { reddet = true; break; }
+      kapi = true; gCanliTut = false;
+    }
+    if (gKesildi && cTurAktif) {                  // kullanici robotun sozunu kesti (yerel algilama)
+      i2s_zero_dma_buffer(I2S_NUM_1); halkaSifirla(); sesN = 0;
+      cDrop = true; cTurAktif = false; gKesDinle = false;
+      canliSesGonder(onTampon, KESON); gonderilenMs += KESON * 1000UL / SR;
+      gKesildi = false; durumC = DINLE; sonSes = millis(); gDurum = D_DINLE;
+      gSonOlay += " [soz kesildi]";
+    }
+    if (cKesildiSrv) {                            // sunucu da kesildigini bildirdi
+      cKesildiSrv = false;
+      if (cTurAktif) { i2s_zero_dma_buffer(I2S_NUM_1); halkaSifirla(); sesN = 0; cTurAktif = false; gKesDinle = false; }
+      cDrop = false; durumC = DINLE; gDurum = D_DINLE; sonSes = millis();
+    }
+    if (cTurBitti) {
+      cTurBitti = false;
+      if (cDrop) { cDrop = false; }
+      else {
+        if (cTurAktif) { gSesSon = true; sesYaz(); gSesSon = false; if (!hCal && hSay > 0) { hCal = true; gCalBas = millis(); } }
+        turBitisZ = millis();
+        turSay++;
+        if (turSay == 1 && gCalBas > 0) { gSure[3] = gCalBas > t0 ? gCalBas - t0 : 0; gSure[0] = 0; gSure[1] = gSure[3]; gSure[2] = 0; }
+        if (cGirdi.length() || cCikti.length()) {
+          gSonOlay = String("Canli: duydugum \"") + cGirdi.substring(0, 100) + "\" -> cevabim \"" + cCikti.substring(0, 120) + "\"";
+          if (cGirdi.length() && cCikti.length()) hafizayaEkle(cGirdi, cCikti);
+          cGirdi = ""; cCikti = "";
+        }
+      }
+      if (durumC != DINLE) durumC = KONUS;        // kalan sesin calmasini bekle
+    }
+    if (cTurAktif) durumC = KONUS;
+    halkaPompa(false);
+    // konusma bitti mi (calma kuyrugu bosaldi mi)
+    if (durumC == KONUS && turBitisZ && hSay == 0 && millis() - turBitisZ > 50) {
+      unsigned long g = millis(); while (millis() - g < 350 && !gKesildi) { mikDinle(); delay(4); }
+      if (!gKesildi) {
+        cTurAktif = false; gKesDinle = false; turBitisZ = 0;
+        durumC = DINLE; gDurum = D_DINLE; sonSes = millis(); mkN = 0;
+        size_t g2 = 1; int s2 = 0; while (g2 > 0 && s2++ < 64) { g2 = 0; i2s_read(I2S_NUM_0, rb, sizeof(rb), &g2, 0); }   // eski (yankili) mikrofon verisini at
+      }
+    }
+    // dinleme: mikrofonu canli gonder
+    if (durumC == DINLE) {
+      size_t got = 0;
+      i2s_read(I2S_NUM_0, rb, sizeof(rb), &got, 0);
+      int n = got / 4;
+      for (int i = 0; i < n; i++) {
+        float v = (float)(rb[i] >> gMikKay);
+        dc += (v - dc) * 0.002f;
+        float x = (v - dc) * 1.5f;
+        if (x > 32767) x = 32767; if (x < -32768) x = -32768;
+        mk[mkN++] = (int16_t)x;
+        if (fabsf(x) > ESIK) sonSes = millis();
+        if (mkN == 1600) { canliSesGonder(mk, 1600); gonderilenMs += 100; mkN = 0; }
+      }
+      if (millis() - sonSes > 12000) break;          // 12 sn kimse konusmadi: hatti kapat
+    }
+    if (durumC == BEKLE && millis() - bekleBas > 15000) { if (!cHata.length()) cHata = "cevap gelmedi"; break; }
+    if (cGoAway && durumC == DINLE) break;
+    if (millis() - t0 > 8UL * 60000UL && durumC == DINLE) break;
+    delay(1);
+  }
+
+  canliKapat();
+  gCanliTut = false; gKesDinle = false;
+  i2s_zero_dma_buffer(I2S_NUM_1); halkaSifirla(); sesN = 0;
+  // maliyet sayaci (ay bazli, saniye)
+  { long gi = nvsOku("canli_gi").toInt() + (long)(gonderilenMs / 1000); long co = nvsOku("canli_co").toInt() + (long)(cSesOut / 48000);
+    nvsYaz("canli_gi", String(gi)); nvsYaz("canli_co", String(co)); }
+  if (cHata.length() && turSay == 0 && !reddet) gSonOlay = String("Canli mod: ") + cHata;
+  if (reddet) { gSonOlay = String("Canli: duydugum \"") + cGirdi.substring(0, 100) + "\" -> adimi duymadim, cevap vermedim."; return CANLI_RED; }
+  if (turSay == 0 && cSesOut == 0) return CANLI_HATA;
+  gSonEtkilesim = millis();
+  return CANLI_TAMAM;
+}
+// ===================== CANLI MOD SONU =====================
 
 void loop() {
   Serial.println();
@@ -4914,6 +5250,12 @@ void loop() {
     Serial.println("(Cok kisa ses, tik ya da gurultu. Yoksayiyorum.)");
     gSonOlay = String("Kisa bir ses duydum (") + gSesliMs + " ms), konusma saymadim.";
     return;
+  }
+  // --- Canli mod: tek hatta akici konusma (basarisiz olursa klasik yola devam) ---
+  if (gCanli && WiFi.status() == WL_CONNECTED && gHikayeBaslik.length() == 0) {
+    int r = canliOturum();
+    if (r != CANLI_HATA) { gDurum = D_BOSTA; return; }
+    i2s_set_sample_rates(I2S_NUM_1, 24000);
   }
   gDurum = D_DUSUN;
   Serial.println("Dusunuyor...");
