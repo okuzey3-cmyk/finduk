@@ -4855,6 +4855,21 @@ void loop() {
     return;
   }
 
+  // --- Cok yuksek sesle seslenilirse sakayla uyar (en fazla 10 dakikada bir) ---
+  {
+    static unsigned long sonBagir = 0;
+    if (tepe > 26000 && (sonBagir == 0 || millis() - sonBagir > 600000UL)) {
+      sonBagir = millis();
+      const char* lafl[] = {
+        "Sesin cok yuksek cikiyor, seni duyabiliyorum, sagir degilim!",
+        "Hop hop, bagirmana gerek yok, seni gayet iyi duyuyorum!",
+        "Kulaklarim cinladi! Yavas soyle, ben sagir degilim."
+      };
+      gMood = M_SASKIN; gMoodBitis = millis() + 2500;
+      gDurum = D_KONUS;
+      konus(lafl[esp_random() % 3]);
+    }
+  }
   String bilgi = "";
   String sd = sadelestir(duyulan);
   // --- Soz kesme: "devam et" denirse yarim kalan cevaba kaldigi yerden devam ---
