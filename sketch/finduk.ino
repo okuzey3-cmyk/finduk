@@ -163,6 +163,7 @@ int gN = 0;                                // son kaydin ornek sayisi
 int gWavBytes = 44;                        // son kaydin wav boyutu
 unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
+bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
 int gBasHz = 450;                // bas kesme frekansi: 260 az kes, 450 bas yok (telefon gibi net), 650 iyice ince
 int gYanki = 2;                  // 0 kapali, 1 sabit esik, 2 ogrenen yanki bastirma
 float gYankiK = 1.0f;            // ogrenilen yanki orani (mikrofona donen ses / hoparlore giden ses)
@@ -1910,6 +1911,9 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  h += String("<h2>Ne zaman cevap versin</h2><form action=/ayar><select name=sadeisim>") +
+       "<option value=1" + (gSadeIsim ? " selected" : "") + ">Sadece Hey Finduk deyince (kendiliginden konusmaz)</option>" +
+       "<option value=0" + (!gSadeIsim ? " selected" : "") + ">Sohbette 30 sn adsiz devam etsin, ara sira kendisi konussun</option></select><button>Kaydet</button></form>";
   h += String("<h2>Bas</h2><p>Kucuk hoparlorde bas cizirti yapar. Bas yok en net sestir.</p><form action=/ayar><select name=bas>") +
        "<option value=450" + (gBasHz == 450 ? " selected" : "") + ">Bas yok (net, onerilen)</option>" +
        "<option value=650" + (gBasHz == 650 ? " selected" : "") + ">Iyice ince (cizirti surerse)</option>" +
@@ -1943,6 +1947,7 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("sadeisim")) { gSadeIsim = webSunucu.arg("sadeisim") == "1"; nvsYaz("sadeisim", gSadeIsim ? "1" : "0"); }
   if (webSunucu.hasArg("bas")) { int b = webSunucu.arg("bas").toInt(); if (b >= 150 && b <= 900) { gBasHz = b; nvsYaz("bas", String(b)); } }
   if (webSunucu.hasArg("yanki")) { int y = webSunucu.arg("yanki").toInt(); if (y >= 0 && y <= 2) { gYanki = y; nvsYaz("yanki", String(y)); } }
   if (webSunucu.hasArg("tvip")) { String t = webSunucu.arg("tvip"); t.trim(); if (t.length() >= 7 && t.length() < 40) nvsYaz("tvip", t); }
@@ -3212,6 +3217,7 @@ bool robotKonusur(const String& soru, const String& bilgi) {
 }
 
 void kendiKonus() {
+  if (gSadeIsim) return;                     // sadece cagrilinca konus modunda kendiliginden konusmaz
   long now = simdiEpoch();
   if (now == 0 || gMisafir || WiFi.status() != WL_CONNECTED) return;
   time_t tt = (time_t)now;
@@ -4708,6 +4714,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { String si = nvsOku("sadeisim"); if (si.length()) gSadeIsim = (si == "1"); }
   { String bs = nvsOku("bas"); if (bs.length()) { int b = bs.toInt(); if (b >= 150 && b <= 900) gBasHz = b; } }
   { String y = nvsOku("yanki"); if (y.length()) gYanki = y.toInt(); String k = nvsOku("yankik"); if (k.length()) { float f = k.toFloat(); if (f > 0.05f && f < 4.0f) gYankiK = f; } }
 
@@ -4836,8 +4843,13 @@ void loop() {
   if (gKisi.length() && millis() > gKisiBitis) gKisi = "";
   bool adiVar = adiGeciyor(duyulan);
   bool tarifSoz = tarifSozMu(sadelestir(duyulan));
-  if (!adiVar && !tarifSoz && millis() > sohbetBitis) {
+  if (!adiVar && (gSadeIsim || (!tarifSoz && millis() > sohbetBitis))) {
     gDurum = D_BOSTA;
+    if (kesme && gYarim.length()) {          // bir ses robotun sozunu kesti ama adi gecmedi: kaldigi yerden devam et
+      String y = gYarim; gYarim = "";
+      gDurum = D_KONUS; konus(y); gDurum = D_BOSTA;
+      return;
+    }
     Serial.println("(Adimi duymadim, yoksayiyorum. Hey Finduk diye basla.)");
     delay(500);
     return;
