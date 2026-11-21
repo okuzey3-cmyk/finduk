@@ -165,6 +165,7 @@ unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
 bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
 unsigned long gSure[4] = {0, 0, 0, 0};  // son cevap: duyma, dusunme, ses baslangici, toplam (ms)
+int gMikKay = 12;                // mikrofon kazanci: 14 = 1x (eski), 13 = 2x, 12 = 4x, 11 = 8x
 volatile int gMikTepe = 0;       // mikrofonun anlik ses seviyesi (panel testi icin)
 String gSonOlay = "";            // son duydugu / neden cevap vermedigi (panelde gorunur)
 bool gWifiDusuk = false;         // Wi-Fi verici gucunu dusur (hoparlore karisan cizirti icin)
@@ -815,17 +816,17 @@ bool bekleSes(unsigned long zamanAsimi, int esik) {
     if (n <= 0) continue;
     if (n > 256) n = 256;
     long long top = 0;
-    for (int i = 0; i < n; i++) top += (buf[i] >> 14);
+    for (int i = 0; i < n; i++) top += (buf[i] >> gMikKay);
     int ort = (int)(top / n);
     int tepe = 0;
     for (int i = 0; i < n; i++) {
-      int v = (buf[i] >> 14) - ort;
+      int v = (buf[i] >> gMikKay) - ort;
       if (abs(v) > tepe) tepe = abs(v);
     }
     // halkayi kaydir, yeni parcayi sona ekle
     memmove(halka, halka + n, (ONKAYIT - n) * sizeof(int16_t));
     for (int i = 0; i < n; i++) {
-      int32_t v = buf[i] >> 14;
+      int32_t v = buf[i] >> gMikKay;
       if (v > 32767) v = 32767;
       if (v < -32768) v = -32768;
       halka[ONKAYIT - n + i] = (int16_t)v;
@@ -854,15 +855,15 @@ int kaydet() {
     if (n <= 0) continue;
     if (n > 256) n = 256;
     long long top = 0;
-    for (int i = 0; i < n; i++) top += (buf[i] >> 14);
+    for (int i = 0; i < n; i++) top += (buf[i] >> gMikKay);
     int ort = (int)(top / n);
     int tepe = 0;
     for (int i = 0; i < n; i++) {
-      int32_t v = buf[i] >> 14;
+      int32_t v = buf[i] >> gMikKay;
       if (v > 32767) v = 32767;
       if (v < -32768) v = -32768;
       if (idx < N_MAX) pcm[idx++] = (int16_t)v;
-      int d = abs((int)(buf[i] >> 14) - ort);
+      int d = abs((int)(buf[i] >> gMikKay) - ort);
       if (d > tepe) tepe = d;
     }
     if (tepe > ESIK_BITIS) {
@@ -1918,6 +1919,11 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  h += String("<h2>Mikrofon hassasiyeti</h2><form action=/ayar><select name=mikkay>") +
+       "<option value=14" + (gMikKay == 14 ? " selected" : "") + ">Normal (eski)</option>" +
+       "<option value=13" + (gMikKay == 13 ? " selected" : "") + ">2 kat</option>" +
+       "<option value=12" + (gMikKay == 12 ? " selected" : "") + ">4 kat (onerilen)</option>" +
+       "<option value=11" + (gMikKay == 11 ? " selected" : "") + ">8 kat (uzaktan duysun)</option></select><button>Kaydet</button></form>";
   h += "<h2>Mikrofon testi</h2><p>Konus, cubuk hareket etmeli.</p><div style='background:#eee;border-radius:6px;height:22px'><div id=mb style='background:#2a7;height:22px;width:0;border-radius:6px'></div></div><p id=mt>...</p>"
        "<script>setInterval(function(){fetch('/mik').then(r=>r.text()).then(t=>{var v=parseInt(t)||0;document.getElementById('mb').style.width=Math.min(100,v/100)+'%';document.getElementById('mt').textContent='Seviye: '+v+(v<300?' (cok dusuk: mikrofon duymuyor olabilir)':'');})},400)</script>";
   h += "<h2>Son olay</h2><p>" + (gSonOlay.length() ? gSonOlay : String("Henuz bir sey duymadi.")) + "</p>";
@@ -1963,6 +1969,7 @@ void webAyar() {
   }
   if (webSunucu.hasArg("ghtoken")) { String t = webSunucu.arg("ghtoken"); t.trim(); if (t.length() >= 20 && t.length() < 200) nvsYaz("ghtoken", t); }
   if (webSunucu.hasArg("tarz")) nvsYaz("kisilik", temizMetin(webSunucu.arg("tarz"), 20));
+  if (webSunucu.hasArg("mikkay")) { int m = webSunucu.arg("mikkay").toInt(); if (m >= 10 && m <= 14) { gMikKay = m; nvsYaz("mikkay", String(m)); } }
   if (webSunucu.hasArg("cizform")) {
     gWifiDusuk = webSunucu.hasArg("wifidusuk"); gOnceIndir = webSunucu.hasArg("onceindir");
     nvsYaz("wifidusuk", gWifiDusuk ? "1" : "0"); nvsYaz("onceindir", gOnceIndir ? "1" : "0");
@@ -2823,11 +2830,11 @@ void mikDinle() {
     int n = got / 4;
     if (n <= 0) break;
     long long top = 0;
-    for (int i = 0; i < n; i++) top += (buf[i] >> 14);
+    for (int i = 0; i < n; i++) top += (buf[i] >> gMikKay);
     int ort = (int)(top / n), tepe = 0;
     memmove(onTampon, onTampon + n, (KESON - n) * sizeof(int16_t));
     for (int i = 0; i < n; i++) {
-      int32_t v = (buf[i] >> 14) - ort;
+      int32_t v = (buf[i] >> gMikKay) - ort;
       if (abs((int)v) > tepe) tepe = abs((int)v);
       if (v > 32767) v = 32767; if (v < -32768) v = -32768;
       onTampon[KESON - n + i] = (int16_t)v;
@@ -4790,6 +4797,7 @@ void setup() {
 
   ayarYukle();
   ayarPenceresi();
+  { String mk = nvsOku("mikkay"); if (mk.length()) { int m = mk.toInt(); if (m >= 10 && m <= 14) gMikKay = m; } }
   { gWifiDusuk = nvsOku("wifidusuk") == "1"; gOnceIndir = nvsOku("onceindir") == "1"; if (gWifiDusuk) WiFi.setTxPower(WIFI_POWER_11dBm); }
   { String si = nvsOku("sadeisim"); if (si.length()) gSadeIsim = (si == "1"); }
   { String bs = nvsOku("bas"); if (bs.length()) { int b = bs.toInt(); if (b >= 150 && b <= 900) gBasHz = b; } }
