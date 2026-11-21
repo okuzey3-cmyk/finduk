@@ -1926,7 +1926,7 @@ void webAna() {
        "<option value=11" + (gMikKay == 11 ? " selected" : "") + ">8 kat (uzaktan duysun)</option></select><button>Kaydet</button></form>";
   h += "<h2>Mikrofon testi</h2><p>Konus, cubuk hareket etmeli.</p><div style='background:#eee;border-radius:6px;height:22px'><div id=mb style='background:#2a7;height:22px;width:0;border-radius:6px'></div></div><p id=mt>...</p>"
        "<script>setInterval(function(){fetch('/mik').then(r=>r.text()).then(t=>{var v=parseInt(t)||0;document.getElementById('mb').style.width=Math.min(100,v/100)+'%';document.getElementById('mt').textContent='Seviye: '+v+(v<300?' (cok dusuk: mikrofon duymuyor olabilir)':'');})},400)</script>";
-  h += "<h2>Son olay</h2><p>" + (gSonOlay.length() ? gSonOlay : String("Henuz bir sey duymadi.")) + "</p>";
+  h += "<h2>Son olay</h2><p>" + (gSonOlay.length() ? gSonOlay : String("Henuz bir sey duymadi.")) + "</p><p><audio controls src='/kayit.wav' style='width:100%'></audio><br><small>Robotun duydugu son kayit. Dinle: sesin net mi, cizirtili mi, cok kisik mi?</small></p>";
   if (gSure[3] > 0) h += "<h2>Son cevap hizi</h2><p>Duyma " + String(gSure[0] / 1000.0, 1) + " sn &middot; Dusunme " + String(gSure[1] / 1000.0, 1) + " sn &middot; Ses " + String(gSure[2] / 1000.0, 1) + " sn<br><b>Toplam " + String(gSure[3] / 1000.0, 1) + " sn</b> (sen sustuktan robot konusmaya baslayana kadar)</p>";
   h += String("<h2>Ne zaman cevap versin</h2><form action=/ayar><select name=sadeisim>") +
        "<option value=1" + (gSadeIsim ? " selected" : "") + ">Sadece Hey Finduk deyince (kendiliginden konusmaz)</option>" +
@@ -2023,6 +2023,13 @@ void webBaslat() {
   webSunucu.on("/ayar", webAyar);
   webSunucu.on("/sil", webSil);
   webSunucu.on("/tv", webTv);
+  webSunucu.on("/kayit.wav", []() {      // son kaydi telefondan dinlemek icin
+    if (!wav || gWavBytes <= 44) { webSunucu.send(200, "text/plain", "Henuz kayit yok"); return; }
+    int n = gWavBytes;
+    webSunucu.setContentLength(n);
+    webSunucu.send(200, "audio/wav", "");
+    for (int i = 0; i < n; i += 4096) { int l = n - i; if (l > 4096) l = 4096; webSunucu.sendContent((const char*)(wav + i), l); }
+  });
   webSunucu.on("/mik", []() { webSunucu.send(200, "text/plain", String(gMikTepe)); });
   webSunucu.on("/sestest", []() {
     int t = webSunucu.arg("t").toInt();
@@ -4900,7 +4907,9 @@ void loop() {
   if (duyulan.length() == 0 || duyulan == "BOS") {
     gDurum = D_BOSTA;
     Serial.println("Bir sey duyamadim. Gemini ham cevabi:");
-    gSonOlay = String("Sesi yaziya ceviremedim. Gemini: ") + geminiHam.substring(0, 160);
+    { int gb = geminiHam.indexOf("\r\n\r\n"); String govdeG = gb >= 0 ? geminiHam.substring(gb + 4) : geminiHam;
+      if (duyulan == "BOS") gSonOlay = "Kaydi Gemini'ye gonderdim ama kayitta konusma duymadi (BOS dedi). Kaydi dinleyip kontrol et.";
+      else gSonOlay = String("Sesi yaziya ceviremedim. Gemini cevabi: ") + govdeG.substring(0, 260); }
     Serial.println(geminiHam.substring(0, 300));
     delay(3000);
     return;
