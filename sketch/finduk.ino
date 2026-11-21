@@ -32,6 +32,10 @@ unsigned long sonGuncelKontrol = 0;
 const bool MAC_SES = false;
 const char* MODEL      = "gemini-3.1-flash-lite";      // kulak
 const char* TTS_MODEL  = "gemini-3.8-flash-lite-tts";  // agiz
+// Bir sesin kotasi dolarsa (429) sirayla digerine gecer; her modelin kotasi ayridir
+const char* TTS_LISTE[] = {"gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts", "gemini-2.5-flash-preview-tts"};
+int gTtsSira = 0;
+bool gTts429 = false;
 const char* SES_ADI    = "Kore";
 const char* CLAUDE_MODEL = "claude-haiku-5-5";
 
@@ -3001,7 +3005,7 @@ bool konusAl(const String& metin, bool akis) {
                  "\"}]}],\"generationConfig\":{\"responseModalities\":[\"AUDIO\"],\"speechConfig\":{\"voiceConfig\":{\"prebuiltVoiceConfig\":{\"voiceName\":\"" +
                  SES_ADI + "\"}}}}}";
 
-  String baslik = String("POST /v1beta/models/") + TTS_MODEL + (akis ? ":streamGenerateContent?alt=sse" : ":generateContent") + " HTTP/1.1\r\n" +
+  String baslik = String("POST /v1beta/models/") + TTS_LISTE[gTtsSira] + (akis ? ":streamGenerateContent?alt=sse" : ":generateContent") + " HTTP/1.1\r\n" +
                   "Host: generativelanguage.googleapis.com\r\n" +
                   "x-goog-api-key: " + GEMINI_KEY + "\r\n" +
                   "Content-Type: application/json\r\n" +
@@ -3126,7 +3130,7 @@ bool konusAl(const String& metin, bool akis) {
   if (!calindi) {
     Serial.println("Ses gelmedi. Durum: " + durum);
     if (akis) gSonOlay += String(" -> cevabi seslendiremedim (") + durum.substring(0, 40) + ") " + bas.substring(0, 160);
-    if (durum.indexOf("429") >= 0) Serial.println("(TTS limiti dolmus olabilir)");
+    if (durum.indexOf("429") >= 0) { Serial.println("(TTS limiti dolmus olabilir)"); gTts429 = true; }
     Serial.println(bas);
     return false;
   }
@@ -3145,7 +3149,14 @@ bool konus(const String& metin) {
   }
   kesSay = 0;
   konusBas = millis();
+  gTts429 = false;
   bool ok = konusAl(metin, true);
+  while (!ok && gTts429 && !gKesildi && gTtsSira < 2) {        // kota dolduysa siradaki ses modeline gec
+    gTtsSira++; gTts429 = false;
+    Serial.printf("(Ses modeli degisti: %s)\n", TTS_LISTE[gTtsSira]);
+    konusBas = millis();
+    ok = konusAl(metin, true);
+  }
   if (!ok && !gKesildi) {
     Serial.println("(Akisli ses olmadi, normal deneniyor)");
     konusBas = millis();
