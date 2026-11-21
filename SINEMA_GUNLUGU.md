@@ -71,3 +71,9 @@
 - Durum bilgisi: Pasaport damgaları (ülke, yapım sayısı), sıradaki duraklar ve günlük ayı/izlenen günler (yapım sayısıyla) Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "pasaport" ve "gunluk" zaten var). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, sinema pasaportumu aç, sonra Japonya durağına bas" ya da "Günlüğümü aç, geçen aya git". Sahte DOM (jsdom) ile üç komut ve durum metni denendi; gerçek telefon/robot denenmedi.
+
+## 2026-11-21
+- Yeni komut: `duello|2` / `duello|Inception` (açık BİZ penceresindeki Puan düellosundan N. filmi ya da adını içeren filmi açar; BİZ penceresi `rafmenu|biz` ile açılır).
+- Durum bilgisi: BİZ ekranında zevk uyumu yüzdesi, puan düellosu satırları (numaralı) ve özel günler Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "biz" ve "rafmenu" zaten var). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, Biz ekranını aç, uyumumuz kaç?" sonra "İlk düelloyu aç". Yalnızca sözdizimi node ile denendi; jsdom yok, gerçek telefon/robot denenmedi (BİZ ekranı için eşin rafının telefonda olması gerekir).
