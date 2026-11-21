@@ -165,6 +165,8 @@ unsigned long gSesliMs = 0;                // son kayitta sesli sure
 // --- Soz kesme (robot konusurken araya girme) ---
 bool gSadeIsim = true;           // true: sadece adi (Hey Finduk) gecen sozlere cevap verir, kendiliginden konusmaz
 unsigned long gSure[4] = {0, 0, 0, 0};  // son cevap: duyma, dusunme, ses baslangici, toplam (ms)
+volatile int gMikTepe = 0;       // mikrofonun anlik ses seviyesi (panel testi icin)
+String gSonOlay = "";            // son duydugu / neden cevap vermedigi (panelde gorunur)
 bool gWifiDusuk = false;         // Wi-Fi verici gucunu dusur (hoparlore karisan cizirti icin)
 bool gOnceIndir = false;         // cevabin sesini once tamamen indir, sonra cal (calarken internet sessiz)
 int gBasHz = 450;                // bas kesme frekansi: 260 az kes, 450 bas yok (telefon gibi net), 650 iyice ince
@@ -828,6 +830,7 @@ bool bekleSes(unsigned long zamanAsimi, int esik) {
       if (v < -32768) v = -32768;
       halka[ONKAYIT - n + i] = (int16_t)v;
     }
+    gMikTepe = (gMikTepe * 3 + tepe) / 4;
     if (tepe > esik) {
       memcpy(onTampon, halka, sizeof(halka));
       onN = ONKAYIT;
@@ -1915,6 +1918,9 @@ void webAna() {
              "</style></head><body><h1>Finduk</h1>";
   h += String("<p>Surum ") + FW_SURUM + " · " + htmlKacir(zamanYazi()) + "</p>";
   h += "<h2>Ses seviyesi: <span id=sv>%" + String((int)gSesAyar) + "</span></h2><form action=/ayar><input type=range name=ses min=10 max=90 step=5 value=" + String((int)gSesAyar) + " style='width:100%' oninput=\"document.getElementById('sv').textContent='%'+this.value\"><button>Kaydet</button></form>";
+  h += "<h2>Mikrofon testi</h2><p>Konus, cubuk hareket etmeli.</p><div style='background:#eee;border-radius:6px;height:22px'><div id=mb style='background:#2a7;height:22px;width:0;border-radius:6px'></div></div><p id=mt>...</p>"
+       "<script>setInterval(function(){fetch('/mik').then(r=>r.text()).then(t=>{var v=parseInt(t)||0;document.getElementById('mb').style.width=Math.min(100,v/100)+'%';document.getElementById('mt').textContent='Seviye: '+v+(v<300?' (cok dusuk: mikrofon duymuyor olabilir)':'');})},400)</script>";
+  h += "<h2>Son olay</h2><p>" + (gSonOlay.length() ? gSonOlay : String("Henuz bir sey duymadi.")) + "</p>";
   if (gSure[3] > 0) h += "<h2>Son cevap hizi</h2><p>Duyma " + String(gSure[0] / 1000.0, 1) + " sn &middot; Dusunme " + String(gSure[1] / 1000.0, 1) + " sn &middot; Ses " + String(gSure[2] / 1000.0, 1) + " sn<br><b>Toplam " + String(gSure[3] / 1000.0, 1) + " sn</b> (sen sustuktan robot konusmaya baslayana kadar)</p>";
   h += String("<h2>Ne zaman cevap versin</h2><form action=/ayar><select name=sadeisim>") +
        "<option value=1" + (gSadeIsim ? " selected" : "") + ">Sadece Hey Finduk deyince (kendiliginden konusmaz)</option>" +
@@ -2010,6 +2016,7 @@ void webBaslat() {
   webSunucu.on("/ayar", webAyar);
   webSunucu.on("/sil", webSil);
   webSunucu.on("/tv", webTv);
+  webSunucu.on("/mik", []() { webSunucu.send(200, "text/plain", String(gMikTepe)); });
   webSunucu.on("/sestest", []() {
     int t = webSunucu.arg("t").toInt();
     if (gDurum != D_BOSTA) { webSunucu.send(200, "text/html; charset=utf-8", "<meta http-equiv=refresh content='2;url=/'>Robot su an mesgul, birazdan tekrar dene."); return; }
@@ -4860,6 +4867,7 @@ void loop() {
   if (gSesliMs < MIN_SESLI_MS) {
     gDurum = D_BOSTA;
     Serial.println("(Cok kisa ses, tik ya da gurultu. Yoksayiyorum.)");
+    gSonOlay = String("Kisa bir ses duydum (") + gSesliMs + " ms), konusma saymadim.";
     return;
   }
   gDurum = D_DUSUN;
@@ -4872,6 +4880,7 @@ void loop() {
   if (geminiHam.indexOf("429 Too Many") >= 0) {
     gDurum = D_BOSTA;
     Serial.println("GEMINI LIMITI DOLDU (429). Sebep:");
+    gSonOlay = "Gemini limiti/kredisi doldu (429). Sesi yaziya ceviremedim.";
     String m = degerBul(geminiHam, "message");
     Serial.println(m.length() ? m : geminiHam.substring(0, 300));
     Serial.println("60 saniye bekliyorum...");
@@ -4883,12 +4892,14 @@ void loop() {
   if (duyulan.length() == 0 || duyulan == "BOS") {
     gDurum = D_BOSTA;
     Serial.println("Bir sey duyamadim. Gemini ham cevabi:");
+    gSonOlay = String("Sesi yaziya ceviremedim. Gemini: ") + geminiHam.substring(0, 160);
     Serial.println(geminiHam.substring(0, 300));
     delay(3000);
     return;
   }
   Serial.print("SEN: ");
   Serial.println(duyulan);
+  gSonOlay = String("Duydugum: \"") + duyulan + "\"";
 
   // Hikaye kayit modu: duyulani oldugu gibi biriktir, "hikaye bitti" deyince telefona gonder
   if (gHikayeBaslik.length() > 0) {
@@ -4923,6 +4934,7 @@ void loop() {
       return;
     }
     Serial.println("(Adimi duymadim, yoksayiyorum. Hey Finduk diye basla.)");
+    gSonOlay += " -> adimi duymadim, cevap vermedim.";
     delay(500);
     return;
   }
