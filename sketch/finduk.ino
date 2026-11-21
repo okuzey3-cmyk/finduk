@@ -889,6 +889,12 @@ int kaydet() {
     pcm[i] = (int16_t)v;
     if (abs(v) > tepe) tepe = abs(v);
   }
+  // Kaydi normallestir: kisik gelen sesi yukselt ki Gemini rahat anlasin (en fazla 8 kat)
+  if (tepe > 200) {
+    float k = 26000.0f / (float)tepe;
+    if (k > 8.0f) k = 8.0f;
+    if (k > 1.05f) for (int i = 0; i < gN; i++) pcm[i] = (int16_t)((float)pcm[i] * k);
+  }
   wavBaslikYaz();
   return tepe;
 }
@@ -943,17 +949,29 @@ String cevapOku(WiFiClientSecure& client) {
   return cevap;
 }
 
+String geminiSesiYaziyaCevirModel(const char* model);
 String geminiSesiYaziyaCevir() {
+  String h = geminiSesiYaziyaCevirModel(MODEL);
+  String d = degerBul(h, "text"); d.trim();
+  if (d.length() == 0 || d == "BOS" || d == "BOS.") {          // anlayamadiysa daha guclu modelle bir kez daha dene
+    Serial.println("(BOS geldi, guclu modelle tekrar deniyorum)");
+    String h2 = geminiSesiYaziyaCevirModel("gemini-3.6-flash");
+    String d2 = degerBul(h2, "text"); d2.trim();
+    if (d2.length() && d2 != "BOS" && d2 != "BOS.") return h2;
+  }
+  return h;
+}
+String geminiSesiYaziyaCevirModel(const char* model) {
   WiFiClientSecure client;
   client.setInsecure();
   client.setTimeout(30);
   if (!client.connect("generativelanguage.googleapis.com", 443)) return "BAGLANTI HATASI";
 
-  String onek = String("{\"contents\":[{\"parts\":[{\"text\":\"") + (nvsOku("dil_modu").length() ? "Bu ses kaydini aynen yaziya cevir. Konusma Turkce ya da Ingilizce olabilir, hangi dildeyse o dilde yaz." : "Bu ses kaydini Turkce olarak aynen yaziya cevir.") + String(" Konusmada Finduk adinda bir robota seslenilebilir, bu ismi Findik diye degil aynen Finduk diye yaz. Sadece soylenen cumleyi yaz, baska hicbir sey ekleme. Ses yoksa BOS yaz.\"},{\"inline_data\":{\"mime_type\":\"audio/wav\",\"data\":\"");
+  String onek = String("{\"contents\":[{\"parts\":[{\"text\":\"") + (nvsOku("dil_modu").length() ? "Bu ses kaydini aynen yaziya cevir. Konusma Turkce ya da Ingilizce olabilir, hangi dildeyse o dilde yaz." : "Bu ses kaydini Turkce olarak aynen yaziya cevir.") + String(" Konusmada Finduk adinda bir robota seslenilebilir, bu ismi Findik diye degil aynen Finduk diye yaz. Sadece soylenen cumleyi yaz, baska hicbir sey ekleme. Ses kisik, uzak ya da hafif gurultulu olsa bile anlayabildigin kelimeleri yaz. Sadece kayitta hic insan konusmasi yoksa BOS yaz.\"},{\"inline_data\":{\"mime_type\":\"audio/wav\",\"data\":\"");
   String sonek = "\"}}]}]}";
   size_t govde = onek.length() + b64Uzunluk(gWavBytes) + sonek.length();
 
-  String baslik = String("POST /v1beta/models/") + MODEL + ":generateContent HTTP/1.1\r\n" +
+  String baslik = String("POST /v1beta/models/") + model + ":generateContent HTTP/1.1\r\n" +
                   "Host: generativelanguage.googleapis.com\r\n" +
                   "x-goog-api-key: " + GEMINI_KEY + "\r\n" +
                   "Content-Type: application/json\r\n" +
@@ -4905,6 +4923,8 @@ void loop() {
   }
 
   String duyulan = degerBul(geminiHam, "text");
+  duyulan.trim();
+  if (duyulan == "BOS." || duyulan == "BOS!") duyulan = "BOS";
   if (duyulan.length() == 0 || duyulan == "BOS") {
     gDurum = D_BOSTA;
     Serial.println("Bir sey duyamadim. Gemini ham cevabi:");
