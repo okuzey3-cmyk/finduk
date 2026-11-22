@@ -77,3 +77,9 @@
 - Durum bilgisi: BİZ ekranında zevk uyumu yüzdesi, puan düellosu satırları (numaralı) ve özel günler Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 34 kelime; "biz" ve "rafmenu" zaten var). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, Biz ekranını aç, uyumumuz kaç?" sonra "İlk düelloyu aç". Yalnızca sözdizimi node ile denendi; jsdom yok, gerçek telefon/robot denenmedi (BİZ ekranı için eşin rafının telefonda olması gerekir).
+
+## 2026-11-22 — BÜYÜK GÜNCELLEME (Sinema Atölyesi + Yıl Hikâyem)
+- Yeni komutlar: `atolyeac|Inception;atmosfer` (tek seferde Rafım'dan Sinema Atölyesi'ni açar, filmi seçer, istenen bölümü açar: atmosfer, muzik, yonetmen, harita, duello), `atolyefilm|2` / `atolyefilm|Amelie` (atölyede film seçer), `atolyemod|harita` (seçili filmle bölüm açar; `atolyemod|degistir` filmi değiştirir), `hikaye` (Yıl Hikâyem'i açar), `hikaye|ileri` / `hikaye|geri` / `hikaye|3` (sayfa gezer). `kapat` artık Yıl Hikâyem'i de kapatıyor.
+- Durum bilgisi: atölyede seçilebilir filmler (numaralı), seçili film ve bölümler; Atmosfer durumu; Yıl Hikâyem'in hangi sayfada olduğu ve sayfa metni; alışkanlıklara "bu yıl N yapım izledin (film/dizi)" eklendi (sınır 520 → 620).
+- Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi'ye "atolye", "yil hikaye" kelimeleri (34 → 36, döngü sınırı da 36). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, Amelie ile atölyede atmosferi aç" ya da "Yıl hikâyemi aç, sonraki sayfa". Gerçek Chromium + sahte raf verisiyle atolyeac, atolyefilm, atolyemod, hikaye ve kapat denendi (internet yoktu: harita/müzik gerçek yüklemeleri ve gerçek telefon/robot denenmedi). Önerilen: "Seansa ekle" (takvim dosyası indirir) bilerek eklenmedi.
