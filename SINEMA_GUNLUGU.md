@@ -83,3 +83,9 @@
 - Durum bilgisi: atölyede seçilebilir filmler (numaralı), seçili film ve bölümler; Atmosfer durumu; Yıl Hikâyem'in hangi sayfada olduğu ve sayfa metni; alışkanlıklara "bu yıl N yapım izledin (film/dizi)" eklendi (sınır 520 → 620).
 - Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi'ye "atolye", "yil hikaye" kelimeleri (34 → 36, döngü sınırı da 36). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, Amelie ile atölyede atmosferi aç" ya da "Yıl hikâyemi aç, sonraki sayfa". Gerçek Chromium + sahte raf verisiyle atolyeac, atolyefilm, atolyemod, hikaye ve kapat denendi (internet yoktu: harita/müzik gerçek yüklemeleri ve gerçek telefon/robot denenmedi). Önerilen: "Seansa ekle" (takvim dosyası indirir) bilerek eklenmedi.
+
+## 2026-11-23
+- Yeni komut: `filtreac` (Keşfet'te Filtre penceresini açar, uygulamaz; `kapat` vazgeçer). `filtre|...` sağlamlaştı: "90'lar" gibi kesme işaretli seçenekler `yil=90lar` ya da `yil=90` ile bulunur, `ne=dizi` de kategori olarak çalışır, boş değer yok sayılır.
+- Durum bilgisi: Filtre penceresi açıkken her filtrenin (ne izleyelim, tür, oyuncu, süre, kimle, platform, yıl, puan) şu anki değeri ve seçenekleri Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 36 kelime; "filtre" zaten var). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: "Finduk, filtreleri aç; 90'lardan komedi dizisi olsun". Gerçek Chromium + sahte sayfa ile filtreac, durum metni, filtre ve kapat denendi (internet yoktu); gerçek telefon/robot denenmedi.
