@@ -89,3 +89,9 @@
 - Durum bilgisi: Filtre penceresi açıkken her filtrenin (ne izleyelim, tür, oyuncu, süre, kimle, platform, yıl, puan) şu anki değeri ve seçenekleri Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 36 kelime; "filtre" zaten var). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, filtreleri aç; 90'lardan komedi dizisi olsun". Gerçek Chromium + sahte sayfa ile filtreac, durum metni, filtre ve kapat denendi (internet yoktu); gerçek telefon/robot denenmedi.
+
+## 2026-11-24
+- Yeni komut: `sesefekt|ac` / `sesefekt|kapat` (Kadife ayarlarındaki "ses efektleri ve titreşim sesi" ayarını açar/kapatır; Kadife'nin konuşma sesi `kadifeses` ile ayrı kalır).
+- Durum bilgisi: Kadife ekranında ses efektlerinin açık/kapalı olduğu da Finduk'a bildirilir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 36 kelime). Süslü parantez farkı değişmedi.
+- Nasıl denenir: "Finduk, uygulamanın ses efektlerini kapat". Sözdizimi node ile ve komut mantığı ayrıca denendi; jsdom/gerçek telefon/robot denenmedi.
