@@ -95,3 +95,8 @@
 - Durum bilgisi: Kadife ekranında ses efektlerinin açık/kapalı olduğu da Finduk'a bildirilir.
 - Robot tarafı: yalnızca KISILIK komut cümlesi (sinemaMi aynı, 36 kelime). Süslü parantez farkı değişmedi.
 - Nasıl denenir: "Finduk, uygulamanın ses efektlerini kapat". Sözdizimi node ile ve komut mantığı ayrıca denendi; jsdom/gerçek telefon/robot denenmedi.
+
+## 2026-11-25
+- Yeni komut: `yorum` (açık biletteki izleyici yorumlarını gösterir), `yorum|2` (2. yorumu genişletir). Durumda yorum sayısı, komuttan sonra ilk 3 yorumun metni (ya da seçilen yorum) Finduk'a bildirilir; köşeli parantezler temizlenir.
+- Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (36 → 38 kelime: yorum, ne demis; döngü 38).
+- Nasıl denenir: bir film açıkken "Finduk, bu filme ne demişler?" (yorumlar birkaç saniye sonra gelir; gerekirse bir kez daha sor). Gerçek Chromium + sahte yorumlarla denendi (internet yoktu: gerçek yorum/çeviri ve gerçek telefon/robot denenmedi).
