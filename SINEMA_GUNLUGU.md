@@ -106,3 +106,8 @@
 - Durum bilgisi: kapalı sürpriz zarfın tür/yıl/puan bilgisi ve ipucu (film adı gizli), kişinin takipte olup olmadığı ve takip edilenler (kişi kartında ve Yakında ekranında). Zarf açıkken eski aday listesi bildirilmez.
 - Robot tarafı: yalnızca KISILIK komut cümlesi ve sinemaMi (38 → 40 kelime: takip, ipucu; döngü 40). Süslü parantez farkı değişmedi (6).
 - Nasıl denenir: "Finduk, sürpriz zarf aç, ipucu ne?" ya da bir film açıkken "Birinci oyuncuyu aç, onu takibe al". Gerçek Chromium + sahte verilerle denendi (internet yoktu); gerçek telefon/robot denenmedi.
+
+## 2026-11-27
+- Yeni komutlar: `nerede` / `nerede|netflix` / `nerede|1` (açık biletin "nereden izlenir" kısmını gösterir; telefonda logo parlar, kullanıcı dokunur; TV modunda platform açılır), `fragman|kapat` (açık fragman oynatıcısını kapatır).
+- Hata düzeltme: "izlenebileceği yerler" bilgisi Finduk'a hiç gitmiyordu; artık abonelik ve kiralık platformlar sırayla bildirilir. sinemaMi 40 → 42 kelime (nereden, kiralik; döngü 42). Süslü parantez farkı değişmedi (6).
+- Nasıl denenir: bir film açıkken "Finduk, bu film nereden izlenir?" ya da "Netflix'i göster". Gerçek Chromium + sahte platform verisiyle telefon ve TV modunda denendi (internet yoktu); gerçek telefon, TV ve robot denenmedi.
